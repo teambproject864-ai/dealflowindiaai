@@ -325,7 +325,7 @@ export function Header() {
             <div className="flex h-9 sm:h-10 w-9 sm:w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500/25 via-cyan-500/20 to-violet-500/15 backdrop-blur-md border border-teal-500/25 shadow-[0_0_25px_rgba(20,184,166,0.25)] transition-all duration-500 group-hover:scale-110 group-hover:shadow-[0_0_40px_rgba(20,184,166,0.45)] group-active:scale-95 animate-glow-pulse">
               <IconDealflowLogo className="h-5.5 sm:h-6.5 w-5.5 sm:w-6.5" aria-hidden />
             </div>
-            <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-white hidden sm:inline-block">
+            <span className="font-display text-base sm:text-xl font-bold tracking-tight text-white inline-block">
               DealFlow<span className="gradient-text-teal">.AI</span>
             </span>
           </Link>
@@ -439,6 +439,26 @@ export function Header() {
             <Menu className="h-5 w-5" />
           </button>
         </div>
+      </div>
+
+      {/* Mobile Top Navigation Strip */}
+      <div className="flex md:hidden items-center gap-1.5 overflow-x-auto px-4 py-2 bg-[#060612]/95 border-t border-white/8 text-xs font-semibold scrollbar-none" aria-label="Mobile navigation">
+        {navLinks.map((link) => {
+          const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all flex items-center gap-1 ${
+                isActive
+                  ? "text-teal-300 bg-gradient-to-r from-teal-500/20 to-teal-400/10 border border-teal-500/30"
+                  : "text-slate-300 hover:text-white bg-white/5 border border-white/10"
+              }`}
+            >
+              {link.name}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Slide-out Mobile Command Drawer */}

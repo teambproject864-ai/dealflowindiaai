@@ -1,0 +1,3 @@
+=== DealFlow Call Transcript - Session call-16b1289c ===
+Duration: 0.74s | Timestamp: 2026-07-25 10:31:19
+

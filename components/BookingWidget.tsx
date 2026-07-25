@@ -234,6 +234,7 @@ type Props = {
   skipAiAgent?: boolean;
   forcedMeetingType?: "cal" | "calendly";
   challengeTags?: string[];
+  onClose?: () => void;
 };
 
 export function BookingWidget({ 
@@ -246,6 +247,7 @@ export function BookingWidget({
   skipAiAgent,
   forcedMeetingType,
   challengeTags = [],
+  onClose,
 }: Props) {
   const router = useRouter();
   
@@ -714,7 +716,7 @@ export function BookingWidget({
               setCreatedMeetUrl(fullCall.meetingUrl);
             }
           } catch {
-            setCreatedMeetUrl("https://meet.google.com/gtm-ops-dfai");
+            setCreatedMeetUrl("https://meet.google.com/ehk-fzku-ekp");
           }
         }, 1500);
         
@@ -1816,12 +1818,12 @@ export function BookingWidget({
                       <div className="flex items-start gap-2.5">
                         <Video className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
                         <a 
-                          href={createdMeetUrl || "https://meet.google.com/gtm-ops-dfai"} 
+                          href={createdMeetUrl || "https://meet.google.com/ehk-fzku-ekp"} 
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 underline break-all"
                         >
-                          {createdMeetUrl ? createdMeetUrl : "https://meet.google.com/gtm-ops-dfai"}
+                          {createdMeetUrl ? createdMeetUrl : "https://meet.google.com/ehk-fzku-ekp"}
                         </a>
                       </div>
                     </div>
@@ -1856,7 +1858,7 @@ export function BookingWidget({
 
                         <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-2 text-xs text-slate-400">
                           <div><strong className="text-slate-200">Date/Time:</strong> {friendlyScheduledDate}</div>
-                          <div><strong className="text-slate-200">Video Link:</strong> <a href={createdMeetUrl || "https://meet.google.com/gtm-ops-dfai"} className="text-indigo-400 underline">{createdMeetUrl || "https://meet.google.com/gtm-ops-dfai"}</a></div>
+                          <div><strong className="text-slate-200">Video Link:</strong> <a href={createdMeetUrl || "https://meet.google.com/ehk-fzku-ekp"} className="text-indigo-400 underline">{createdMeetUrl || "https://meet.google.com/ehk-fzku-ekp"}</a></div>
                           <div><strong className="text-slate-200">Invited Operation Architects:</strong> {defaultGuests.slice(0, 2).join(", ")}</div>
                         </div>
 
@@ -1872,10 +1874,15 @@ export function BookingWidget({
                     <button
                       type="button"
                       onClick={() => {
-                        // Pushes back to Home cockpit or lead status
-                        router.push("/");
+                        if (onClose) {
+                          onClose();
+                        }
+                        if (typeof window !== "undefined") {
+                          window.dispatchEvent(new CustomEvent("close-voice-call"));
+                        }
+                        router.push("/portal");
                       }}
-                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 px-8 py-3.5 text-sm font-semibold text-black transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(20,184,166,0.3)] duration-300"
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 px-8 py-3.5 text-sm font-semibold text-black transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(20,184,166,0.3)] duration-300 cursor-pointer"
                     >
                       Access Revenue Cockpit
                       <ArrowRight className="h-4 w-4" />

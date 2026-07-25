@@ -11,8 +11,13 @@ export function VoiceCallWidget() {
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
+    const handleClose = () => setIsOpen(false);
     window.addEventListener("open-voice-call", handleOpen);
-    return () => window.removeEventListener("open-voice-call", handleOpen);
+    window.addEventListener("close-voice-call", handleClose);
+    return () => {
+      window.removeEventListener("open-voice-call", handleOpen);
+      window.removeEventListener("close-voice-call", handleClose);
+    };
   }, []);
 
   useEffect(() => {
@@ -84,6 +89,7 @@ export function VoiceCallWidget() {
                   name=""
                   email=""
                   companyName=""
+                  onClose={() => setIsOpen(false)}
                 />
               </div>
             </motion.div>

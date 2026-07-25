@@ -43,6 +43,8 @@ import { runDealflowCRMFunctionalTests } from "./dealflow-crm-functional.test";
 import { runLLMPipelineTests } from "./dealflow-llm-pipeline.test";
 import { runDeliverableStudioTests } from "./deliverable-studio.test";
 import { runComprehensiveE2ETestSuite } from "./comprehensive-e2e-suite.test";
+import { runCallBotTestSuite } from "./call-bot.test";
+import { runProductionLiveE2ETestSuite } from "./live-production-e2e.test";
 
 
 
@@ -334,7 +336,9 @@ async function main() {
     runDealflowCRMFunctionalTests,
     runLLMPipelineTests,
     runDeliverableStudioTests,
-    runComprehensiveE2ETestSuite
+    runComprehensiveE2ETestSuite,
+    runCallBotTestSuite,
+    runProductionLiveE2ETestSuite
   ];
 
 

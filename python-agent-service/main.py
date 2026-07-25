@@ -1,35 +1,79 @@
 #!/usr/bin/env python3
+"""
+DealFlow AI Python Agent Service.
+Provides REST and WebSocket APIs for Evolution API WhatsApp Integration
+and the Rewritten Live Call Bot (WebRTC / SIP).
+"""
+
+import asyncio
+import logging
 import os
 import time
-import uuid
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+from contextlib import asynccontextmanager
+
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, Request, status, BackgroundTask
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-# --- Load Environment ---
-load_dotenv()
+from config import settings
+from whatsapp import (
+    whatsapp_client,
+    ws_listener,
+    workflow_engine,
+    db_manager,
+    SendTextMessageRequest,
+    SendMediaMessageRequest,
+    SendLocationMessageRequest,
+    ConnectionState
+)
+from call_bot import call_session_manager
 
-# --- Configuration ---
-APP_NAME = "DealFlow AI Agent Service"
-APP_VERSION = "0.1.0"
-HOST = os.getenv("HOST", "0.0.0.0")
-PORT = int(os.getenv("PORT", "8000"))
-DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+# --- Logging Setup ---
+logging.basicConfig(
+    level=logging.DEBUG if settings.DEBUG else logging.INFO,
+    format="%(asctime)s [%(name)s] [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger("DealFlow.Main")
 
-# --- Initialize App ---
+
+# --- Lifespan Context Manager ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Service startup and shutdown lifecycle event handler.
+    """
+    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}...")
+    
+    # Initialize SQLite Database tables
+    await db_manager.initialize()
+    
+    # Start background WebSocket listener for Evolution API
+    try:
+        await ws_listener.start()
+    except Exception as e:
+        logger.warn(f"Could not start Evolution API WebSocket listener on startup: {e}")
+
+    yield
+
+    logger.info("Shutting down service...")
+    await ws_listener.stop()
+    await whatsapp_client.close()
+
+
+# --- Initialize FastAPI App ---
 app = FastAPI(
-    title=APP_NAME,
-    version=APP_VERSION,
-    description="AI Agent Service for DealFlow",
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description="Unified Evolution API WhatsApp Integration & Real-time Live Call Bot Service for DealFlow AI",
     docs_url="/docs",
     redoc_url="/redoc",
-    debug=DEBUG,
+    lifespan=lifespan
 )
 
-# --- CORS ---
+# --- CORS Middleware ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -38,173 +82,201 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Logging Helper ---
-def log(message: str, level: str = "info"):
-    timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    print(f"[{timestamp}] [{APP_NAME}] [{level.upper()}] {message}")
 
-# --- Pydantic Schemas ---
-class AgentActionRequest(BaseModel):
-    user_id: str = Field(..., description="ID of the user making the request")
-    agent_id: str = Field(..., description="ID of the agent to execute")
-    action_type: str = Field(..., description="Type of action to perform")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Parameters for the action")
-    context: Optional[Dict[str, Any]] = Field(default=None, description="Additional context")
+# --- Request Schemas ---
+class CallStartRequest(BaseModel):
+    call_type: str = Field(default="discovery", description="Call type: discovery, onboarding, standup, weekly, escalation")
+    meeting_url: Optional[str] = Field(default=None, description="Optional meeting URL")
+    sdp_offer: Optional[str] = Field(default=None, description="Optional WebRTC SDP offer string")
+    intake_context: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Customer intake metadata")
 
-class AgentActionResponse(BaseModel):
-    success: bool
-    action_id: str
-    result: Optional[Any] = None
-    error: Optional[str] = None
-    timestamp: str
-    execution_time_ms: float
 
-class HealthResponse(BaseModel):
-    status: str
-    service: str
-    version: str
-    timestamp: str
-    uptime_seconds: float
+class InboundAudioFrameRequest(BaseModel):
+    session_id: str = Field(..., description="Active session ID")
+    pcm_base64: str = Field(..., description="Base64 encoded 16kHz 16-bit PCM audio frame bytes")
 
-# --- In-Memory Storage ---
-start_time = time.time()
-action_history: List[Dict[str, Any]] = []
-
-# --- Helper Functions ---
-def generate_timestamp() -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-
-def execute_dummy_action(action_type: str, parameters: Dict[str, Any]) -> Any:
-    """Execute a dummy action for demonstration purposes"""
-    time.sleep(0.1)  # Simulate work
-    if action_type == "echo":
-        return {"message": parameters.get("input", "")}
-    elif action_type == "add":
-        a = parameters.get("a", 0)
-        b = parameters.get("b", 0)
-        return {"sum": a + b}
-    elif action_type == "analyze":
-        return {
-            "analysis_id": str(uuid.uuid4()),
-            "score": 0.85,
-            "insights": ["Positive sentiment detected", "High engagement"]
-        }
-    else:
-        return {"status": "completed", "parameters": parameters}
 
 # --- Routes ---
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    start_req_time = time.time()
-    log(f"Incoming request: {request.method} {request.url}", "debug")
-    response = await call_next(request)
-    process_time_ms = (time.time() - start_req_time) * 1000
-    log(f"Request completed: {request.method} {request.url} - {response.status_code} - {process_time_ms:.2f}ms", "info")
-    return response
 
-@app.get("/health", response_model=HealthResponse, tags=["Health"])
+@app.get("/health", tags=["Health"])
 async def health_check():
-    uptime = time.time() - start_time
-    return HealthResponse(
-        status="healthy",
-        service=APP_NAME,
-        version=APP_VERSION,
-        timestamp=generate_timestamp(),
-        uptime_seconds=uptime,
-    )
-
-@app.get("/", tags=["Root"])
-async def root():
-    return JSONResponse(
-        content={
-            "service": APP_NAME,
-            "version": APP_VERSION,
-            "docs": "/docs",
-            "health": "/health",
-        },
-        status_code=status.HTTP_200_OK,
-    )
-
-@app.post("/agent/action", response_model=AgentActionResponse, tags=["Agent"])
-async def execute_agent_action(request: AgentActionRequest):
-    start_exec_time = time.time()
-    action_id = str(uuid.uuid4())
-    
-    log(f"Executing agent action: {request.action_type} for user {request.user_id}", "info")
-    
-    try:
-        result = execute_dummy_action(request.action_type, request.parameters)
-        
-        execution_time_ms = (time.time() - start_exec_time) * 1000
-        
-        response = AgentActionResponse(
-            success=True,
-            action_id=action_id,
-            result=result,
-            timestamp=generate_timestamp(),
-            execution_time_ms=execution_time_ms,
-        )
-        
-        # Store in history
-        action_history.append({
-            "action_id": action_id,
-            "user_id": request.user_id,
-            "agent_id": request.agent_id,
-            "action_type": request.action_type,
-            "parameters": request.parameters,
-            "success": True,
-            "timestamp": generate_timestamp(),
-            "execution_time_ms": execution_time_ms,
-        })
-        
-        log(f"Agent action completed successfully: {action_id}", "info")
-        return response
-        
-    except Exception as e:
-        execution_time_ms = (time.time() - start_exec_time) * 1000
-        error_msg = str(e)
-        log(f"Agent action failed: {error_msg}", "error")
-        
-        action_history.append({
-            "action_id": action_id,
-            "user_id": request.user_id,
-            "agent_id": request.agent_id,
-            "action_type": request.action_type,
-            "parameters": request.parameters,
-            "success": False,
-            "error": error_msg,
-            "timestamp": generate_timestamp(),
-            "execution_time_ms": execution_time_ms,
-        })
-        
-        return AgentActionResponse(
-            success=False,
-            action_id=action_id,
-            error=error_msg,
-            timestamp=generate_timestamp(),
-            execution_time_ms=execution_time_ms,
-        )
-
-@app.get("/agent/history/{user_id}", tags=["Agent"])
-async def get_agent_history(user_id: str, limit: int = 100):
-    filtered_history = [
-        entry for entry in reversed(action_history)
-        if entry["user_id"] == user_id
-    ][:limit]
+    """
+    Health check endpoint reporting service uptime, version, and database state.
+    """
     return {
-        "user_id": user_id,
-        "count": len(filtered_history),
-        "history": filtered_history,
+        "status": "healthy",
+        "service": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "evolution_api_url": settings.EVOLUTION_API_URL,
+        "whatsapp_websocket": "active" if ws_listener.is_running else "inactive",
+        "active_call_sessions": len(call_session_manager.active_sessions)
     }
 
-# --- Run ---
+
+# --- WhatsApp Evolution API Endpoints ---
+
+@app.post("/whatsapp/instance/create", tags=["WhatsApp"])
+async def create_whatsapp_instance(instance_name: Optional[str] = None):
+    """
+    Creates a new Evolution API WhatsApp instance.
+    """
+    status_obj = await whatsapp_client.create_instance(instance_name)
+    return {"success": True, "instance": status_obj.model_dump()}
+
+
+@app.get("/whatsapp/instance/status", tags=["WhatsApp"])
+async def get_whatsapp_instance_status(instance_name: Optional[str] = None):
+    """
+    Fetches the status of the WhatsApp instance.
+    """
+    status_obj = await whatsapp_client.fetch_instance_status(instance_name)
+    return {"success": True, "instance": status_obj.model_dump()}
+
+
+@app.get("/whatsapp/instance/qrcode", tags=["WhatsApp"])
+async def get_whatsapp_qrcode(instance_name: Optional[str] = None):
+    """
+    Fetches QR code for WhatsApp web scanning.
+    """
+    code = await whatsapp_client.fetch_qrcode(instance_name)
+    if not code:
+        raise HTTPException(status_code=404, detail="QR code not available or instance already connected.")
+    return {"success": True, "qrcode": code}
+
+
+@app.post("/whatsapp/send/text", tags=["WhatsApp"])
+async def send_whatsapp_text(req: SendTextMessageRequest):
+    """
+    Sends a text message over WhatsApp with rate limiting and recipient cooldown.
+    """
+    try:
+        record = await whatsapp_client.send_text_message(req)
+        return {"success": True, "message": record.model_dump()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/whatsapp/send/media", tags=["WhatsApp"])
+async def send_whatsapp_media(req: SendMediaMessageRequest):
+    """
+    Sends a media message (image, video, document, audio) over WhatsApp.
+    """
+    try:
+        record = await whatsapp_client.send_media_message(req)
+        return {"success": True, "message": record.model_dump()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/whatsapp/send/location", tags=["WhatsApp"])
+async def send_whatsapp_location(req: SendLocationMessageRequest):
+    """
+    Sends a location message over WhatsApp.
+    """
+    try:
+        record = await whatsapp_client.send_location_message(req)
+        return {"success": True, "message": record.model_dump()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/whatsapp/contacts", tags=["WhatsApp"])
+async def get_whatsapp_contacts():
+    """
+    Fetches all WhatsApp contacts.
+    """
+    contacts = await whatsapp_client.fetch_contacts()
+    return {"success": True, "count": len(contacts), "contacts": [c.model_dump() for c in contacts]}
+
+
+@app.post("/whatsapp/webhook", tags=["WhatsApp"])
+async def evolution_webhook_listener(request: Request):
+    """
+    Inbound Webhook listener for Evolution API event webhooks.
+    """
+    try:
+        payload = await request.json()
+        logger.info(f"Received Evolution API Webhook: {payload.get('event')}")
+        await ws_listener._dispatch_event(payload)
+        return {"success": True, "status": "processed"}
+    except Exception as e:
+        logger.error(f"Error processing webhook: {e}")
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=400)
+
+
+# --- Dealflow Live Call Bot Endpoints ---
+
+@app.post("/callbot/start", tags=["Call Bot"])
+async def start_call_session(req: CallStartRequest):
+    """
+    Initiates a new real-time WebRTC / SIP call bot session.
+    """
+    session = await call_session_manager.create_session(
+        call_type=req.call_type,
+        meeting_url=req.meeting_url,
+        intake_context=req.intake_context
+    )
+    res = await session.start(sdp_offer=req.sdp_offer)
+    return {"success": True, "session": res}
+
+
+@app.post("/callbot/stop/{session_id}", tags=["Call Bot"])
+async def stop_call_session(session_id: str):
+    """
+    Stops a live call bot session, finalizes recording, extracts CallSummary JSON, and syncs to CRM.
+    """
+    res = await call_session_manager.end_session(session_id)
+    if not res:
+        raise HTTPException(status_code=404, detail=f"Call session {session_id} not found.")
+    return {"success": True, "result": res}
+
+
+@app.get("/callbot/status/{session_id}", tags=["Call Bot"])
+async def get_call_session_status(session_id: str):
+    """
+    Fetches status, transcript history, and recording info for a call session.
+    """
+    session = call_session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail=f"Call session {session_id} not found.")
+    
+    return {
+        "success": True,
+        "session_id": session_id,
+        "is_active": session.is_running,
+        "is_bot_speaking": session.is_bot_speaking,
+        "is_user_speaking": session.webrtc_session.is_user_speaking,
+        "transcript_count": len(session.conversation_history),
+        "transcripts": session.conversation_history
+    }
+
+
+@app.post("/callbot/audio/inbound", tags=["Call Bot"])
+async def push_inbound_audio_frame(req: InboundAudioFrameRequest):
+    """
+    Receives raw base64 encoded audio bytes for an active call session.
+    """
+    session = call_session_manager.get_session(req.session_id)
+    if not session or not session.is_running:
+        raise HTTPException(status_code=404, detail=f"Active session {req.session_id} not found.")
+    
+    import base64
+    try:
+        pcm_bytes = base64.b64decode(req.pcm_base64)
+        frame = await session.webrtc_session.push_inbound_audio_frame(pcm_bytes)
+        return {
+            "success": True,
+            "session_id": req.session_id,
+            "user_speaking": session.webrtc_session.is_user_speaking,
+            "energy": round(frame.calculate_energy(), 2)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid PCM audio payload: {e}")
+
+
+# --- Entrypoint ---
 if __name__ == "__main__":
     import uvicorn
-    log(f"Starting {APP_NAME} v{APP_VERSION} on {HOST}:{PORT}")
-    uvicorn.run(
-        "main:app",
-        host=HOST,
-        port=PORT,
-        reload=DEBUG,
-        log_level="debug" if DEBUG else "info",
-    )
+    logger.info(f"Starting uvicorn server on {settings.HOST}:{settings.PORT}...")
+    uvicorn.run("main:app", host=settings.HOST, port=settings.PORT, reload=settings.DEBUG)

@@ -80,6 +80,11 @@ service cloud.firestore {
     match /calls/{callId} {
       allow read: if isAuthenticated();
       allow write: if false; // Server Admin SDK only
+
+      match /{allSubcollections=**} {
+        allow read: if isAuthenticated();
+        allow write: if false; // Server Admin SDK only
+      }
     }
 
     // ─── Call Summaries ───────────────────────────────────────
