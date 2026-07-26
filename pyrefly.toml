@@ -2,6 +2,10 @@
 [tool.pyrefly]
 type-checking-mode = "off"
 disable-type-errors = true
+disable-search-path-heuristics = true
+search-path = ["python-agent-service", "."]
+
+
 project-excludes = [
     "**/inmemory/**",
     "**/virtual/**",
@@ -15,3 +19,4 @@ project-excludes = [
 [tool.pyrefly.errors]
 parse-error = false
 unknown-name = false
+

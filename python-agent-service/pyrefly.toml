@@ -1,0 +1,9 @@
+# Pyrefly Type Checker Configuration for Python Agent Service
+[tool.pyrefly]
+type-checking-mode = "off"
+disable-type-errors = true
+search-path = ["."]
+
+[tool.pyrefly.errors]
+parse-error = false
+unknown-name = false

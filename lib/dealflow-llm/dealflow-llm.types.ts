@@ -35,7 +35,7 @@ export interface DealflowOutput {
 
 export interface DealflowMarketDataPoint {
   id: string;
-  category: 'customer_insight' | 'campaign_performance' | 'content_performance';
+  category: 'customer_insight' | 'campaign_performance' | 'content_performance' | string;
   features: number[];
   label?: string;
   metadata: Record<string, any>;

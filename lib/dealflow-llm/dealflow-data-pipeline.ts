@@ -3,6 +3,8 @@ import { hfInfer } from '../huggingface';
 import { nvInfer } from '../nvidia';
 import { kimiInfer } from '../kimi';
 import type { DealflowMarketDataPoint } from './dealflow-llm.types';
+import { DEALFLOW_DOMAIN_DATASET, DealflowKnowledgeEntry } from './dealflow-domain-dataset';
+
 
 export interface BaselineModelConfig {
   modelName: string;
@@ -107,6 +109,27 @@ export class DealflowDataIngestionPipeline {
     });
   }
 
+  // Ingest master DealFlow domain dataset as high-quality training points
+  ingestDomainDataset(): DealflowMarketDataPoint[] {
+    return DEALFLOW_DOMAIN_DATASET.map(entry => {
+      const combinedText = `${entry.title} ${entry.groundTruthAnswer} ${entry.keyConcepts.join(' ')}`;
+      return {
+        id: entry.id,
+        category: entry.cluster,
+        features: this.extractFeatures(combinedText),
+        label: entry.groundTruthAnswer,
+        metadata: {
+          subDomain: entry.subDomain,
+          title: entry.title,
+          keywords: entry.questionKeywords,
+          concepts: entry.keyConcepts,
+          persona: entry.personaContext || 'general',
+        },
+        timestamp: Date.now(),
+      };
+    });
+  }
+
   // Get stored synthetic data
   getSyntheticDataStore(): SyntheticDataSample[] {
     return [...this.syntheticDataStore];
@@ -119,8 +142,9 @@ export class DealflowDataIngestionPipeline {
 
   // Helper: Extract features from text
   private extractFeatures(text: string): number[] {
-    const keywords = ['customer', 'campaign', 'engagement', 'conversion', 'growth', 'segment', 'roi', 'brand', 'product', 'launch', 'market', 'strategy', 'content', 'channel', 'personalization'];
+    const keywords = ['customer', 'campaign', 'engagement', 'conversion', 'growth', 'segment', 'roi', 'brand', 'product', 'launch', 'market', 'strategy', 'content', 'channel', 'personalization', 'webrtc', 'sip', 'rag', 'okf', 'mempalace', 'veritas', 'hermes', 'crm', 'hubspot', 'salesforce', 'rbac'];
     const words = text.toLowerCase().split(/\s+/);
     return keywords.map(keyword => words.filter(w => w.includes(keyword)).length / (words.length + 1));
   }
 }
+

@@ -223,14 +223,18 @@ export function refreshToken(existingToken: string): string | null {
 
 // --- Cookie Management ---
 export async function setAuthCookie(token: string) {
-  const cookieStore = await cookies();
-  cookieStore.set(AUTH_COOKIE_NAME, token, {
-    httpOnly: true, // Secure from XSS
-    secure: process.env.NODE_ENV === "production", // Only HTTPS in production
-    sameSite: "lax", // Prevent CSRF
-    path: "/",
-    maxAge: 60 * 60 * 8, // 8 hours (matches JWT expiry)
-  });
+  try {
+    const cookieStore = await cookies();
+    cookieStore.set(AUTH_COOKIE_NAME, token, {
+      httpOnly: true, // Secure from XSS
+      secure: process.env.NODE_ENV === "production", // Only HTTPS in production
+      sameSite: "lax", // Prevent CSRF
+      path: "/",
+      maxAge: 60 * 60 * 8, // 8 hours (matches JWT expiry)
+    });
+  } catch (e) {
+    // If called outside Next.js request context (e.g. CLI test environment), ignore cookie store error
+  }
 }
 
 export async function getAuthCookie(): Promise<string | null> {

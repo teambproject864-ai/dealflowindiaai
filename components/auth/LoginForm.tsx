@@ -257,6 +257,8 @@ export default function LoginForm({ role, allowRegistration = false }: LoginForm
 
   useEffect(() => {
     if (searchParams.get("signup") === "true") setIsLogin(false);
+    const err = searchParams.get("error");
+    if (err) setApiError(err);
   }, [searchParams]);
 
   useEffect(() => {

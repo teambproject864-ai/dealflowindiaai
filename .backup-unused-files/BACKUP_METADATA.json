@@ -1,0 +1,67 @@
+{
+  "backupDate": "2026-07-26T06:20:10.348Z",
+  "retentionDays": 30,
+  "expirationDate": "2026-08-25T06:20:10.357Z",
+  "files": [
+    {
+      "path": "scripts/gen-hash.js",
+      "sizeBytes": 255,
+      "backupPath": ".backup-unused-files/scripts/gen-hash.js"
+    },
+    {
+      "path": "tests/run-twilio.ts",
+      "sizeBytes": 290,
+      "backupPath": ".backup-unused-files/tests/run-twilio.ts"
+    },
+    {
+      "path": "tests/run-voice.ts",
+      "sizeBytes": 294,
+      "backupPath": ".backup-unused-files/tests/run-voice.ts"
+    },
+    {
+      "path": "tests/list-data.ts",
+      "sizeBytes": 1103,
+      "backupPath": ".backup-unused-files/tests/list-data.ts"
+    },
+    {
+      "path": "tests/create-dummy-meeting.ts",
+      "sizeBytes": 2130,
+      "backupPath": ".backup-unused-files/tests/create-dummy-meeting.ts"
+    },
+    {
+      "path": "tests/test-contrast.ts",
+      "sizeBytes": 2617,
+      "backupPath": ".backup-unused-files/tests/test-contrast.ts"
+    },
+    {
+      "path": "tests/test-pinecone.ts",
+      "sizeBytes": 2411,
+      "backupPath": ".backup-unused-files/tests/test-pinecone.ts"
+    },
+    {
+      "path": "tests/test-calendar-api.ts",
+      "sizeBytes": 1368,
+      "backupPath": ".backup-unused-files/tests/test-calendar-api.ts"
+    },
+    {
+      "path": "FINAL-AUDIT-AND-CLEANUP-REPORT.md",
+      "sizeBytes": 3943,
+      "backupPath": ".backup-unused-files/FINAL-AUDIT-AND-CLEANUP-REPORT.md"
+    },
+    {
+      "path": "FINAL_FIX_REPORT.md",
+      "sizeBytes": 6766,
+      "backupPath": ".backup-unused-files/FINAL_FIX_REPORT.md"
+    },
+    {
+      "path": "PERFORMANCE_OPTIMIZATION_REPORT.md",
+      "sizeBytes": 4438,
+      "backupPath": ".backup-unused-files/PERFORMANCE_OPTIMIZATION_REPORT.md"
+    },
+    {
+      "path": "COMPREHENSIVE_REVIEW_REPORT.md",
+      "sizeBytes": 7309,
+      "backupPath": ".backup-unused-files/COMPREHENSIVE_REVIEW_REPORT.md"
+    }
+  ]
+}

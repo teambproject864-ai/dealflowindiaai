@@ -57,7 +57,6 @@ import {
 import { COUNTRIES } from "@/lib/countries";
 import { cn } from "@/lib/utils";
 import AuthProvider from "@/components/auth/AuthProvider";
-import LogoutButton from "@/components/auth/LogoutButton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
 import { BarChart3 } from "lucide-react";

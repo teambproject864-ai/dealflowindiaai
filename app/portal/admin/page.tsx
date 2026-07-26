@@ -44,7 +44,6 @@ import { DealflowCRMWorkspace } from "@/components/portal/DealflowCRMWorkspace";
 import { cn } from "@/lib/utils";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import AuthProvider from "@/components/auth/AuthProvider";
-import LogoutButton from "@/components/auth/LogoutButton";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
 import { getDb } from "@/lib/firebase-client";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";

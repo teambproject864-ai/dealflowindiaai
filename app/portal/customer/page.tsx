@@ -46,7 +46,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AuthProvider from "@/components/auth/AuthProvider";
-import LogoutButton from "@/components/auth/LogoutButton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ContentWorkflowWorkspace } from "@/components/portal/ContentWorkflowWorkspace";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
@@ -188,6 +187,7 @@ function CustomerPortalContent() {
   };
 
   // Core Data States
+  const [tasks, setTasks] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
   const [gtmReports, setGtmReports] = useState<any[]>([]);
   const [gtmPlaybooks, setGtmPlaybooks] = useState<any[]>([]);
@@ -243,6 +243,7 @@ function CustomerPortalContent() {
   // Widget States for customizable dashboard
   const [widgets, setWidgets] = useState<string[]>([
     "credit-usage",
+    "tasks",
     "projects",
     "conversations",
     "analytics",
@@ -296,7 +297,8 @@ function CustomerPortalContent() {
         }
       };
 
-      const [ticketsData, gtmData, docsData, chatData, icpData, feedbackData, callsData, configData, contentData] = await Promise.all([
+      const [tasksData, ticketsData, gtmData, docsData, chatData, icpData, feedbackData, callsData, configData, contentData] = await Promise.all([
+        safeFetchJson("/api/portal/tasks"),
         safeFetchJson("/api/portal/tickets"),
         safeFetchJson("/api/portal/gtm-reports"),
         safeFetchJson("/api/portal/documents"),
@@ -308,6 +310,7 @@ function CustomerPortalContent() {
         safeFetchJson("/api/portal/content"),
       ]);
 
+      if (tasksData.success) setTasks(tasksData.tasks || []);
       if (ticketsData.success) setTickets(ticketsData.tickets);
       if (gtmData.success) setGtmReports(gtmData.reports);
       if (docsData.success) setDocuments(docsData.documents);
@@ -806,6 +809,63 @@ function CustomerPortalContent() {
 
             <div className="df-widget-grid">
               {widgets.map((widgetId, index) => {
+                if (widgetId === "tasks") {
+                  const openTasks = tasks.filter(t => t.status !== "completed" && t.status !== "done");
+                  const completedTasks = tasks.filter(t => t.status === "completed" || t.status === "done");
+                  return (
+                    <DashboardWidget
+                      key={widgetId}
+                      id={widgetId}
+                      title="Assigned Tasks"
+                      onRemove={() => handleRemoveWidget(widgetId)}
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDrop={(e) => handleDrop(e, index)}
+                    >
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-slate-950/45 p-3 rounded-xl border border-white/5 text-center">
+                            <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Open</span>
+                            <span className="text-2xl font-black text-orange-400">{openTasks.length}</span>
+                          </div>
+                          <div className="bg-slate-950/45 p-3 rounded-xl border border-white/5 text-center">
+                            <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Completed</span>
+                            <span className="text-2xl font-black text-emerald-400">{completedTasks.length}</span>
+                          </div>
+                        </div>
+                        <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 custom-scrollbar">
+                          {tasks.slice(0, 3).map((task) => (
+                            <div key={task.id} className="p-2.5 bg-slate-950/40 rounded-lg border border-white/5 text-xs space-y-1">
+                              <div className="flex justify-between items-start gap-2">
+                                <p className="font-bold text-slate-200 line-clamp-1">{task.title}</p>
+                                <span className={cn(
+                                  "px-1.5 py-0.5 rounded text-[9px] font-bold shrink-0",
+                                  task.status === "todo" ? "bg-slate-700/40 text-slate-300 border border-slate-600/30" :
+                                  task.status === "in-progress" || task.status === "in_progress" ? "bg-blue-500/10 text-blue-400 border border-blue-500/30" :
+                                  task.status === "review" ? "bg-violet-500/10 text-violet-400 border border-violet-500/30" :
+                                  "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                                )}>
+                                  {task.status === "in-progress" || task.status === "in_progress" ? "In Progress" :
+                                    (task.status || "todo").charAt(0).toUpperCase() + (task.status || "todo").slice(1)}
+                                </span>
+                              </div>
+                              {task.assignedAgentName && (
+                                <p className="text-[10px] text-slate-500">Assigned to: {task.assignedAgentName}</p>
+                              )}
+                              {task.dueDate && (
+                                <p className="text-[10px] text-slate-500">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
+                              )}
+                            </div>
+                          ))}
+                          {tasks.length === 0 && (
+                            <p className="text-xs text-slate-500 italic py-6 text-center">No assigned tasks yet.</p>
+                          )}
+                        </div>
+                      </div>
+                    </DashboardWidget>
+                  );
+                }
+
                 if (widgetId === "credit-usage") {
                   return (
                     <DashboardWidget

@@ -1,4 +1,13 @@
 {
+  "extraPaths": [
+    "python-agent-service",
+    "."
+  ],
+  "executionEnvironments": [
+    {
+      "root": "python-agent-service"
+    }
+  ],
   "exclude": [
     "**/node_modules",
     "**/__pycache__",
@@ -13,3 +22,4 @@
     "diagnosticMode": "workspace"
   }
 }
+
