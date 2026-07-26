@@ -501,3 +501,28 @@ export async function executeEndOfDayEmailRun(stakeholderEmail: string): Promise
   console.log(`[PostCallEmail] End-of-day run complete: ${results.succeeded}/${results.processed} succeeded`);
   return results;
 }
+
+export async function sendPostCallMOMEmail(params: {
+  recipients: string[];
+  mom: import('./call-bot/mom-generator').MinutesOfMeeting;
+}): Promise<{ success: boolean; dispatchedAt: string; recipients: string[] }> {
+  console.log(`[PostCallEmail] Dispatching 15-minute MOM email for Call ID ${params.mom.callId} to ${params.recipients.join(', ')}`);
+
+  const subject = `[Minutes of Meeting] ${params.mom.callScenario.toUpperCase()} Call - ${params.mom.callId}`;
+  const htmlBody = params.mom.htmlDocument;
+
+  for (const email of params.recipients) {
+    try {
+      await sendEmailWithRetry({ to: email, subject, body: htmlBody });
+    } catch (err: any) {
+      console.warn(`[PostCallEmail] Failed to send email to ${email}:`, err?.message || err);
+    }
+  }
+
+  return {
+    success: true,
+    dispatchedAt: new Date().toISOString(),
+    recipients: params.recipients,
+  };
+}
+

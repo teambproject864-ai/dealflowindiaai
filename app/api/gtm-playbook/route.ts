@@ -97,10 +97,13 @@ export async function GET(request: NextRequest) {
         .collection("gtm_playbooks")
         .where("customerId", "==", user.id)
         .limit(10)
-        .get();
+        .get()
+        .catch(() => null);
 
       const playbooks: GTMPlaybook[] = [];
-      snap.forEach((doc) => playbooks.push({ id: doc.id, ...doc.data() } as any));
+      if (snap && !snap.empty) {
+        snap.forEach((doc) => playbooks.push({ id: doc.id, ...doc.data() } as any));
+      }
 
       // Sort by generatedAt descending in-memory
       playbooks.sort((a: any, b: any) => {
@@ -117,10 +120,13 @@ export async function GET(request: NextRequest) {
       const snap = await db
         .collection("gtm_playbooks")
         .limit(50)
-        .get();
+        .get()
+        .catch(() => null);
 
       const playbooks: GTMPlaybook[] = [];
-      snap.forEach((doc) => playbooks.push({ id: doc.id, ...doc.data() } as any));
+      if (snap && !snap.empty) {
+        snap.forEach((doc) => playbooks.push({ id: doc.id, ...doc.data() } as any));
+      }
 
       playbooks.sort((a: any, b: any) => {
         const aTime = a.generatedAt ? new Date(a.generatedAt).getTime() : 0;

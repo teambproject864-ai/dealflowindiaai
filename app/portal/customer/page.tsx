@@ -52,10 +52,14 @@ import { DashboardWidget } from "@/components/portal/DashboardWidget";
 import { DealflowCRMWorkspace } from "@/components/portal/DealflowCRMWorkspace";
 import { AgentAssignmentModule } from "@/components/portal/AgentAssignmentModule";
 import { APIKeyManagementModule } from "@/components/portal/APIKeyManagementModule";
+import { DealflowConnectHub } from "@/components/portal/DealflowConnectHub";
 import { UserCheck, Key } from "lucide-react";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart2, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "dealflow-bot", label: "Dealflow Meeting Bot", icon: Bot, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
+  { id: "whatsapp-alerts", label: "Evolution API WhatsApp Integration", icon: Zap, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "dealflow-connect", label: "Dealflow Connect & Integration Hub", icon: Layers, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
   { id: "content-hub", label: "Content & Workflow Hub", icon: Target, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
   { id: "agent-assignment", label: "Agent Assignment", icon: UserCheck, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
   { id: "api-keys", label: "API Key Vault", icon: Key, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
@@ -69,8 +73,10 @@ const tabs = [
   { id: "feedback", label: "Feedback", icon: Star, color: "text-pink-400 border-pink-500/30 hover:border-pink-500/60 shadow-pink-500/10" },
   { id: "ai-communications", label: "AI Interactions", icon: Phone, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
   { id: "genbi", label: "Chatbot (Wren AI)", icon: Bot, color: "text-fuchsia-400 border-fuchsia-500/30 hover:border-fuchsia-500/60 shadow-fuchsia-500/10" },
+  { id: "kb-search", label: "Knowledge Base & Solutions", icon: Search, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
   { id: "dealflow-crm", label: "Dealflow CRM", icon: Briefcase, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
 ] as const;
+
 
 
 function CustomerPortalContent() {
@@ -321,10 +327,10 @@ function CustomerPortalContent() {
 
       // Fetch AI-generated GTM Playbooks
       try {
-        const playbookRes = await fetch("/api/gtm-playbook");
-        if (playbookRes.ok) {
-          const playbookData = await playbookRes.json();
-          if (playbookData.success && playbookData.playbooks) {
+        const playbookRes = await fetch("/api/gtm-playbook").catch(() => null);
+        if (playbookRes && playbookRes.ok && playbookRes.headers.get("content-type")?.includes("application/json")) {
+          const playbookData = await playbookRes.json().catch(() => null);
+          if (playbookData && playbookData.success && playbookData.playbooks) {
             setGtmPlaybooks(playbookData.playbooks);
             if (!selectedPlaybook && playbookData.playbooks.length > 0) {
               setSelectedPlaybook(playbookData.playbooks[0]);
@@ -2560,12 +2566,110 @@ function CustomerPortalContent() {
           </div>
         )}
 
-        {/* 14. DEALFLOW CRM TAB */}
+        {/* 14. WHATSAPP GATEWAY & REMINDERS TAB */}
+        {activeTab === "whatsapp-alerts" && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+                  <Zap className="h-6 w-6 text-emerald-400" /> Evolution API WhatsApp Gateway &amp; Reminders
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">Configure automated 15-minute meeting reminders, deal status alerts, and post-call MOM dispatches via encrypted WhatsApp messaging.</p>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono font-bold">
+                Role Daily Limit: 20 msgs/day
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <GlassPanel className="p-6 space-y-4 border-slate-800">
+                <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-emerald-400" /> Bound WhatsApp Phone Number
+                </h3>
+                <p className="text-xs text-slate-400">Receive instant encrypted alerts on your mobile device for scheduled meeting bot sessions.</p>
+                <div className="space-y-3">
+                  <Input
+                    placeholder="+1 (555) 019-2831"
+                    defaultValue="+1 (555) 019-2831"
+                    className="bg-slate-950 border-slate-800 text-white font-mono text-xs"
+                  />
+                  <ExtrudedButton size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-xs font-bold">
+                    Save Verified Phone
+                  </ExtrudedButton>
+                </div>
+              </GlassPanel>
+
+              <GlassPanel className="p-6 space-y-4 border-slate-800">
+                <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-teal-400" /> Notification Triggers
+                </h3>
+                <div className="space-y-3 text-xs text-slate-300">
+                  <label className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-850 cursor-pointer">
+                    <span>15-min &amp; 5-min Pre-Meeting Bot Reminders</span>
+                    <input type="checkbox" defaultChecked className="rounded accent-emerald-500" />
+                  </label>
+                  <label className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-850 cursor-pointer">
+                    <span>CRM Deal Stage Progression Updates</span>
+                    <input type="checkbox" defaultChecked className="rounded accent-emerald-500" />
+                  </label>
+                  <label className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-850 cursor-pointer">
+                    <span>Post-Call Minutes of Meeting (MOM) Dispatches</span>
+                    <input type="checkbox" defaultChecked className="rounded accent-emerald-500" />
+                  </label>
+                </div>
+              </GlassPanel>
+            </div>
+          </div>
+        )}
+
+        {/* 15. KNOWLEDGE BASE & SOLUTIONS SEARCH TAB */}
+        {activeTab === "kb-search" && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+                <Search className="h-6 w-6 text-teal-400" /> Interactive Knowledge Base &amp; Solutions
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">Search self-service troubleshooting guides, API integrations, and meeting bot setup walkthroughs.</p>
+            </div>
+
+            <GlassPanel className="p-6 space-y-4 border-slate-800">
+              <Input
+                placeholder="Type a topic or question (e.g. 'How to invite meeting bot to Google Meet')..."
+                className="bg-slate-950 border-slate-800 text-white text-xs"
+              />
+
+              <div className="space-y-3 pt-2">
+                <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-850 space-y-1">
+                  <h4 className="font-bold text-slate-200 text-sm">How do I invite the Dealflow Bot to external Zoom or Google Meet calls?</h4>
+                  <p className="text-xs text-slate-400">Go to the Dealflow Connect &amp; API Hub tab, enter the meeting URL, and click 'Dispatch Bot Now'. You can also download the `.ics` calendar file.</p>
+                </div>
+                <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-850 space-y-1">
+                  <h4 className="font-bold text-slate-200 text-sm">Where do I manage my BYOK API Keys?</h4>
+                  <p className="text-xs text-slate-400">Your API keys are stored in an AES-256 encrypted vault under the API Key Vault tab. You can add, rotate, or mask keys at any time.</p>
+                </div>
+                <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-850 space-y-1">
+                  <h4 className="font-bold text-slate-200 text-sm">How are pre-meeting WhatsApp reminders triggered?</h4>
+                  <p className="text-xs text-slate-400">When a meeting bot session is scheduled, our system automatically schedules 15-minute and 5-minute pre-call reminders to all registered attendee phone numbers via Evolution API.</p>
+                </div>
+              </div>
+            </GlassPanel>
+          </div>
+        )}
+
+        {/* 16. DEALFLOW CRM TAB */}
         {activeTab === "dealflow-crm" && (
           <div className="animate-in fade-in duration-300">
             <DealflowCRMWorkspace userRole="customer" userId={user?.id} />
           </div>
         )}
+
+        {/* 17. DEALFLOW CONNECT & API HUB TAB */}
+        {(activeTab === "dealflow-connect" || activeTab === "api-keys" || activeTab === "dealflow-bot") && (
+          <div className="animate-in fade-in duration-300">
+            <DealflowConnectHub />
+          </div>
+        )}
+
 
       </div>
     </div>

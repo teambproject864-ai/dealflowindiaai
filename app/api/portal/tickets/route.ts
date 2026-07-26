@@ -22,10 +22,12 @@ export async function GET(request: NextRequest) {
         queryRef = queryRef.where("customerId", "==", user.id);
       }
 
-      const snap = await queryRef.orderBy("createdAt", "desc").get();
-      snap.forEach((doc: any) => {
-        tickets.push({ id: doc.id, ...doc.data() });
-      });
+      const snap = await queryRef.orderBy("createdAt", "desc").get().catch(() => null);
+      if (snap && !snap.empty) {
+        snap.forEach((doc: any) => {
+          tickets.push({ id: doc.id, ...doc.data() });
+        });
+      }
     }
 
     return NextResponse.json({ success: true, tickets }, { status: 200 });

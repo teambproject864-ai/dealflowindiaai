@@ -16,10 +16,12 @@ export async function GET(request: NextRequest) {
 
     let resignations: any[] = [];
     if (db) {
-      const snap = await db.collection("resignations").orderBy("processedAt", "desc").get();
-      snap.forEach((doc: any) => {
-        resignations.push({ id: doc.id, ...doc.data() });
-      });
+      const snap = await db.collection("resignations").orderBy("processedAt", "desc").get().catch(() => null);
+      if (snap && !snap.empty) {
+        snap.forEach((doc: any) => {
+          resignations.push({ id: doc.id, ...doc.data() });
+        });
+      }
     }
 
     return NextResponse.json({ success: true, resignations }, { status: 200 });

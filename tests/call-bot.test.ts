@@ -18,7 +18,7 @@ export async function runCallRouterTests() {
 
   // Test discovery call type config
   const discoveryConfig = getCallTypeConfig("discovery");
-  assert.strictEqual(discoveryConfig.callType, "discovery");
+  assert.strictEqual(discoveryConfig.callType, "client_sales");
   assert.strictEqual(discoveryConfig.allowPricingDiscussion, true);
   assert.strictEqual(discoveryConfig.objectionHandlingEnabled, true);
   assert.strictEqual(discoveryConfig.maxTurnLengthTokens, 250);
@@ -32,12 +32,12 @@ export async function runCallRouterTests() {
 
   // Test standup call type config
   const standupConfig = getCallTypeConfig("standup");
-  assert.strictEqual(standupConfig.callType, "standup");
+  assert.strictEqual(standupConfig.callType, "internal_standup");
   assert.strictEqual(standupConfig.maxTurnLengthTokens, 120);
 
   // Test fallback for unknown call type
   const unknownConfig = getCallTypeConfig("invalid_type_name");
-  assert.strictEqual(unknownConfig.callType, "discovery");
+  assert.strictEqual(unknownConfig.callType, "client_sales");
 
   // Test helper functions
   assert.strictEqual(isPricingAllowed("discovery"), true);

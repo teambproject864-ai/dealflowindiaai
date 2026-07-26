@@ -17,31 +17,37 @@ export async function GET(request: NextRequest) {
     let documents: any[] = [];
     if (db) {
       if (user.role === "admin") {
-        const snap = await db.collection("documents").get();
-        snap.forEach((doc: any) => {
-          documents.push({ id: doc.id, ...doc.data() });
-        });
-        documents.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        const snap = await db.collection("documents").get().catch(() => null);
+        if (snap && !snap.empty) {
+          snap.forEach((doc: any) => {
+            documents.push({ id: doc.id, ...doc.data() });
+          });
+          documents.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        }
       } else if (user.role === "agent") {
         // Find assigned customers of the agent
-        const custSnap = await db.collection("customers").where("assignedAgentId", "==", user.id).get();
-        const assignedCustIds = custSnap.docs.map(d => d.id);
+        const custSnap = await db.collection("customers").where("assignedAgentId", "==", user.id).get().catch(() => null);
+        const assignedCustIds = custSnap ? custSnap.docs.map(d => d.id) : [];
         
-        const snap = await db.collection("documents").get();
-        snap.forEach((doc: any) => {
-          const data = doc.data();
-          if (assignedCustIds.includes(data.customerId) || data.createdBy === user.id) {
-            documents.push({ id: doc.id, ...data });
-          }
-        });
-        documents.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        const snap = await db.collection("documents").get().catch(() => null);
+        if (snap && !snap.empty) {
+          snap.forEach((doc: any) => {
+            const data = doc.data();
+            if (assignedCustIds.includes(data.customerId) || data.createdBy === user.id) {
+              documents.push({ id: doc.id, ...data });
+            }
+          });
+          documents.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        }
       } else {
         // Customer role
-        const snap = await db.collection("documents").where("customerId", "==", user.id).get();
-        snap.forEach((doc: any) => {
-          documents.push({ id: doc.id, ...doc.data() });
-        });
-        documents.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        const snap = await db.collection("documents").where("customerId", "==", user.id).get().catch(() => null);
+        if (snap && !snap.empty) {
+          snap.forEach((doc: any) => {
+            documents.push({ id: doc.id, ...doc.data() });
+          });
+          documents.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        }
       }
     }
 

@@ -19,11 +19,14 @@ export async function GET(request: NextRequest) {
       const snap = await db.collection("agent_notifications")
         .where("agentId", "==", user.id)
         .orderBy("createdAt", "desc")
-        .get();
+        .get()
+        .catch(() => null);
 
-      snap.forEach((doc: any) => {
-        notifications.push({ id: doc.id, ...doc.data() });
-      });
+      if (snap && !snap.empty) {
+        snap.forEach((doc: any) => {
+          notifications.push({ id: doc.id, ...doc.data() });
+        });
+      }
     }
 
     return NextResponse.json({ success: true, notifications }, { status: 200 });

@@ -177,7 +177,7 @@ export default function HomePage() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="max-w-3xl text-slate-300 text-base sm:text-lg leading-relaxed mb-10"
         >
-          DealFlow AI deploys collaborative agents with persistent memory directly integrated with your CRM. Reclaim 60% of your sales reps&apos; calendar by automating updates, call dialers, and outreach sequences.
+          DealFlow AI deploys universal meeting bots and collaborative agents with persistent memory directly integrated with your CRM. Reclaim 60% of your sales reps&apos; calendar by automating client calls, team standups, 15-minute MOM emails, and outreach sequences.
         </motion.p>
 
         <motion.div
@@ -259,7 +259,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">Eliminate CRM Drudgery</h3>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  Our Memory OS automatically transcribes sales calls, pulls key deal parameters, and updates Salesforce or HubSpot logs. Save up to 6 hours per week per representative.
+                  Our universal Dealflow Meeting Bot automatically transcribes client check-ins, standups, and onboarding calls, dispatches 15-minute MOM HTML emails, and updates Salesforce or HubSpot CRM logs.
                 </p>
               </div>
               <div className="mt-6 flex flex-wrap gap-2">
@@ -299,7 +299,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">Fleet of Specialized Agents</h3>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  Orchestrate collaborative agents for outreach campaigns, calendar booking management, and pre-meeting dossiers.
+                  Orchestrate the Dealflow Meeting Bot alongside specialized agents for client calls, internal team standups, BYOK API key management, and pre-meeting dossiers.
                 </p>
               </div>
               <div className="mt-6">
@@ -318,7 +318,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">GDPR & Compliance Firewall</h3>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  Enterprise-grade security settings. Every document access is audited, and client data flows are isolated and compliant (SOC 2 Type II audit in progress). Strict role-based layouts prevent unauthorized interactions.
+                  Enterprise-grade security and AES-256 encrypted BYOK API key management. Every meeting access is audited, and client data flows are isolated and compliant (SOC 2 Type II audit in progress).
                 </p>
               </div>
               <div className="mt-6 flex justify-between items-center flex-wrap gap-4 text-[10px] font-mono">
@@ -467,7 +467,7 @@ export default function HomePage() {
             <div className="absolute -top-4 -left-2 text-8xl text-teal-500/10 font-serif select-none pointer-events-none">“</div>
             
             <p className="text-base md:text-lg text-slate-300 italic font-light leading-relaxed mb-8 relative z-10">
-              &quot;DealFlow AI transformed our sales development. We automated CRM updates completely, and the self-learning email sequences bumped our meeting booking rate by 38% in the first month alone.&quot;
+              &quot;DealFlow AI transformed our revenue operations. The universal Dealflow Meeting Bot handles client calls and dispatches 15-minute MOM emails automatically, driving over 91% alignment on deal action execution.&quot;
             </p>
             <div className="relative z-10">
               <strong className="text-white text-sm block tracking-wide">Sarah Jenkins</strong>

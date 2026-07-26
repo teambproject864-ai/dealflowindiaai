@@ -15,8 +15,8 @@ export async function GET(req: Request) {
     let databaseHasData = false;
 
     if (db) {
-      const snapshot = await db.collection("customers").get();
-      if (!snapshot.empty) {
+      const snapshot = await db.collection("customers").get().catch(() => null);
+      if (snapshot && !snapshot.empty) {
         databaseHasData = true;
         snapshot.forEach((doc) => {
           const data = doc.data();

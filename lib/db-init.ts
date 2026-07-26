@@ -132,8 +132,8 @@ export async function seedFirestore() {
     console.log("[db-init] Default users validation complete.");
 
     // 2. Seed customers collection
-    const customersSnap = await db.collection("customers").limit(1).get();
-    if (customersSnap.empty) {
+    const customersSnap = await db.collection("customers").limit(1).get().catch(() => null);
+    if (customersSnap?.empty) {
       console.log("[db-init] Seeding customers collection...");
       const defaultCustomers = [
         {
@@ -211,8 +211,8 @@ export async function seedFirestore() {
     }
 
     // 3. Seed tasks collection
-    const tasksSnap = await db.collection("tasks").limit(1).get();
-    if (tasksSnap.empty) {
+    const tasksSnap = await db.collection("tasks").limit(1).get().catch(() => null);
+    if (tasksSnap?.empty) {
       console.log("[db-init] Seeding tasks collection...");
       const defaultTasks = [
         {
@@ -273,8 +273,8 @@ export async function seedFirestore() {
     }
 
     // 4. Seed documents collection
-    const docsSnap = await db.collection("documents").limit(1).get();
-    if (docsSnap.empty) {
+    const docsSnap = await db.collection("documents").limit(1).get().catch(() => null);
+    if (docsSnap?.empty) {
       console.log("[db-init] Seeding documents collection...");
       const defaultDocs = [
         {
@@ -339,8 +339,8 @@ export async function seedFirestore() {
     }
 
     // 5. Seed gtm_reports collection
-    const reportsSnap = await db.collection("gtm_reports").limit(1).get();
-    if (reportsSnap.empty) {
+    const reportsSnap = await db.collection("gtm_reports").limit(1).get().catch(() => null);
+    if (reportsSnap?.empty) {
       console.log("[db-init] Seeding gtm_reports collection...");
       const defaultReports = [
         {
@@ -348,13 +348,6 @@ export async function seedFirestore() {
           customerId: "customer-demo",
           reportName: "North America Expansion Blueprint",
           category: "Market Expansion",
-          status: "active",
-          region: "North America",
-          segment: "Enterprise",
-          revenue: 125000,
-          conversionRate: 2.4,
-          cac: 450,
-          ltv: 2200,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -382,8 +375,8 @@ export async function seedFirestore() {
     }
 
     // 6. Seed requirements collection
-    const reqsSnap = await db.collection("requirements").limit(1).get();
-    if (reqsSnap.empty) {
+    const reqsSnap = await db.collection("requirements").limit(1).get().catch(() => null);
+    if (reqsSnap?.empty) {
       console.log("[db-init] Seeding requirements collection...");
       const defaultReqs = [
         {
@@ -425,8 +418,8 @@ export async function seedFirestore() {
     }
 
     // 7. Seed resignations collection
-    const resignationsSnap = await db.collection("resignations").limit(1).get();
-    if (resignationsSnap.empty) {
+    const resignationsSnap = await db.collection("resignations").limit(1).get().catch(() => null);
+    if (resignationsSnap?.empty) {
       console.log("[db-init] Seeding resignations collection...");
       const defaultResignations = [
         {
@@ -451,8 +444,8 @@ export async function seedFirestore() {
     }
 
     // 8. Seed tickets collection
-    const ticketsSnap = await db.collection("tickets").limit(1).get();
-    if (ticketsSnap.empty) {
+    const ticketsSnap = await db.collection("tickets").limit(1).get().catch(() => null);
+    if (ticketsSnap?.empty) {
       console.log("[db-init] Seeding tickets collection...");
       const defaultTickets = [
         {
@@ -477,8 +470,8 @@ export async function seedFirestore() {
     }
 
     // 9. Seed calls collection
-    const callsSnap = await db.collection("calls").limit(1).get();
-    if (callsSnap.empty) {
+    const callsSnap = await db.collection("calls").limit(1).get().catch(() => null);
+    if (callsSnap?.empty) {
       console.log("[db-init] Seeding calls collection...");
       const defaultCalls = [
         {
@@ -504,8 +497,8 @@ export async function seedFirestore() {
     }
 
     // 10. Seed feedback collection
-    const feedbackSnap = await db.collection("feedback").limit(1).get();
-    if (feedbackSnap.empty) {
+    const feedbackSnap = await db.collection("feedback").limit(1).get().catch(() => null);
+    if (feedbackSnap?.empty) {
       console.log("[db-init] Seeding feedback collection...");
       const defaultFeedback = [
         {
@@ -526,8 +519,8 @@ export async function seedFirestore() {
     }
 
     // 11. Seed chat messages collection
-    const chatSnap = await db.collection("chat_messages").limit(1).get();
-    if (chatSnap.empty) {
+    const chatSnap = await db.collection("chat_messages").limit(1).get().catch(() => null);
+    if (chatSnap?.empty) {
       console.log("[db-init] Seeding chat_messages collection...");
       const defaultMessages = [
         {
@@ -570,8 +563,8 @@ export async function seedFirestore() {
     }
 
     // 12. Seed content_assets collection
-    const contentSnap = await db.collection("content_assets").limit(1).get();
-    if (contentSnap.empty) {
+    const contentSnap = await db.collection("content_assets").limit(1).get().catch(() => null);
+    if (contentSnap?.empty) {
       console.log("[db-init] Seeding content_assets collection...");
       
       const tacticsList = [

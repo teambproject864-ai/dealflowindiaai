@@ -192,8 +192,8 @@ export function validateCRMRecord(type: "customer" | "company" | "deal", data: a
  */
 export async function getCRMCompanies(): Promise<CRMCompany[]> {
   try {
-    if (db) {
-      const snap = await db.collection("crm_companies")?.get();
+    if (db && process.env.DISABLE_FIRESTORE !== "true") {
+      const snap = await db.collection("crm_companies")?.get().catch(() => null);
       if (snap && !snap.empty) {
         const list: CRMCompany[] = [];
         snap.forEach(doc => list.push({ id: doc.id, ...doc.data() } as CRMCompany));
@@ -203,6 +203,9 @@ export async function getCRMCompanies(): Promise<CRMCompany[]> {
   } catch (e) {
     console.warn("[CRMStore] Firestore read error, using memory fallback:", e);
   }
+  if (inMemoryCompanies.size === 0) {
+    SEED_COMPANIES.forEach(c => inMemoryCompanies.set(c.id, c));
+  }
   return Array.from(inMemoryCompanies.values());
 }
 
@@ -211,8 +214,8 @@ export async function getCRMCompanies(): Promise<CRMCompany[]> {
  */
 export async function getCRMCustomers(): Promise<CRMCustomer[]> {
   try {
-    if (db) {
-      const snap = await db.collection("crm_customers")?.get();
+    if (db && process.env.DISABLE_FIRESTORE !== "true") {
+      const snap = await db.collection("crm_customers")?.get().catch(() => null);
       if (snap && !snap.empty) {
         const list: CRMCustomer[] = [];
         snap.forEach(doc => list.push({ id: doc.id, ...doc.data() } as CRMCustomer));
@@ -222,6 +225,9 @@ export async function getCRMCustomers(): Promise<CRMCustomer[]> {
   } catch (e) {
     console.warn("[CRMStore] Firestore read error, using memory fallback:", e);
   }
+  if (inMemoryCustomers.size === 0) {
+    SEED_CUSTOMERS.forEach(c => inMemoryCustomers.set(c.id, c));
+  }
   return Array.from(inMemoryCustomers.values());
 }
 
@@ -230,8 +236,8 @@ export async function getCRMCustomers(): Promise<CRMCustomer[]> {
  */
 export async function getCRMDeals(): Promise<CRMDeal[]> {
   try {
-    if (db) {
-      const snap = await db.collection("crm_deals")?.get();
+    if (db && process.env.DISABLE_FIRESTORE !== "true") {
+      const snap = await db.collection("crm_deals")?.get().catch(() => null);
       if (snap && !snap.empty) {
         const list: CRMDeal[] = [];
         snap.forEach(doc => list.push({ id: doc.id, ...doc.data() } as CRMDeal));
@@ -240,6 +246,9 @@ export async function getCRMDeals(): Promise<CRMDeal[]> {
     }
   } catch (e) {
     console.warn("[CRMStore] Firestore read error, using memory fallback:", e);
+  }
+  if (inMemoryDeals.size === 0) {
+    SEED_DEALS.forEach(d => inMemoryDeals.set(d.id, d));
   }
   return Array.from(inMemoryDeals.values());
 }
@@ -446,5 +455,23 @@ export async function searchCRMRecords(options: CRMFilterOptions = {}) {
       totalDeals: filteredDeals.length,
       totalPipelineValue
     }
+  };
+}
+
+/**
+ * Get Aggregated CRM Record Statistics
+ */
+export async function getCRMRecordStats() {
+  const result = await searchCRMRecords();
+  const closedWonValue = result.deals
+    .filter(d => d.stage === "closed-won")
+    .reduce((sum, d) => sum + (d.amount || 0), 0);
+
+  return {
+    totalCustomers: result.metrics.totalCustomers,
+    totalCompanies: result.metrics.totalCompanies,
+    totalDeals: result.metrics.totalDeals,
+    totalPipelineValue: result.metrics.totalPipelineValue,
+    closedWonValue,
   };
 }

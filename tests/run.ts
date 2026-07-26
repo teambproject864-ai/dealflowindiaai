@@ -45,6 +45,11 @@ import { runDeliverableStudioTests } from "./deliverable-studio.test";
 import { runComprehensiveE2ETestSuite } from "./comprehensive-e2e-suite.test";
 import { runCallBotTestSuite } from "./call-bot.test";
 import { runProductionLiveE2ETestSuite } from "./live-production-e2e.test";
+import { runDealflowMeetingBotTests } from "./dealflow-meeting-bot.test";
+import { runCustomerIntegrationHubSecurityTests } from "./customer-integration-hub-security.test";
+import { runCrossPortalFeaturesTestSuite } from "./cross-portal-features.test";
+import { runPortalRedesignTestSuite } from "./portal-redesign.test";
+
 
 
 
@@ -338,8 +343,13 @@ async function main() {
     runDeliverableStudioTests,
     runComprehensiveE2ETestSuite,
     runCallBotTestSuite,
-    runProductionLiveE2ETestSuite
+    runProductionLiveE2ETestSuite,
+    runDealflowMeetingBotTests,
+    runCustomerIntegrationHubSecurityTests,
+    runCrossPortalFeaturesTestSuite,
+    runPortalRedesignTestSuite
   ];
+
 
 
 

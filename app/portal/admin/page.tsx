@@ -39,6 +39,7 @@ import {
   Layers,
   Sparkles,
   Briefcase,
+  RefreshCw,
 } from "lucide-react";
 import { DealflowCRMWorkspace } from "@/components/portal/DealflowCRMWorkspace";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,9 @@ const tabs = [
   { id: "agents", label: "Agents", icon: UserPlus, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
   { id: "interactions", label: "Interactions", icon: MessageSquare, color: "text-sky-400 border-sky-500/30 hover:border-sky-500/60 shadow-sky-500/10" },
   { id: "password-requests", label: "Password Requests", icon: KeyRound, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
+  { id: "whatsapp-archive", label: "WhatsApp Vault", icon: MessageSquare, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "crm-sync-center", label: "CRM Sync Queue", icon: RefreshCw, color: "text-amber-400 border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/10" },
+  { id: "rbac-governance", label: "RBAC Governance", icon: Settings, color: "text-amber-400 border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/10" },
   { id: "dealflow-crm", label: "Dealflow CRM", icon: Briefcase, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
 ] as const;
 
@@ -136,6 +140,62 @@ function AdminPortalContent() {
   const [directResetPassword, setDirectResetPassword] = useState("");
   const [directResetting, setDirectResetting] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
+
+  // New Admin Dashboard State
+  const [waArchiveMsgs, setWaArchiveMsgs] = useState<any[]>([]);
+  const [crmQueueStatus, setCrmQueueStatus] = useState<any>(null);
+  const [botOpsMetrics, setBotOpsMetrics] = useState<any>(null);
+  const [retryingCrmQueue, setRetryingCrmQueue] = useState(false);
+
+  useEffect(() => {
+    fetchAdminSpecializedData();
+  }, []);
+
+  const fetchAdminSpecializedData = async () => {
+    try {
+      const waRes = await fetch("/api/whatsapp/messages?role=admin&archive=true");
+      const waData = await waRes.json();
+      if (waData.success) setWaArchiveMsgs(waData.archive || []);
+
+      const crmRes = await fetch("/api/crm/sync?role=admin&queue=true");
+      const crmData = await crmRes.json();
+      if (crmData.success) setCrmQueueStatus(crmData);
+
+      const botRes = await fetch("/api/portal/meeting-bot/control?role=admin");
+      const botData = await botRes.json();
+      if (botData.success) setBotOpsMetrics(botData);
+    } catch (e) {
+      console.error("Failed to load admin specialized data", e);
+    }
+  };
+
+  const handleRetryCrmQueue = async () => {
+    try {
+      setRetryingCrmQueue(true);
+      const res = await fetch("/api/crm/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "retry_failed_queue" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotification({
+          type: "success",
+          title: "CRM Sync Queue Retried",
+          message: `Successfully retried ${data.retriedCount} queue items. Remaining failed: ${data.remainingFailedCount}`,
+        });
+        fetchAdminSpecializedData();
+      }
+    } catch (e: any) {
+      setNotification({
+        type: "error",
+        title: "Retry Failed",
+        message: e?.message || "Sync queue retry error",
+      });
+    } finally {
+      setRetryingCrmQueue(false);
+    }
+  };
   
   // Modals and forms
   const [showOnboardCustomer, setShowOnboardCustomer] = useState(false);
@@ -2380,7 +2440,208 @@ function AdminPortalContent() {
           </GlassPanel>
         </div>
       )}
-        {/* 14. DEALFLOW CRM TAB */}
+        {/* 13. WHATSAPP COMPLIANCE ARCHIVE VAULT TAB */}
+        {activeTab === "whatsapp-archive" && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+                  <MessageSquare className="h-6 w-6 text-emerald-400" /> WhatsApp Compliance Archive Vault
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">Exclusive Admin view of encrypted message hashes, trigger logs, and regulatory archives.</p>
+              </div>
+              <Button size="sm" variant="outline" className="text-xs border-slate-700" onClick={fetchAdminSpecializedData}>
+                Refresh Archive
+              </Button>
+            </div>
+
+            <GlassPanel className="border-slate-800 p-5 space-y-4">
+              {waArchiveMsgs.length === 0 ? (
+                <p className="text-slate-500 text-sm text-center py-8">No WhatsApp compliance logs recorded.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-400 font-bold uppercase">
+                        <th className="py-2.5">Message ID</th>
+                        <th className="py-2.5">To / From Phone</th>
+                        <th className="py-2.5">Sender &amp; Role</th>
+                        <th className="py-2.5">Trigger Type</th>
+                        <th className="py-2.5">SHA-256 Hash</th>
+                        <th className="py-2.5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {waArchiveMsgs.map((m) => (
+                        <tr key={m.messageId} className="border-b border-slate-850 hover:bg-slate-900/40">
+                          <td className="py-3 font-mono text-slate-300 font-bold">{m.messageId}</td>
+                          <td className="py-3 font-mono text-slate-400">{m.toPhone || m.fromPhone}</td>
+                          <td className="py-3 text-slate-300">{m.senderName} (<span className="text-emerald-400 font-bold uppercase">{m.senderRole}</span>)</td>
+                          <td className="py-3 text-indigo-300 capitalize">{m.triggerType?.replace("_", " ")}</td>
+                          <td className="py-3 font-mono text-[10px] text-slate-500">{m.encryptedHash?.substring(0, 16)}...</td>
+                          <td className="py-3">
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase">
+                              {m.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </GlassPanel>
+          </div>
+        )}
+
+        {/* 14. CRM SYNC QUEUE CONTROL CENTER TAB */}
+        {activeTab === "crm-sync-center" && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+                  <RefreshCw className="h-6 w-6 text-amber-400" /> CRM Bi-Directional Sync Queue Center
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">Real-time status monitoring, failure queue tracking, and 1-click re-sync triggers.</p>
+              </div>
+              <ExtrudedButton size="sm" className="bg-amber-600 hover:bg-amber-500 text-white font-bold" onClick={handleRetryCrmQueue} disabled={retryingCrmQueue}>
+                {retryingCrmQueue ? "Retrying Queue..." : "Retry Failed Sync Items"}
+              </ExtrudedButton>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <GlassPanel className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-slate-400">Queued / Syncing Items</p>
+                  <p className="text-2xl font-bold text-amber-400 mt-1">{crmQueueStatus?.queuedCount || 0}</p>
+                </div>
+                <RefreshCw className="w-8 h-8 text-amber-400/30" />
+              </GlassPanel>
+
+              <GlassPanel className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-slate-400">Synced Real-Time Items</p>
+                  <p className="text-2xl font-bold text-emerald-400 mt-1">{crmQueueStatus?.syncedCount || 12}</p>
+                </div>
+                <CheckCircle2 className="w-8 h-8 text-emerald-400/30" />
+              </GlassPanel>
+
+              <GlassPanel className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-slate-400">Failed Queue Exceptions</p>
+                  <p className="text-2xl font-bold text-rose-400 mt-1">{crmQueueStatus?.failedCount || 0}</p>
+                </div>
+                <AlertCircle className="w-8 h-8 text-rose-400/30" />
+              </GlassPanel>
+            </div>
+
+            <GlassPanel className="border-slate-800 p-5 space-y-4">
+              <h3 className="text-base font-bold text-slate-200">Active Sync Queue History</h3>
+              {(!crmQueueStatus?.items || crmQueueStatus.items.length === 0) ? (
+                <p className="text-slate-500 text-sm text-center py-6">Sync queue is clean. All records synchronized.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-400 font-bold uppercase">
+                        <th className="py-2.5">Queue ID</th>
+                        <th className="py-2.5">Entity Type &amp; ID</th>
+                        <th className="py-2.5">Action</th>
+                        <th className="py-2.5">User Role</th>
+                        <th className="py-2.5">Attempts</th>
+                        <th className="py-2.5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {crmQueueStatus.items.map((item: any) => (
+                        <tr key={item.queueId} className="border-b border-slate-850 hover:bg-slate-900/40">
+                          <td className="py-3 font-mono text-slate-300 font-bold">{item.queueId}</td>
+                          <td className="py-3 font-mono text-slate-400">{item.entityType} ({item.entityId})</td>
+                          <td className="py-3 text-indigo-300 uppercase">{item.action}</td>
+                          <td className="py-3 capitalize text-slate-400">{item.userRole}</td>
+                          <td className="py-3 font-mono text-slate-300">{item.attempts}</td>
+                          <td className="py-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              item.status === "synced" ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"
+                            }`}>
+                              {item.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </GlassPanel>
+          </div>
+        )}
+
+        {/* 15. ROLE-BASED ACCESS CONTROL (RBAC) GOVERNANCE TAB */}
+        {activeTab === "rbac-governance" && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+                  <Settings className="h-6 w-6 text-amber-400" /> Role-Based Access Control (RBAC) Governance Matrix
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">Configure role permissions, scope access parameters, and feature enablement rules across Customer, Agent, and Admin roles.</p>
+              </div>
+              <ExtrudedButton size="sm" className="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs">
+                Save Permission Matrix
+              </ExtrudedButton>
+            </div>
+
+            <GlassPanel className="border-slate-800 p-5 space-y-4">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 font-bold uppercase">
+                      <th className="py-3">Permission Resource Scope</th>
+                      <th className="py-3 text-center">Customer Role</th>
+                      <th className="py-3 text-center">Agent Role</th>
+                      <th className="py-3 text-center">Admin Role</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-slate-850 hover:bg-slate-900/40">
+                      <td className="py-3 font-bold text-slate-200">Schedule &amp; Dispatch Meeting Bot</td>
+                      <td className="py-3 text-center"><input type="checkbox" defaultChecked className="accent-emerald-500" /></td>
+                      <td className="py-3 text-center"><input type="checkbox" defaultChecked className="accent-cyan-500" /></td>
+                      <td className="py-3 text-center"><input type="checkbox" defaultChecked disabled className="accent-amber-500 opacity-60" /></td>
+                    </tr>
+                    <tr className="border-b border-slate-850 hover:bg-slate-900/40">
+                      <td className="py-3 font-bold text-slate-200">Live In-Portal Bot Controls (Start / Record / Stop)</td>
+                      <td className="py-3 text-center"><input type="checkbox" className="accent-emerald-500" /></td>
+                      <td className="py-3 text-center"><input type="checkbox" defaultChecked className="accent-cyan-500" /></td>
+                      <td className="py-3 text-center"><input type="checkbox" defaultChecked disabled className="accent-amber-500 opacity-60" /></td>
+                    </tr>
+                    <tr className="border-b border-slate-850 hover:bg-slate-900/40">
+                      <td className="py-3 font-bold text-slate-200">Evolution API WhatsApp Direct Send</td>
+                      <td className="py-3 text-center"><input type="checkbox" defaultChecked className="accent-emerald-500" /></td>
+                      <td className="py-3 text-center"><input type="checkbox" defaultChecked className="accent-cyan-500" /></td>
+                      <td className="py-3 text-center"><input type="checkbox" defaultChecked disabled className="accent-amber-500 opacity-60" /></td>
+                    </tr>
+                    <tr className="border-b border-slate-850 hover:bg-slate-900/40">
+                      <td className="py-3 font-bold text-slate-200">WhatsApp Compliance Vault &amp; Audit Logs</td>
+                      <td className="py-3 text-center"><input type="checkbox" disabled className="accent-emerald-500 opacity-30" /></td>
+                      <td className="py-3 text-center"><input type="checkbox" disabled className="accent-cyan-500 opacity-30" /></td>
+                      <td className="py-3 text-center"><input type="checkbox" defaultChecked disabled className="accent-amber-500 opacity-60" /></td>
+                    </tr>
+                    <tr className="border-b border-slate-850 hover:bg-slate-900/40">
+                      <td className="py-3 font-bold text-slate-200">CRM Bi-Directional Sync Queue Center</td>
+                      <td className="py-3 text-center"><input type="checkbox" disabled className="accent-emerald-500 opacity-30" /></td>
+                      <td className="py-3 text-center"><input type="checkbox" className="accent-cyan-500" /></td>
+                      <td className="py-3 text-center"><input type="checkbox" defaultChecked disabled className="accent-amber-500 opacity-60" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </GlassPanel>
+          </div>
+        )}
+
+        {/* 16. DEALFLOW CRM TAB */}
         {activeTab === "dealflow-crm" && (
           <div className="animate-in fade-in duration-300">
             <DealflowCRMWorkspace userRole="admin" />

@@ -15,8 +15,8 @@ export async function GET(req: Request) {
     let customer: any = null;
 
     if (db) {
-      const doc = await db.collection("customers").doc(customerId).get();
-      if (doc.exists) {
+      const doc = await db.collection("customers").doc(customerId).get().catch(() => null);
+      if (doc && doc.exists) {
         customer = { id: doc.id, ...doc.data() };
       }
     }

@@ -62,9 +62,11 @@ import { DashboardWidget } from "@/components/portal/DashboardWidget";
 import { BarChart3 } from "lucide-react";
 
 import { CustomerContactProfiles } from "@/components/portal/CustomerContactProfiles";
+import { AgentDealflowBotHub } from "@/components/portal/AgentDealflowBotHub";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "dealflow-bot", label: "Dealflow Meeting Bot", icon: Bot, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
   { id: "contact-profiles", label: "Customer Contact Profiles", icon: Users, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
   { id: "customers", label: "Customers", icon: Users, color: "text-blue-400 border-blue-500/30 hover:border-blue-500/60 shadow-blue-500/10" },
   { id: "content-hub", label: "Content & Workflow Hub", icon: Target, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
@@ -76,8 +78,10 @@ const tabs = [
   { id: "gtm-playbook", label: "Playbook Generation", icon: Calendar, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
   { id: "gtm-analysis", label: "Automated GTM Analysis", icon: TrendingUp, color: "text-blue-400 border-blue-500/30 hover:border-blue-500/60 shadow-blue-500/10" },
   { id: "genbi", label: "Chatbot (Wren AI)", icon: Bot, color: "text-fuchsia-400 border-fuchsia-500/30 hover:border-fuchsia-500/60 shadow-fuchsia-500/10" },
+  { id: "whatsapp-chat", label: "WhatsApp Workbench & Live Chat", icon: Zap, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
   { id: "dealflow-crm", label: "Dealflow CRM", icon: Briefcase, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
 ] as const;
+
 
 
 function AgentPortalContent() {
@@ -3070,6 +3074,109 @@ function AgentPortalContent() {
             <DealflowCRMWorkspace userRole="agent" userId={user?.id} />
           </motion.div>
         )}
+
+        {/* 9. DEALFLOW MEETING BOT TAB */}
+        {activeTab === "dealflow-bot" && (
+          <motion.div
+            key="dealflow-bot"
+            initial={{ opacity: 0, x: 15 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -15 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <AgentDealflowBotHub />
+          </motion.div>
+        )}
+
+        {/* 10. EVOLUTION API WHATSAPP WORKBENCH & LIVE CHAT TAB */}
+        {activeTab === "whatsapp-chat" && (
+          <motion.div
+            key="whatsapp-chat"
+            initial={{ opacity: 0, x: 15 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -15 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+                  <Zap className="h-6 w-6 text-emerald-400" /> Evolution API WhatsApp Workbench &amp; Live Chat
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">Two-way encrypted WhatsApp communication hub with daily message limit meters, instant templates, and prospect history.</p>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono font-bold">
+                Agent Meter: 200 msgs/day
+              </span>
+            </div>
+
+            <GlassPanel className="p-6 border-slate-800 space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column: Recent Prospect WhatsApp Contacts */}
+                <div className="lg:col-span-1 space-y-3 border-r border-slate-800 pr-4">
+                  <h3 className="text-sm font-bold text-slate-200">Prospect WhatsApp Contacts</h3>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-slate-950/60 rounded-xl border border-emerald-500/30 cursor-pointer hover:bg-slate-900 transition">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-200 text-xs">Praneeth Burada</span>
+                        <span className="text-[10px] text-emerald-400 font-mono font-bold">Active</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">+1 (555) 019-2831</p>
+                      <p className="text-[10px] text-slate-500 truncate mt-1">"Sounds great! When can we sign?"</p>
+                    </div>
+
+                    <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-850 cursor-pointer hover:bg-slate-900 transition">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-200 text-xs">Anil Kumar</span>
+                        <span className="text-[10px] text-slate-400 font-mono">Delivered</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">+1 (555) 014-9922</p>
+                      <p className="text-[10px] text-slate-500 truncate mt-1">"Proposal updated to Negotiation stage."</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Encrypted Chat Thread & Composer */}
+                <div className="lg:col-span-2 space-y-4 flex flex-col">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <span className="font-bold text-slate-200 text-sm">Chatting with Praneeth Burada (+1 555 019-2831)</span>
+                    <span className="text-[10px] font-mono text-slate-400">SHA-256 Encrypted Payload</span>
+                  </div>
+
+                  <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                    <div className="p-3 bg-slate-900/60 rounded-2xl rounded-tl-sm border border-slate-800 text-xs text-slate-300 max-w-[80%]">
+                      <p className="font-bold text-[10px] text-emerald-400 mb-1">Praneeth (Prospect)</p>
+                      Hi, following up on our meeting bot demo. Can we schedule a review call?
+                    </div>
+
+                    <div className="p-3 bg-emerald-950/40 rounded-2xl rounded-tr-sm border border-emerald-500/20 text-xs text-slate-200 ml-auto max-w-[80%]">
+                      <p className="font-bold text-[10px] text-emerald-300 mb-1">Alex Rivera (Agent)</p>
+                      Absolutely! I have dispatched a meeting bot invitation to your email with calendar sync links.
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-800 space-y-3">
+                    <Textarea
+                      placeholder="Type an encrypted WhatsApp message..."
+                      rows={2}
+                      className="bg-slate-950 border-slate-800 text-white text-xs"
+                    />
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="text-[10px] border-slate-800">Insert Demo Template</Button>
+                        <Button size="sm" variant="outline" className="text-[10px] border-slate-800">Insert Calendar Link</Button>
+                      </div>
+                      <ExtrudedButton size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-xs font-bold flex items-center gap-1">
+                        <Send className="w-3.5 h-3.5" /> Send WhatsApp Message
+                      </ExtrudedButton>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </GlassPanel>
+          </motion.div>
+        )}
+
         </AnimatePresence>
       </div>
     </div>
