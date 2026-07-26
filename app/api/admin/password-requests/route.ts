@@ -16,14 +16,17 @@ export async function GET(req: Request) {
       const snapshot = await db
         .collection("password_resets")
         .orderBy("createdAt", "desc")
-        .get();
+        .get()
+        .catch(() => null);
 
-      snapshot.forEach((doc) => {
-        requests.push({
-          id: doc.id,
-          ...doc.data(),
+      if (snapshot && !snapshot.empty) {
+        snapshot.forEach((doc) => {
+          requests.push({
+            id: doc.id,
+            ...doc.data(),
+          });
         });
-      });
+      }
     }
 
     return NextResponse.json({ success: true, requests });

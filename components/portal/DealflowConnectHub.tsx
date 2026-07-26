@@ -73,6 +73,7 @@ export function DealflowConnectHub() {
     fetchInvites();
     fetchTrainingConfig();
     fetchPersonalDeals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const safeFetchJson = async (url: string, init?: RequestInit) => {

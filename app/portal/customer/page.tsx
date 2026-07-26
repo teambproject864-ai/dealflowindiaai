@@ -2641,7 +2641,7 @@ function CustomerPortalContent() {
               <div className="space-y-3 pt-2">
                 <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-850 space-y-1">
                   <h4 className="font-bold text-slate-200 text-sm">How do I invite the Dealflow Bot to external Zoom or Google Meet calls?</h4>
-                  <p className="text-xs text-slate-400">Go to the Dealflow Connect &amp; API Hub tab, enter the meeting URL, and click 'Dispatch Bot Now'. You can also download the `.ics` calendar file.</p>
+                  <p className="text-xs text-slate-400">Go to the Dealflow Connect &amp; API Hub tab, enter the meeting URL, and click &apos;Dispatch Bot Now&apos;. You can also download the `.ics` calendar file.</p>
                 </div>
                 <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-850 space-y-1">
                   <h4 className="font-bold text-slate-200 text-sm">Where do I manage my BYOK API Keys?</h4>

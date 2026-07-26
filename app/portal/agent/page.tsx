@@ -3122,7 +3122,7 @@ function AgentPortalContent() {
                         <span className="text-[10px] text-emerald-400 font-mono font-bold">Active</span>
                       </div>
                       <p className="text-[11px] text-slate-400 mt-0.5">+1 (555) 019-2831</p>
-                      <p className="text-[10px] text-slate-500 truncate mt-1">"Sounds great! When can we sign?"</p>
+                      <p className="text-[10px] text-slate-500 truncate mt-1">&quot;Sounds great! When can we sign?&quot;</p>
                     </div>
 
                     <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-850 cursor-pointer hover:bg-slate-900 transition">
@@ -3131,7 +3131,7 @@ function AgentPortalContent() {
                         <span className="text-[10px] text-slate-400 font-mono">Delivered</span>
                       </div>
                       <p className="text-[11px] text-slate-400 mt-0.5">+1 (555) 014-9922</p>
-                      <p className="text-[10px] text-slate-500 truncate mt-1">"Proposal updated to Negotiation stage."</p>
+                      <p className="text-[10px] text-slate-500 truncate mt-1">&quot;Proposal updated to Negotiation stage.&quot;</p>
                     </div>
                   </div>
                 </div>
