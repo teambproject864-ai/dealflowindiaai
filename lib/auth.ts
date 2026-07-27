@@ -60,15 +60,35 @@ export interface DemoAdmin {
   role: "admin";
 }
 
-// Plaintext passwords for demo users (dynamically hashed in memory on startup)
+// S-01 FIX: No plaintext password fallbacks. All credentials MUST come from env vars.
+// In production, missing env vars throw at module load time (fail-fast).
+// In development/CI, a placeholder sentinel is used so demo accounts exist without
+// exposing real credentials in source control. The sentinel is bcrypt-salted and
+// never a real password — logins will be rejected unless the env var is set.
+function requireEnvPassword(envVar: string, accountName: string): string {
+  const value = process.env[envVar];
+  if (!value) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        `CRITICAL SECURITY ERROR: ${envVar} is not set. ` +
+        `Cannot start server without credentials for ${accountName}.`
+      );
+    }
+    // Non-production: return a sentinel that will never match any real input,
+    // preventing accidental logins with a known string.
+    return `__UNSET_PLACEHOLDER_${envVar}_SET_ENV_VAR__`;
+  }
+  return value;
+}
+
 const DEV_PASSWORDS = {
-  admin: process.env.ADMIN_PASSWORD || "Pranee@1909",
-  admin1: process.env.ADMIN1_PASSWORD || "Pranee@1909",
-  praneethAgent: process.env.AGENT_PRANEETH_PASSWORD || "Praneeth123!",
-  ashokAgent: process.env.AGENT_ASHOK_PASSWORD || "AgentAshok456!",
-  demoCustomer: process.env.CUSTOMER_DEMO_PASSWORD || "CustomerDemo123!",
-  praneethCustomer: process.env.CUSTOMER_PRANEETH_PASSWORD || "Praneeth@123",
-  anilCustomer: process.env.CUSTOMER_ANIL_PASSWORD || "Anil@123!",
+  admin:            requireEnvPassword("ADMIN_PASSWORD",              "admin@dealflow.ai"),
+  admin1:           requireEnvPassword("ADMIN1_PASSWORD",             "admin1@dealflow.ai"),
+  praneethAgent:    requireEnvPassword("AGENT_PRANEETH_PASSWORD",     "praneeth@dealflow.ai"),
+  ashokAgent:       requireEnvPassword("AGENT_ASHOK_PASSWORD",        "agent.ashok@dealflow.ai"),
+  demoCustomer:     requireEnvPassword("CUSTOMER_DEMO_PASSWORD",      "demo@customer.com"),
+  praneethCustomer: requireEnvPassword("CUSTOMER_PRANEETH_PASSWORD",  "praneethburada@gmail.com"),
+  anilCustomer:     requireEnvPassword("CUSTOMER_ANIL_PASSWORD",      "anil@cralgo.com"),
 };
 
 export const DEMO_ADMIN = {

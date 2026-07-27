@@ -13,7 +13,7 @@ export default function GoToMarketAssessmentPage() {
         <div className="mb-12">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-[#24252a] bg-[#111219]/40 text-[#9f9f93] hover:text-white hover:bg-[#16181f] transition-all duration-300 mb-6"
+            className="inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-[#24252a] bg-[#111219]/40 text-slate-400 hover:text-white hover:bg-[#16181f] transition-all duration-300 mb-6"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Home
@@ -25,7 +25,7 @@ export default function GoToMarketAssessmentPage() {
           <h1 className="font-display text-4xl sm:text-5xl font-light text-white leading-tight mb-4">
             Transform Your GTM Strategy with AI
           </h1>
-          <p className="text-[#9f9f93] text-base sm:text-lg max-w-2xl leading-relaxed font-light">
+          <p className="text-slate-400 text-base sm:text-lg max-w-2xl leading-relaxed font-light">
             Complete our comprehensive assessment to unlock personalized AI-powered recommendations for your ideal customer profile, outreach sequences, and go-to-market roadmap.
           </p>
         </div>
@@ -63,7 +63,7 @@ export default function GoToMarketAssessmentPage() {
                   </div>
                   <div>
                     <h4 className="font-display text-base font-medium text-white mb-1">{benefit.title}</h4>
-                    <p className="text-sm text-[#9f9f93] leading-relaxed font-light">{benefit.description}</p>
+                    <p className="text-sm text-slate-400 leading-relaxed font-light">{benefit.description}</p>
                   </div>
                 </div>
               ))}
@@ -74,19 +74,19 @@ export default function GoToMarketAssessmentPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <p className="text-3xl font-display text-[#d4a017] font-light">10x</p>
-                  <p className="text-xs text-[#9f9f93] mt-1">Faster strategy generation</p>
+                  <p className="text-xs text-slate-400 mt-1">Faster strategy generation</p>
                 </div>
                 <div>
                   <p className="text-3xl font-display text-[#d4a017] font-light">95%</p>
-                  <p className="text-xs text-[#9f9f93] mt-1">Data accuracy guarantee</p>
+                  <p className="text-xs text-slate-400 mt-1">Data accuracy guarantee</p>
                 </div>
                 <div>
                   <p className="text-3xl font-display text-[#d4a017] font-light">24/7</p>
-                  <p className="text-xs text-[#9f9f93] mt-1">AI agent availability</p>
+                  <p className="text-xs text-slate-400 mt-1">AI agent availability</p>
                 </div>
                 <div>
                   <p className="text-3xl font-display text-[#d4a017] font-light">500+</p>
-                  <p className="text-xs text-[#9f9f93] mt-1">Companies assessed</p>
+                  <p className="text-xs text-slate-400 mt-1">Companies assessed</p>
                 </div>
               </div>
             </div>
@@ -101,3 +101,4 @@ export default function GoToMarketAssessmentPage() {
     </div>
   );
 }
+

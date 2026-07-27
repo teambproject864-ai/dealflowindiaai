@@ -15,6 +15,7 @@ import {
   Star,
   AlertCircle
 } from "lucide-react";
+import { toast } from "sonner";
 import { GlassPanel } from "@/components/immersive/GlassPanel";
 import { ExtrudedButton } from "@/components/immersive/ExtrudedButton";
 import { REVENUE_AGENTS } from "@/lib/types";
@@ -28,7 +29,6 @@ export function AgentAssignmentModule() {
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [notification, setNotification] = useState<string | null>(null);
 
   const fetchRequests = async () => {
     try {
@@ -64,17 +64,17 @@ export function AgentAssignmentModule() {
       });
       const data = await res.json();
       if (data.success) {
-        setNotification("Agent change request submitted successfully to administrators.");
+        toast.success("Agent change request submitted to administrators.");
         setReason("");
         setSelectedAgentKey("");
         setShowModal(false);
         fetchRequests();
       } else {
-        alert(data.error || "Failed to submit request");
+        toast.error(data.error || "Failed to submit request");
       }
     } catch (err) {
       console.error(err);
-      alert("Error submitting request");
+      toast.error("Error submitting request");
     } finally {
       setIsSubmitting(false);
     }
@@ -106,14 +106,6 @@ export function AgentAssignmentModule() {
           </button>
         </div>
       </GlassPanel>
-
-      {/* Notification Toast */}
-      {notification && (
-        <div className="p-4 bg-emerald-950/80 border border-emerald-500/40 rounded-xl text-xs text-emerald-200 flex justify-between items-center">
-          <span>{notification}</span>
-          <button onClick={() => setNotification(null)} className="text-emerald-400 font-bold">Dismiss</button>
-        </div>
-      )}
 
       {/* Currently Assigned Agent Card */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

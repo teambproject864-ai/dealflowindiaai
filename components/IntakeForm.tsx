@@ -26,6 +26,7 @@ import { Loader2, Upload, File, X, CheckCircle2 } from "lucide-react";
 import { IconArrowLeft, IconArrowRight } from "@/components/gtm/GtmIcons";
 import { GlassPanel } from "@/components/immersive/GlassPanel";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { toast } from "sonner";
 
 // --- Custom field options as per user's request ---
 const certificationOptions = [
@@ -333,7 +334,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
           router.push(`/analysis?leadId=${result.leadId}`);
         }
       } else {
-        alert(result.error || "Failed to save lead");
+        toast.error(result.error || "Failed to save lead");
         setSubmitting(false);
       }
     } catch (error) {
@@ -425,7 +426,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                     value={data.name}
                     onChange={(e) => setData({ ...data, name: e.target.value })}
                     placeholder="John Doe"
-                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
                     aria-invalid={!!errors.name}
                     aria-describedby={errors.name ? 'name-error' : undefined}
                   />
@@ -442,7 +443,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                     value={data.emailPersonal}
                     onChange={(e) => setData({ ...data, emailPersonal: e.target.value })}
                     placeholder="john@company.com"
-                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
                   />
                   {errors.emailPersonal && <p className="text-xs text-red-400 font-light">{errors.emailPersonal}</p>}
                 </div>
@@ -456,9 +457,9 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   value={data.additionalEmail}
                   onChange={(e) => setData({ ...data, additionalEmail: e.target.value })}
                   placeholder="operations@company.com"
-                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
                 />
-                <p className="text-[10px] text-[#9f9f93] font-light">We will copy this address on onboarding updates and GTM reports.</p>
+                <p className="text-[10px] text-slate-400 font-light">We will copy this address on onboarding updates and GTM reports.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -469,7 +470,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                     value={data.companyName}
                     onChange={(e) => setData({ ...data, companyName: e.target.value })}
                     placeholder="Acme Corp"
-                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
                   />
                   {errors.companyName && <p className="text-xs text-red-400 font-light">{errors.companyName}</p>}
                 </div>
@@ -481,7 +482,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                     value={data.websiteUrl}
                     onChange={(e) => setData({ ...data, websiteUrl: e.target.value })}
                     placeholder="https://acme.com"
-                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
                   />
                   {errors.websiteUrl && <p className="text-xs text-red-400 font-light">{errors.websiteUrl}</p>}
                 </div>
@@ -504,7 +505,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   value={data.caseStudies}
                   onChange={(e) => setData({ ...data, caseStudies: e.target.value })}
                   placeholder="Case 1: Grew revenue by 40%... Case 2: Reduced churn... (Include customer quotes or success stories)"
-                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[110px]"
+                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[110px]"
                 />
                 {errors.caseStudies && <p className="text-xs text-red-400 font-light">{errors.caseStudies}</p>}
               </div>
@@ -526,7 +527,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                 >
                   <Upload className="mx-auto h-7 w-7 text-[#d4a017] mb-2" aria-hidden="true" />
                   <p className="text-xs font-semibold text-white">Drag & drop files here or click to browse</p>
-                  <p className="text-[10px] text-[#9f9f93] mt-1">Supports PDF, DOCX, PNG, MP4 up to 50MB</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Supports PDF, DOCX, PNG, MP4 up to 50MB</p>
                   <input
                     id="case-study-upload"
                     type="file"
@@ -574,7 +575,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                     placeholder="Specify other certification..."
                     value={data.certificationsOther}
                     onChange={(e) => setData({ ...data, certificationsOther: e.target.value })}
-                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
+                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
                   />
                 )}
               </div>
@@ -588,7 +589,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   value={data.trustFactors}
                   onChange={(e) => setData({ ...data, trustFactors: e.target.value })}
                   placeholder="G2 leadership badges, 99% SLA uptime, references..."
-                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
                 />
                 {errors.trustFactors && <p className="text-xs text-red-400 font-light">{errors.trustFactors}</p>}
               </div>
@@ -629,7 +630,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                     value={data.linkedInContent || ""}
                     onChange={(e) => setData({ ...data, linkedInContent: e.target.value })}
                     placeholder="We publish client case studies, industry trend commentary, etc..."
-                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[70px]"
+                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[70px]"
                   />
                 </div>
               )}
@@ -653,7 +654,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   value={data.offerPromise}
                   onChange={(e) => setData({ ...data, offerPromise: e.target.value })}
                   placeholder="Example: We build a fully functional outbound agent campaign in 7 days..."
-                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[70px]"
+                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[70px]"
                 />
                 {errors.offerPromise && <p className="text-xs text-red-400 font-light">{errors.offerPromise}</p>}
               </div>
@@ -665,7 +666,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   value={data.irresistibleHook}
                   onChange={(e) => setData({ ...data, irresistibleHook: e.target.value })}
                   placeholder="Example: Get a free customized target account dataset when you book a meeting..."
-                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[70px]"
+                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[70px]"
                 />
               </div>
 
@@ -676,7 +677,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   value={data.painPoint}
                   onChange={(e) => setData({ ...data, painPoint: e.target.value })}
                   placeholder="Sales reps waste hours manually dialing and writing personalized emails..."
-                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[70px]"
+                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[70px]"
                 />
                 {errors.painPoint && <p className="text-xs text-red-400 font-light">{errors.painPoint}</p>}
               </div>
@@ -711,7 +712,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                     placeholder="Specify other guarantee..."
                     value={data.riskReversalOther}
                     onChange={(e) => setData({ ...data, riskReversalOther: e.target.value })}
-                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
+                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
                   />
                 )}
               </div>
@@ -745,7 +746,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                     placeholder="Specify other CTA..."
                     value={data.primaryCtaOther}
                     onChange={(e) => setData({ ...data, primaryCtaOther: e.target.value })}
-                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
+                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
                   />
                 )}
               </div>
@@ -771,7 +772,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                     placeholder="Specify other outreach asset..."
                     value={data.minimumAssetOther}
                     onChange={(e) => setData({ ...data, minimumAssetOther: e.target.value })}
-                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
+                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
                   />
                 )}
               </div>
@@ -783,7 +784,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   value={data.objectionsHandling}
                   onChange={(e) => setData({ ...data, objectionsHandling: e.target.value })}
                   placeholder="Objection details and responses..."
-                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[80px]"
+                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[80px]"
                 />
                 {errors.objectionsHandling && <p className="text-xs text-red-400 font-light">{errors.objectionsHandling}</p>}
               </div>
@@ -795,7 +796,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   value={data.emailSequenceThemes}
                   onChange={(e) => setData({ ...data, emailSequenceThemes: e.target.value })}
                   placeholder="Messaging and proof points..."
-                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[80px]"
+                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[80px]"
                 />
               </div>
 
@@ -828,7 +829,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   value={data.icpDescription}
                   onChange={(e) => setData({ ...data, icpDescription: e.target.value })}
                   placeholder="Describe your ICP in detail..."
-                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[90px]"
+                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[90px]"
                 />
                 {errors.icpDescription && <p className="text-xs text-red-400 font-light">{errors.icpDescription}</p>}
               </div>
@@ -856,7 +857,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                       placeholder="Specify other industry..."
                       value={data.targetIndustriesOther}
                       onChange={(e) => setData({ ...data, targetIndustriesOther: e.target.value })}
-                      className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
+                      className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
                     />
                   )}
                 </div>
@@ -888,7 +889,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   value={data.targetGeographicRegionsText}
                   onChange={(e) => setData({ ...data, targetGeographicRegionsText: e.target.value })}
                   placeholder="North America, Europe, APAC..."
-                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[60px]"
+                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[60px]"
                 />
                 {errors.targetGeographicRegionsText && <p className="text-xs text-red-400 font-light">{errors.targetGeographicRegionsText}</p>}
               </div>
@@ -916,7 +917,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                       placeholder="Specify other decision maker..."
                       value={data.decisionMakersOther}
                       onChange={(e) => setData({ ...data, decisionMakersOther: e.target.value })}
-                      className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
+                      className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
                     />
                   )}
                 </div>
@@ -942,7 +943,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                       placeholder="Specify other trigger..."
                       value={data.buyingTriggersOther}
                       onChange={(e) => setData({ ...data, buyingTriggersOther: e.target.value })}
-                      className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
+                      className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
                     />
                   )}
                 </div>
@@ -978,7 +979,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                     placeholder="Specify other tool..."
                     value={data.currentToolsOther}
                     onChange={(e) => setData({ ...data, currentToolsOther: e.target.value })}
-                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
+                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
                   />
                 )}
               </div>
@@ -1008,7 +1009,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   value={data.additionalNotes}
                   onChange={(e) => setData({ ...data, additionalNotes: e.target.value })}
                   placeholder="Tell us any other parameters, details, or custom workflow ideas..."
-                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[110px]"
+                  className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[110px]"
                 />
               </div>
             </div>
@@ -1050,3 +1051,4 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
     </div>
   );
 }
+

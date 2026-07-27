@@ -82,10 +82,11 @@ export async function POST(request: NextRequest) {
         { expiresIn: "15m" }
       );
 
-      // For demo purposes, log the reset link instead of sending an email
-      const resetLink = `${request.nextUrl.origin}/auth/reset-password?token=${resetToken}`;
+      // S-03 FIX: NEVER log the reset token or the full reset URL.
+      // Log only the email and expiry time for audit purposes.
+      const expiryTime = new Date(Date.now() + 15 * 60 * 1000).toISOString();
       logger.info(
-        `[PASSWORD RESET] Reset link generated for ${email}: ${resetLink}`
+        `[PASSWORD RESET] Reset token generated for ${email}. Expires at: ${expiryTime}`
       );
 
       // Persist reset token to Firestore if available

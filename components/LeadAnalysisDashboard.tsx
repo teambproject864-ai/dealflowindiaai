@@ -1042,7 +1042,7 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-semibold bg-[#8a704c]/10 text-[#d4a017] uppercase tracking-wider">
                   User-Provided
                 </span>
-                <p className="text-xs text-[#9f9f93] font-light">Data you submitted in the intake form</p>
+                <p className="text-xs text-slate-400 font-light">Data you submitted in the intake form</p>
               </div>
               <div className="flex gap-2">
                 {isEditing ? (
@@ -1082,7 +1082,7 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
             <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-semibold bg-[#8a704c]/10 text-[#d4a017] uppercase tracking-wider">
               AI-Generated
             </span>
-            <p className="text-xs text-[#9f9f93] font-light">Analysis output from DealFlow AI</p>
+            <p className="text-xs text-slate-400 font-light">Analysis output from DealFlow AI</p>
           </div>
         </div>
         <GTMSection title="1. Executive Summary" id="executive" icon={<FileText />}>
@@ -2306,3 +2306,4 @@ function LegacyGTMDisplay({ analysis }: { analysis: AnalysisResult }) {
     </div>
   );
 }
+

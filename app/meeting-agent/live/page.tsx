@@ -284,7 +284,7 @@ export default function GtmAssessmentPage() {
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
                 placeholder="Acme Pipeline Agent"
-                className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+                className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
               />
               {errors.productName && (
                 <p role="alert" className="text-xs text-red-400 font-light">{errors.productName}</p>
@@ -299,7 +299,7 @@ export default function GtmAssessmentPage() {
                 value={productOwnerName}
                 onChange={(e) => setProductOwnerName(e.target.value)}
                 placeholder="Sarah Jenkins"
-                className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+                className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
               />
               {errors.productOwnerName && (
                 <p role="alert" className="text-xs text-red-400 font-light">{errors.productOwnerName}</p>
@@ -317,7 +317,7 @@ export default function GtmAssessmentPage() {
                 value={productOwnerEmail}
                 onChange={(e) => setProductOwnerEmail(e.target.value)}
                 placeholder="sarah@company.com"
-                className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+                className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
               />
               {errors.productOwnerEmail && (
                 <p role="alert" className="text-xs text-red-400 font-light">{errors.productOwnerEmail}</p>
@@ -369,7 +369,7 @@ export default function GtmAssessmentPage() {
                 value={marketingBudgetAllocation}
                 onChange={(e) => setMarketingBudgetAllocation(e.target.value)}
                 placeholder="50000"
-                className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+                className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
               />
               {errors.marketingBudgetAllocation && (
                 <p role="alert" className="text-xs text-red-400 font-light">{errors.marketingBudgetAllocation}</p>
@@ -385,7 +385,7 @@ export default function GtmAssessmentPage() {
               value={primaryUseCase}
               onChange={(e) => setPrimaryUseCase(e.target.value)}
               placeholder="Describe the primary use case and core target users..."
-              className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[80px]"
+              className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[80px]"
             />
             {errors.primaryUseCase && (
               <p role="alert" className="text-xs text-red-400 font-light">{errors.primaryUseCase}</p>
@@ -400,7 +400,7 @@ export default function GtmAssessmentPage() {
               value={stakeholders}
               onChange={(e) => setStakeholders(e.target.value)}
               placeholder="Sarah (Product), David (Sales), Helen (Legal)"
-              className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-[#9f9f93] focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+              className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
             />
             {errors.stakeholders && (
               <p role="alert" className="text-xs text-red-400 font-light">{errors.stakeholders}</p>
@@ -424,7 +424,7 @@ export default function GtmAssessmentPage() {
             >
               <Upload className="mx-auto h-7 w-7 text-[#d4a017] mb-2" />
               <p className="text-xs font-semibold text-white">Drag & drop or click to upload compliance documents</p>
-              <p className="text-[10px] text-[#9f9f93] mt-1">PDF, DOCX up to 50MB</p>
+              <p className="text-[10px] text-slate-400 mt-1">PDF, DOCX up to 50MB</p>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -494,28 +494,28 @@ export default function GtmAssessmentPage() {
                 <div className="text-center">
                   <CheckCircle2 className="w-12 h-12 text-[#d4a017] mx-auto mb-4" />
                   <h3 className="text-xl font-display font-light text-white">Go-to-Market Assessment Submitted</h3>
-                  <p className="text-xs text-[#9f9f93] mt-1">Your tracking ID has been generated successfully.</p>
+                  <p className="text-xs text-slate-400 mt-1">Your tracking ID has been generated successfully.</p>
                 </div>
 
                 <div className="border border-[#24252a] rounded-md p-4 bg-[#16181f]/60 space-y-3">
                   <div className="flex justify-between border-b border-[#24252a]/60 pb-2">
-                    <span className="text-xs text-[#9f9f93]">Tracking ID</span>
+                    <span className="text-xs text-slate-400">Tracking ID</span>
                     <span className="text-xs font-mono font-bold text-[#d4a017]">{trackingId}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-[#9f9f93]">Product</span>
+                    <span className="text-slate-400">Product</span>
                     <span className="text-white font-medium">{productName}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-[#9f9f93]">Owner</span>
+                    <span className="text-slate-400">Owner</span>
                     <span className="text-white font-medium">{productOwnerName}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-[#9f9f93]">Launch Date</span>
+                    <span className="text-slate-400">Launch Date</span>
                     <span className="text-white font-medium">{targetLaunchDate}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-[#9f9f93]">Region</span>
+                    <span className="text-slate-400">Region</span>
                     <span className="text-white font-medium">{targetMarketRegion}</span>
                   </div>
                 </div>
@@ -542,3 +542,4 @@ export default function GtmAssessmentPage() {
     </div>
   );
 }
+

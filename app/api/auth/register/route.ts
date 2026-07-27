@@ -121,13 +121,14 @@ export async function POST(req: NextRequest) {
     // Also save to in-memory NEW_CUSTOMERS array
     NEW_CUSTOMERS.push(newCustomer);
 
-    addAuditLog(sanitizedEmail, "customer", true, `Registration initiated. Verification code generated: ${verificationCode}`, ip, userAgent);
+    // S-02 FIX: Do NOT log the verification code — it must not appear in log aggregators.
+    addAuditLog(sanitizedEmail, "customer", true, "Registration initiated. Verification code generated and stored server-side.", ip, userAgent);
 
-    // Securely return registration verification requirements (Do not set cookie yet)
+    // S-02 FIX: Return NO verificationCode in the response body.
+    // The code is delivered only via the email/SMS channel (server-side).
     return NextResponse.json({ 
       success: true, 
       requiresVerification: true,
-      verificationCode,
       message: "Registration successful. A verification code has been sent to your registered address."
     });
   } catch (error) {

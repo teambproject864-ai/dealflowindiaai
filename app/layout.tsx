@@ -7,6 +7,7 @@ import { AIChatAssistant } from "@/components/AIChatAssistant";
 import { VoiceCallWidget } from "@/components/VoiceCallWidget";
 import { LiveChatWidget } from "@/components/LiveChatWidget";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const sans = Plus_Jakarta_Sans({
@@ -120,6 +121,20 @@ export default function RootLayout({
         <VoiceCallWidget />
         <LiveChatWidget />
         <CookieConsentBanner />
+        {/* Sonner toast notifications — app-wide */}
+        <Toaster
+          position="bottom-right"
+          theme="dark"
+          richColors
+          closeButton
+          toastOptions={{
+            style: {
+              background: "hsl(220 42% 7%)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "hsl(0 0% 98%)",
+            },
+          }}
+        />
       </body>
     </html>
   );
