@@ -9,7 +9,7 @@ import { IntakeFormData } from "@/lib/types";
 async function testICPMatchingEnterpriseSaaS() {
   console.log("[Test] Verifying ICP matching for Enterprise SaaS...");
   
-  const enterpriseData: IntakeFormData = {
+  const enterpriseData: Partial<IntakeFormData> = {
     companyName: "CloudTech Global",
     industry: "Enterprise SaaS & Cloud Computing",
     websiteUrl: "https://cloudtech.global",
@@ -34,7 +34,7 @@ async function testICPMatchingEnterpriseSaaS() {
 async function testICPMatchingSMBAgency() {
   console.log("[Test] Verifying ICP matching for SMB Agencies...");
   
-  const agencyData: IntakeFormData = {
+  const agencyData: Partial<IntakeFormData> = {
     companyName: "Creative Pulse Media",
     industry: "Digital Marketing Agency",
     websiteUrl: "https://creativepulse.io",
@@ -58,7 +58,7 @@ async function testICPMatchingSMBAgency() {
 async function testICPMatchingNoMatch() {
   console.log("[Test] Verifying ICP matching for non-matching profile...");
   
-  const unknownData: IntakeFormData = {
+  const unknownData: Partial<IntakeFormData> = {
     companyName: "Generic Corp",
     industry: "Heavy Manufacturing",
     websiteUrl: "https://genericcorp.com",

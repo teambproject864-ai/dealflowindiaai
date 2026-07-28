@@ -10,7 +10,7 @@ export interface ICPDefinition {
   targetIndustries: string[];
   targetCompanySizes: string[];
   targetRevenueRanges: string[];
-  suitabilityCriteria: (data: LeadRecord | IntakeFormData) => boolean;
+  suitabilityCriteria: (data: Partial<LeadRecord | IntakeFormData>) => boolean;
   documentUrl: string;
 }
 
@@ -32,19 +32,13 @@ export interface ICPMatchResult {
 export const ICP_DEFINITIONS: ICPDefinition[] = [
   {
     id: "enterprise-saas",
-    name: "Enterprise SaaS",
-    description: "High-growth SaaS companies targeting enterprise clients.",
-    targetIndustries: ["SaaS", "Software", "Technology", "Cloud Computing"],
-    targetCompanySizes: ["201-500", "501-1000", "1001-5000", "5000+"],
-    targetRevenueRanges: ["$50M - $100M", "$100M+"],
-    suitabilityCriteria: (data) => {
-      const industry = data.industry?.toLowerCase() || "";
-      const size = data.companySize || "";
-      const isSaaS = industry.includes("saas") || industry.includes("software") || industry.includes("tech");
-      const isEnterpriseSize = size.includes("500") || size.includes("1000") || size.includes("5000");
-      return isSaaS && isEnterpriseSize;
-    },
-    documentUrl: "/docs/icp/enterprise-saas-playbook.pdf"
+    name: "Enterprise SaaS Profile",
+    description: "High-volume enterprise SaaS companies with 500+ employees",
+    targetIndustries: ["SaaS", "Enterprise Software", "Cloud Computing", "Tech"],
+    targetCompanySizes: ["500-1000", "501-1000", "1000+", "10000+"],
+    targetRevenueRanges: ["$50M-$100M", "$100M+"],
+    suitabilityCriteria: (data) => Boolean(data.companySize?.includes("50") || data.revenue?.includes("100M")),
+    documentUrl: "/docs/icps/enterprise-saas-blueprint.pdf"
   },
   {
     id: "mid-market-ecom",
