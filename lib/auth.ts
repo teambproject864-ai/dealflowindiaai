@@ -68,14 +68,9 @@ export interface DemoAdmin {
 function requireEnvPassword(envVar: string, accountName: string): string {
   const value = process.env[envVar];
   if (!value) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error(
-        `CRITICAL SECURITY ERROR: ${envVar} is not set. ` +
-        `Cannot start server without credentials for ${accountName}.`
-      );
-    }
-    // Non-production: return a sentinel that will never match any real input,
-    // preventing accidental logins with a known string.
+    // If the env var is not set, return a sentinel string that will never match any real password input.
+    // This allows module evaluation during build/server initialization to succeed while ensuring
+    // unconfigured demo accounts cannot be logged into.
     return `__UNSET_PLACEHOLDER_${envVar}_SET_ENV_VAR__`;
   }
   return value;
