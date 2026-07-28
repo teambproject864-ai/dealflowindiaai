@@ -15,10 +15,10 @@ function getLoopEngine(): LoopEngine {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { loopId: string } }
+  { params }: { params: Promise<{ loopId: string }> }
 ) {
   try {
-    const { loopId } = params;
+    const { loopId } = await params;
     const engine = getLoopEngine();
     const loop = engine.getLoop(loopId);
 
@@ -35,10 +35,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { loopId: string } }
+  { params }: { params: Promise<{ loopId: string }> }
 ) {
   try {
-    const { loopId } = params;
+    const { loopId } = await params;
     const engine = getLoopEngine();
     const body = await request.json();
 

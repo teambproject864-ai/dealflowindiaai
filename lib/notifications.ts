@@ -157,7 +157,7 @@ export async function sendMeetingActivationNotification(args: {
   `;
 
   // Log to Firestore
-  const logRef = db.collection("meeting_activation_logs").doc();
+  const logRef = db ? db.collection("meeting_activation_logs").doc() : null;
   const logData = {
     callId,
     meetingUrl,
@@ -170,7 +170,7 @@ export async function sendMeetingActivationNotification(args: {
     createdAt: new Date().toISOString(),
   };
 
-  await logRef.set(logData);
+  if (logRef) await logRef.set(logData);
 
   try {
     await sendEmailWithRetry({
@@ -179,21 +179,25 @@ export async function sendMeetingActivationNotification(args: {
       body: html,
     });
 
-    await logRef.update({
-      status: "success",
-      sentAt: new Date().toISOString(),
-    });
+    if (logRef) {
+      await logRef.update({
+        status: "success",
+        sentAt: new Date().toISOString(),
+      });
+    }
 
     console.log(`[Notification] Meeting activation email sent for call ${callId}`);
     return { success: true };
   } catch (error: any) {
     console.error(`[Notification] Meeting activation email failed for call ${callId}:`, error.message);
     
-    await logRef.update({
-      status: "failed",
-      error: error.message,
-      lastAttemptAt: new Date().toISOString(),
-    });
+    if (logRef) {
+      await logRef.update({
+        status: "failed",
+        error: error.message,
+        lastAttemptAt: new Date().toISOString(),
+      });
+    }
 
     throw error;
   }
@@ -232,7 +236,7 @@ export async function sendCombinedNotification(args: {
     </div>
   `;
 
-  const logRef = db.collection("notification_logs").doc();
+  const logRef = db ? db.collection("notification_logs").doc() : null;
   const logData = {
     callId,
     leadId,
@@ -245,7 +249,8 @@ export async function sendCombinedNotification(args: {
     createdAt: new Date().toISOString(),
   };
 
-  await logRef.set(logData);
+  const activeLogRef = logRef;
+  if (activeLogRef) await activeLogRef.set(logData);
 
   try {
     await withRetry(
@@ -256,25 +261,28 @@ export async function sendCombinedNotification(args: {
       { retries: 3, baseDelayMs: 1000 }
     );
 
-    await logRef.update({
-      status: "success",
-      meetingLinkSent: true,
-      reportSent: true,
-      sentAt: new Date().toISOString(),
-      attempts: logData.attempts,
-    });
+    if (activeLogRef) {
+      await activeLogRef.update({
+        status: "success",
+        meetingLinkSent: true,
+        reportSent: true,
+        sentAt: new Date().toISOString(),
+        attempts: logData.attempts,
+      });
+    }
 
+    console.log(`[Notification] Combined email sent successfully to ${to} for call ${callId}`);
     return { success: true };
   } catch (error: any) {
-    console.error("[Notification] Combined delivery failed:", error.message);
-    
-    await logRef.update({
-      status: "failed",
-      error: error.message,
-      attempts: logData.attempts,
-      lastAttemptAt: new Date().toISOString(),
-    });
-
+    console.error(`[Notification] Combined email failed for call ${callId}:`, error.message);
+    if (activeLogRef) {
+      await activeLogRef.update({
+        status: "failed",
+        error: error.message,
+        attempts: logData.attempts,
+        lastAttemptAt: new Date().toISOString(),
+      });
+    }
     throw error;
   }
 }

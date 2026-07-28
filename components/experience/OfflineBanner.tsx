@@ -15,12 +15,32 @@ export function OfflineBanner() {
   useEffect(() => {
     if (wasOffline.current && online) {
       setSyncing(true);
-      const t = setTimeout(() => {
-        setSyncing(false);
-        setShowRestored(true);
-        setTimeout(() => setShowRestored(false), 3000);
-      }, 1500);
-      return () => clearTimeout(t);
+      (async () => {
+        try {
+          const { getAllUnsyncedLeads, markLeadSynced } = await import("@/lib/offlineStore");
+          const unsynced = await getAllUnsyncedLeads();
+          for (const item of unsynced) {
+            try {
+              if (item.leadId && item.data) {
+                await fetch("/api/leads/save", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(item.data),
+                });
+                await markLeadSynced(item.leadId);
+              }
+            } catch (syncErr) {
+              console.warn(`[OfflineSync] Failed syncing lead ${item.leadId}:`, syncErr);
+            }
+          }
+        } catch (e) {
+          console.error("[OfflineSync] Error during background sync loop:", e);
+        } finally {
+          setSyncing(false);
+          setShowRestored(true);
+          setTimeout(() => setShowRestored(false), 3000);
+        }
+      })();
     }
     if (!online) wasOffline.current = true;
   }, [online]);

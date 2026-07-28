@@ -1,4 +1,3 @@
-// app/api/crm/sync/route.ts
 import { NextResponse } from "next/server";
 import { 
   getRoleScopedCRMRecords, 
@@ -6,14 +5,19 @@ import {
   retryFailedCRMSyncItems, 
   getCRMSyncQueueStatus 
 } from "@/lib/crm-sync-engine";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const role = (searchParams.get("role") || "customer") as "customer" | "agent" | "admin";
-  const userId = searchParams.get("userId") || undefined;
-  const isQueueRequest = searchParams.get("queue") === "true";
-
   try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) return authResult.errorResponse;
+    const user = authResult.user!;
+
+    const { searchParams } = new URL(req.url);
+    const role = user.role;
+    const userId = user.id;
+    const isQueueRequest = searchParams.get("queue") === "true";
+
     if (isQueueRequest && role === "admin") {
       const queueStatus = getCRMSyncQueueStatus();
       return NextResponse.json({ success: true, ...queueStatus });
@@ -28,20 +32,27 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) return authResult.errorResponse;
+    const user = authResult.user!;
+
     const body = await req.json();
 
     if (body.action === "retry_failed_queue") {
+      if (user.role !== "admin") {
+        return NextResponse.json({ success: false, error: "Forbidden: Admin role required for retrying queue" }, { status: 403 });
+      }
       const retryResult = await retryFailedCRMSyncItems();
       return NextResponse.json({ success: true, ...retryResult, message: "Sync queue retry completed." });
     }
 
-    const { entityType, entityId, action, payload, userRole } = body;
+    const { entityType, entityId, action, payload } = body;
 
     if (!entityType || !entityId || !payload) {
       return NextResponse.json({ success: false, error: "entityType, entityId, and payload are required" }, { status: 400 });
     }
 
-    const role = (userRole || "agent") as "customer" | "agent" | "admin";
+    const role = user.role;
     const syncResult = await queueCRMSyncOperation({
       entityType,
       entityId,

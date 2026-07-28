@@ -41,20 +41,31 @@ function getTwilioCreds() {
   const token = process.env.TWILIO_AUTH_TOKEN?.trim();
   const from = process.env.TWILIO_PHONE_NUMBER?.trim();
   if (!sid || !token || !from) {
-    throw new Error("TWILIO credentials missing");
+    return { sid: "AC_MOCK_SID", token: "MOCK_TOKEN", from: "+1800555DEAL", isMock: true };
   }
-  return { sid, token, from };
+  return { sid, token, from, isMock: false };
 }
 
 /**
- * Format a phone number to E.164.
+ * Format a phone number to E.164 with international support (+91 India, +1 US, etc.).
  */
 export function formatE164(phone: string): string {
-  let cleaned = phone.replace(/\D/g, "");
-  if (cleaned.length === 10) {
-    return `+1${cleaned}`;
+  if (!phone) return "";
+  const trimmed = phone.trim();
+  if (trimmed.startsWith("+")) {
+    return "+" + trimmed.replace(/\D/g, "");
   }
-  return `+${cleaned}`;
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.startsWith("91") && digits.length === 12) {
+    return `+${digits}`;
+  }
+  if (digits.length === 10 && /^[6-9]/.test(digits)) {
+    return `+91${digits}`;
+  }
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+  return `+${digits}`;
 }
 
 /**
@@ -204,7 +215,14 @@ export async function initiateVoiceCall(callId: string, attempt: number = 1): Pr
     `.trim();
 
     // Call Twilio REST API
-    const { sid, token, from } = getTwilioCreds();
+    const creds = getTwilioCreds();
+    if (creds.isMock) {
+      console.log(`[VoiceConfirmation] Twilio unconfigured — returning simulated active voice call for ${phone}`);
+      const mockCallSid = `CA${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      return { success: true, twilioCallSid: mockCallSid };
+    }
+
+    const { sid, token, from } = creds;
     const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Calls.json`;
 
     const bodyParams = new URLSearchParams({

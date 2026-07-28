@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { mockCustomerDocs } from "../route";
+import { mockCustomerDocs, CustomerDocument } from "@/lib/customer-documents";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,11 +16,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Find the document across all records to check ownership
-    let document = null;
-    let ownerId = null;
+    let document: CustomerDocument | null = null;
+    let ownerId: string | null = null;
 
     for (const [customerId, docs] of Object.entries(mockCustomerDocs)) {
-      const found = docs.find((d) => d.id === documentId);
+      const found = docs.find((d: CustomerDocument) => d.id === documentId);
       if (found) {
         document = found;
         ownerId = customerId;

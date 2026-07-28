@@ -59,11 +59,58 @@ export default function PortalLayout({
     );
   }
 
+  // Role-based Access Control (N-01)
+  const currentPath = pathname || "";
+  const isLoginPage =
+    currentPath === "/portal" ||
+    currentPath === "/portal/admin/login" ||
+    currentPath === "/portal/customer/login" ||
+    currentPath === "/portal/agent/login";
+
+  let isForbidden = false;
+  if (currentUser && !isLoginPage) {
+    if (currentPath.startsWith("/portal/admin") && currentUser.role !== "admin") {
+      isForbidden = true;
+    } else if (currentPath.startsWith("/portal/agent") && currentUser.role !== "agent" && currentUser.role !== "admin") {
+      isForbidden = true;
+    } else if (currentPath.startsWith("/portal/customer") && currentUser.role !== "customer" && currentUser.role !== "admin") {
+      isForbidden = true;
+    }
+  }
+
+  if (isForbidden) {
+    const defaultAllowedPortal =
+      currentUser?.role === "admin"
+        ? "/portal/admin"
+        : currentUser?.role === "agent"
+        ? "/portal/agent"
+        : "/portal/customer";
+
+    return (
+      <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center immersive-scene">
+        <GlassPanel className="max-w-md p-8 text-center space-y-4">
+          <h2 className="text-2xl font-bold text-rose-400">403 — Access Forbidden</h2>
+          <p className="text-sm text-slate-300">
+            Your role (<strong className="capitalize">{currentUser?.role}</strong>) does not have permission to view this section.
+          </p>
+          <div className="pt-4 flex justify-center gap-3">
+            <Link
+              href={defaultAllowedPortal}
+              className="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-sm font-semibold transition-colors"
+            >
+              Go to Your Authorized Portal
+            </Link>
+          </div>
+        </GlassPanel>
+      </div>
+    );
+  }
+
   const navLinks = [
-    { href: "/portal/admin", label: "Admin Dashboard", match: "/portal/admin" },
-    { href: "/portal/agent", label: "Agent Portal", match: "/portal/agent" },
-    { href: "/portal/customer", label: "Customer Portal", match: "/portal/customer" },
-  ];
+    { href: "/portal/admin", label: "Admin Dashboard", match: "/portal/admin", allowedRoles: ["admin"] },
+    { href: "/portal/agent", label: "Agent Portal", match: "/portal/agent", allowedRoles: ["admin", "agent"] },
+    { href: "/portal/customer", label: "Customer Portal", match: "/portal/customer", allowedRoles: ["admin", "customer"] },
+  ].filter(link => !currentUser || link.allowedRoles.includes(currentUser.role));
 
   return (
     <div className="min-h-[calc(100vh-8rem)] immersive-scene">

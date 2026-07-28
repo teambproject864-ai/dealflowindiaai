@@ -81,14 +81,15 @@ export async function vectorSearch(params: VectorSearchParams): Promise<VectorSe
       }));
 
     // 5. Optionally enrich with full data records
-    if (params.includeFullDoc && results.length > 0 && db) {
+    const currentDb = db;
+    if (params.includeFullDoc && results.length > 0 && currentDb) {
       console.log(`[Search] Enriching ${results.length} results with record data...`);
       const enrichedResults = await Promise.all(
         results.map(async (res) => {
           try {
             const memoryId = res.memory.id;
             if (!memoryId) return res;
-            const doc = await db.collection('alma_memory').doc(memoryId).get();
+            const doc = await currentDb.collection('alma_memory').doc(memoryId).get();
             if (doc.exists) {
               return {
                 ...res,

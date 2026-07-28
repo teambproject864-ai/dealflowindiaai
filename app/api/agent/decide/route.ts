@@ -1,17 +1,25 @@
-// app/api/agent/decide/route.ts
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { agentDecide } from '@/lib/agent-brain';
 import { textToSpeech } from '@/lib/elevenlabs';
 import { injectAudio } from '@/lib/recall';
 import { navigateTo } from '@/lib/screen-controller';
+import { requireAuth } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
+    const authResult = await requireAuth(req, ["admin", "agent"]);
+    if (authResult.errorResponse) return authResult.errorResponse;
+    const user = authResult.user!;
+
     const { callId } = await req.json();
 
     if (!callId) {
       return NextResponse.json({ error: 'Missing callId' }, { status: 400 });
+    }
+
+    if (!db) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
     const [callDoc, transcriptDoc] = await Promise.all([
@@ -24,6 +32,9 @@ export async function POST(req: Request) {
     }
 
     const callData = callDoc.data();
+    if (user.role !== "admin" && callData?.assignedAgentId && callData.assignedAgentId !== user.id) {
+      return NextResponse.json({ error: "Forbidden: Not assigned agent for this call" }, { status: 403 });
+    }
     const transcriptData = transcriptDoc.data();
     const segments = transcriptData?.segments || [];
     const recentLines = segments.slice(-10).map((s: any) => `${s.speaker}: ${s.text}`);

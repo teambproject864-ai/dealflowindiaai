@@ -20,9 +20,8 @@ async function testICPMatchingEnterpriseSaaS() {
     targetAudience: "Enterprise IT Leaders",
     monthlyLeads: "500+",
     salesCycle: "6+ months",
-    contactName: "Jane Smith",
-    contactEmail: "jane@cloudtech.global",
-    contactPhone: "+15551234567"
+    name: "Jane Smith",
+    emailPersonal: "jane@cloudtech.global"
   };
 
   const match = matchICP(enterpriseData);
@@ -46,9 +45,8 @@ async function testICPMatchingSMBAgency() {
     targetAudience: "Small Business Owners",
     monthlyLeads: "50-100",
     salesCycle: "1-2 months",
-    contactName: "Mike Jones",
-    contactEmail: "mike@creativepulse.io",
-    contactPhone: "+15559876543"
+    name: "Mike Jones",
+    emailPersonal: "mike@creativepulse.io"
   };
 
   const match = matchICP(agencyData);
@@ -71,9 +69,8 @@ async function testICPMatchingNoMatch() {
     targetAudience: "Distributors",
     monthlyLeads: "1000+",
     salesCycle: "12+ months",
-    contactName: "Bob Brown",
-    contactEmail: "bob@genericcorp.com",
-    contactPhone: "+15550000000"
+    name: "Bob Brown",
+    emailPersonal: "bob@genericcorp.com"
   };
 
   const match = matchICP(unknownData);

@@ -72,6 +72,7 @@ function getISTDateString(date: Date = new Date()): string {
 
 async function logEmailEntry(entry: EmailLogEntry): Promise<void> {
   try {
+    if (!db) return;
     const docRef = await db.collection('daily_email_logs').add({
       ...entry,
       createdAt: new Date().toISOString()
@@ -84,6 +85,7 @@ async function logEmailEntry(entry: EmailLogEntry): Promise<void> {
 
 async function updateEmailLogEntry(id: string, updates: Partial<EmailLogEntry>): Promise<void> {
   try {
+    if (!db) return;
     await db.collection('daily_email_logs').doc(id).update(updates);
   } catch (error) {
     console.error('[DailyEmailScheduler] Failed to update email log:', error);
@@ -112,18 +114,24 @@ export async function sendDailyEmail(
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
     const yesterdayIso = yesterday.toISOString();
 
-    // Fetch activities from past 24h
-    const [callsSnapshot, summariesSnapshot, logsSnapshot] = await Promise.all([
-      db.collection('calls').where('updatedAt', '>=', yesterdayIso).get(),
-      db.collection('summaries').where('sentAt', '>=', yesterdayIso).get(),
-      db.collection('audit_logs').where('createdAt', '>=', yesterdayIso).limit(50).get()
-    ]);
+    let calls: CallRecord[] = [];
+    let summaries: SummaryRecord[] = [];
+    let errors: any[] = [];
 
-    const calls = callsSnapshot.docs.map(doc => doc.data() as CallRecord);
-    const summaries = summariesSnapshot.docs.map(doc => doc.data() as SummaryRecord);
-    const errors = logsSnapshot.docs
-      .map(doc => doc.data())
-      .filter(log => log.type.includes('fail') || log.type.includes('error') || log.error);
+    if (db) {
+      // Fetch activities from past 24h
+      const [callsSnapshot, summariesSnapshot, logsSnapshot] = await Promise.all([
+        db.collection('calls').where('updatedAt', '>=', yesterdayIso).get(),
+        db.collection('summaries').where('sentAt', '>=', yesterdayIso).get(),
+        db.collection('audit_logs').where('createdAt', '>=', yesterdayIso).limit(50).get()
+      ]);
+
+      calls = callsSnapshot.docs.map(doc => doc.data() as CallRecord);
+      summaries = summariesSnapshot.docs.map(doc => doc.data() as SummaryRecord);
+      errors = logsSnapshot.docs
+        .map(doc => doc.data())
+        .filter(log => log.type?.includes('fail') || log.type?.includes('error') || log.error);
+    }
 
     const body = config.bodyTemplate 
       ? config.bodyTemplate(new Date())
@@ -282,6 +290,9 @@ function generateDetailedReportBody(date: Date, calls: CallRecord[], summaries: 
 
 export async function getSchedulerStatus(): Promise<SchedulerStatus> {
   try {
+    if (!db) {
+      return { isRunning: false, totalSent: 0, totalFailed: 0 };
+    }
     const lastRunSnapshot = await db.collection('daily_email_logs')
       .orderBy('createdAt', 'desc')
       .limit(1)
@@ -326,6 +337,7 @@ export async function getSchedulerStatus(): Promise<SchedulerStatus> {
 
 export async function getEmailLogs(limit: number = 30): Promise<EmailLogEntry[]> {
   try {
+    if (!db) return [];
     const snapshot = await db.collection('daily_email_logs')
       .orderBy('createdAt', 'desc')
       .limit(limit)

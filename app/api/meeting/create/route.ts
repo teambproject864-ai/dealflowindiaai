@@ -37,11 +37,13 @@ export async function POST(req: Request) {
     // Recall reports the bot joined the meeting.
     void (async () => {
       try {
-        const callDoc = await db.collection('calls').doc(callId).get();
+        const currentDb = db;
+        if (!currentDb) return;
+        const callDoc = await currentDb.collection('calls').doc(callId).get();
         const callData = callDoc.data();
         if (!callData?.leadId) return;
 
-        const leadDoc = await db.collection('leads').doc(callData.leadId).get();
+        const leadDoc = await currentDb.collection('leads').doc(callData.leadId).get();
         const leadData = leadDoc.data();
         if (!leadData) return;
 
@@ -54,7 +56,7 @@ export async function POST(req: Request) {
           if (botStatus === 'joined_call') {
             const audio = await textToSpeech(openingLine, personaKey);
             await injectAudio(botId, audio);
-            await db.collection('calls').doc(callId).update({
+            await currentDb.collection('calls').doc(callId).update({
               openingLineSentAt: new Date().toISOString(),
             });
             break;

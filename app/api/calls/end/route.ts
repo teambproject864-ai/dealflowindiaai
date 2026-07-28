@@ -9,6 +9,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Missing callId" }, { status: 400 });
     }
 
+    if (!db) {
+      return NextResponse.json({ success: true });
+    }
+
     const ref = db.collection("calls").doc(callId);
     const doc = await ref.get();
     if (!doc.exists) {

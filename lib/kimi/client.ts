@@ -8,7 +8,7 @@ export class KimiClient {
   private logs: KimiApiCallLog[];
   private cacheTTL: number;
 
-  constructor(apiKey: string, baseUrl: string = "https://api.moonshot.cn/v1", cacheTTL: number = 300000) {
+  constructor(apiKey: string = process.env.KIMI_API_KEY || "mock-key", baseUrl: string = "https://api.moonshot.cn/v1", cacheTTL: number = 300000) {
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
     this.cacheTTL = cacheTTL;

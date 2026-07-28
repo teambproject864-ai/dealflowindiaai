@@ -156,7 +156,13 @@ export function hashIp(ip: string): string {
 }
 
 function getAESKey(): Buffer {
-  const rawKey = process.env.LLM_API_KEY_ENCRYPTION_KEY || 'default-fallback-key-dealflow-value';
+  const rawKey = process.env.LLM_API_KEY_ENCRYPTION_KEY;
+  if (!rawKey) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("CRITICAL SECURITY ERROR: LLM_API_KEY_ENCRYPTION_KEY environment variable is not set in production.");
+    }
+    return createHash('sha256').update('dev-aes-encryption-key-dealflow-vault').digest();
+  }
   if (typeof rawKey === 'string' && /^[0-9a-fA-F]{64}$/.test(rawKey)) {
     return Buffer.from(rawKey, 'hex');
   }
@@ -180,29 +186,19 @@ export function decryptLead(lead: any): any {
   if (!lead) return lead;
   const key = getAESKey();
   const result = { ...lead };
-  const fallbackKey = createHash('sha256').update('default-fallback-key-dealflow-value').digest();
 
   if (result.contactEmail && typeof result.contactEmail === 'string' && result.contactEmail.includes(':')) {
     try {
       result.contactEmail = decryptAES(result.contactEmail, key);
     } catch (e) {
-      try {
-        result.contactEmail = decryptAES(result.contactEmail, fallbackKey);
-      } catch (err) {
-        const namePart = result.contactName ? result.contactName.toLowerCase().replace(/[^a-z0-9]+/g, '.') : 'contact';
-        result.contactEmail = `${namePart}@example.com`;
-      }
+      // Return original or encrypted string on decryption error without swallowing or substituting fake values
     }
   }
   if (result.contactPhone && typeof result.contactPhone === 'string' && result.contactPhone.includes(':')) {
     try {
       result.contactPhone = decryptAES(result.contactPhone, key);
     } catch (e) {
-      try {
-        result.contactPhone = decryptAES(result.contactPhone, fallbackKey);
-      } catch (err) {
-        result.contactPhone = "+1 (555) 019-9999";
-      }
+      // Return original or encrypted string on decryption error
     }
   }
   return result;

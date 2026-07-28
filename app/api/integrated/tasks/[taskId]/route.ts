@@ -3,12 +3,13 @@ import { getOrchestrator, initializeIntegratedSystem } from "@/lib/integrated-sy
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
+    const { taskId } = await params;
     initializeIntegratedSystem();
     const orchestrator = getOrchestrator();
-    const task = orchestrator.getTask(params.taskId);
+    const task = orchestrator.getTask(taskId);
     
     if (!task) {
       return NextResponse.json(

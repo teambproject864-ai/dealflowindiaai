@@ -170,9 +170,9 @@ class LLMManager {
           model: selectedModel.name,
           messages: [
             ...(request.systemPrompt
-              ? [{ role: "system", content: request.systemPrompt }]
+              ? [{ role: "system" as const, content: request.systemPrompt }]
               : []),
-            { role: "user", content: request.userPrompt },
+            { role: "user" as const, content: request.userPrompt },
           ],
           maxTokens: request.maxTokens || 800,
           temperature: request.temperature || 0.2,
@@ -181,13 +181,12 @@ class LLMManager {
       } else {
         output = await hfInfer(
           request.userPrompt,
-          request.systemPrompt,
+          request.systemPrompt || "",
           {
             max_tokens: request.maxTokens || 800,
             temperature: request.temperature || 0.2,
             top_p: request.topP || 0.95,
-          },
-          selectedModel.name
+          }
         );
       }
 

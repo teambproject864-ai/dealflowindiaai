@@ -119,6 +119,11 @@ class MeetingBotLiveTester {
     console.log("========================================\n");
 
     console.log("Checking Firebase connection...");
+    if (!db) {
+      console.log("⚠️ Firebase unconfigured or disabled for test runner.");
+      this.testCallId = "mock-call-id";
+      return;
+    }
     try {
       const testDoc = await db.collection("test").doc("connection").get();
       console.log("✅ Firebase connection successful");

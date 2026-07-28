@@ -36,6 +36,7 @@ async function audit(entry: any) {
   const payload = { ...entry, createdAt: new Date().toISOString() };
   console.log(JSON.stringify(payload));
   try {
+    if (!db) return;
     await db.collection("audit_logs").add(payload);
   } catch (e) {
     console.error("audit_log_failed", e);
@@ -46,6 +47,9 @@ export async function POST(req: Request) {
   const requestId = crypto.randomUUID?.() || crypto.randomBytes(16).toString("hex");
   const now = new Date();
   try {
+    if (!db) {
+      return NextResponse.json({ success: false, error: "Database not configured" }, { status: 500 });
+    }
     const body = await req.json().catch(() => ({}));
     const calendarId = (body.calendarId || envStr("CALENDAR_ID")) as string | null;
     const icsUrl = (body.icsUrl || envStr("CALENDAR_ICS_URL")) as string | null;

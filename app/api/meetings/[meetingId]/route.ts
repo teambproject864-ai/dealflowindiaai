@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 // GET /api/meetings/[meetingId] - Get a single meeting
 export async function GET(
   request: Request,
-  { params }: { params: { meetingId: string } }
+  { params }: { params: Promise<{ meetingId: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -19,7 +19,7 @@ export async function GET(
       );
     }
 
-    const { meetingId } = params;
+    const { meetingId } = await params;
     const system = UnifiedMeetingSystem.getInstance();
     const meeting = await system.getMeeting(meetingId);
 
@@ -46,7 +46,7 @@ export async function GET(
 // PATCH /api/meetings/[meetingId]/start - Start meeting
 export async function PATCH(
   request: Request,
-  { params }: { params: { meetingId: string } }
+  { params }: { params: Promise<{ meetingId: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -57,7 +57,7 @@ export async function PATCH(
       );
     }
 
-    const { meetingId } = params;
+    const { meetingId } = await params;
     const { action } = await request.json();
     const system = UnifiedMeetingSystem.getInstance();
 

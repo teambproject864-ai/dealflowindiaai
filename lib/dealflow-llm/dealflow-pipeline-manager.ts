@@ -261,7 +261,7 @@ export class DealflowPipelineManager {
   }
 
   public promoteCandidate(candidateVersion: string): { success: boolean; activeVersion: string } {
-    this.log("deployment", "info", `Promoting candidate model ${candidateVersion} to production...`);
+    this.log("deployment", "in_progress", `Promoting candidate model ${candidateVersion} to production...`);
     this.previousStableVersion = this.activeVersion;
     this.activeVersion = candidateVersion;
     this.log("deployment", "success", `Dealflow LLM successfully updated to active version ${this.activeVersion}`);

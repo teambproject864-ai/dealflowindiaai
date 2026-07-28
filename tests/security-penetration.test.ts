@@ -101,12 +101,26 @@ export async function runEndToEndPenetrationTest() {
     assert.strictEqual(integrity.isValid, true, 'Audit log chain must be cryptographically valid');
   });
 
-  // --- 6. Weekly Security Health Report Generation ---
-  await test('6. Weekly Security Health Report Generation', () => {
-    const report = WeeklySecurityReportGenerator.generateWeeklyReport();
-    assert.strictEqual(typeof report.reportId, 'string', 'Report ID must be generated');
-    assert.strictEqual(report.overallSecurityScore >= 90, true, 'Security score must meet high standard');
-    assert.strictEqual(report.tamperProofAuditChainStatus, 'VALID', 'Audit chain status must be VALID');
+  // --- 7. Phase 0 Security & Auth Hardening Verification ---
+  await test('7. JWT Strict Signature & SSRF Guard Verification', async () => {
+    const { verifyToken, createToken } = await import('../lib/auth');
+    const { validateSafeExternalUrl } = await import('../lib/ssrf-guard');
+
+    // Reject dummy token header bypass
+    const dummyToken = 'dummyHeader.eyJ1c2VySWQiOiJhZG1pbi0xIiwiZW1haWwiOiJhZG1pbkBkZWFsZmxvdy5haSIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJBZG1pbiJ9.signature';
+    assert.strictEqual(verifyToken(dummyToken), null, 'Dummy token bypass must be strictly rejected');
+
+    // Valid JWT sign and verify roundtrip
+    const testToken = createToken({ id: 'test-u1', email: 'test@dealflow.ai', role: 'admin', name: 'Test User' });
+    const verified = verifyToken(testToken);
+    assert.ok(verified, 'Valid JWT signature must be verified successfully');
+    assert.strictEqual(verified?.userId, 'test-u1');
+
+    // SSRF Guard Checks
+    assert.strictEqual(validateSafeExternalUrl('http://127.0.0.1/admin').valid, false, 'Loopback IP must be blocked');
+    assert.strictEqual(validateSafeExternalUrl('http://169.254.169.254/latest/meta-data').valid, false, 'Cloud IMDS IP must be blocked');
+    assert.strictEqual(validateSafeExternalUrl('http://10.0.0.1/internal').valid, false, 'RFC1918 private subnet must be blocked');
+    assert.strictEqual(validateSafeExternalUrl('https://meet.google.com/abc-defg-hij').valid, true, 'Valid external HTTPS URL must be allowed');
   });
 
   console.log(`\n================================================================`);

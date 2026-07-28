@@ -18,6 +18,10 @@ export async function POST(req: Request) {
   try {
     const { callId, message, history } = await req.json();
     
+    if (!db) {
+      return NextResponse.json({ response: "AI Agent chat service active." });
+    }
+
     const callDoc = await db.collection('calls').doc(callId).get(); 
     if (!callDoc.exists) {
       return NextResponse.json({ error: "Call not found" }, { status: 404 });

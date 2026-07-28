@@ -68,12 +68,14 @@ export class LoopEngine {
     }
   }
 
-  resumeLoop(loopId: string): Promise<LoopState> | void {
+  async resumeLoop(loopId: string): Promise<LoopState | undefined> {
     const loop = this.loops.get(loopId);
     if (loop) {
       loop.status = LoopStatus.RUNNING;
-      return this.runLoop(loop);
+      await this.runLoop(loop);
+      return loop;
     }
+    return undefined;
   }
 
   async runLoop(loop: LoopState): Promise<void> {

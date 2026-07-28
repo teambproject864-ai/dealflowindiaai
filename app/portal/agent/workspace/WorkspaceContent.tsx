@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { toast } from 'sonner';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -438,7 +439,7 @@ export default function WorkspaceContent() {
       setIncomingCallData(null);
       setDialedNumber("");
       setIsRecording(false);
-      alert(`Call successfully transferred to ${targetDept}.`);
+      toast.success(`Call successfully transferred to ${targetDept}.`);
     }, 1500);
   };
 
@@ -1469,7 +1470,7 @@ export default function WorkspaceContent() {
                                   </div>
                                 </div>
                                 <button
-                                  onClick={() => alert(`Simulating file download for: ${doc.title}`)}
+                                  onClick={() => toast.info(`Simulating file download for: ${doc.title}`)}
                                   className="p-2 border border-slate-800 hover:border-slate-700 bg-slate-950/20 hover:bg-slate-950/40 text-slate-400 hover:text-white rounded-lg transition-all"
                                   title="Download Document"
                                 >
@@ -1768,7 +1769,7 @@ export default function WorkspaceContent() {
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed font-light">Verify latency and microphone feedback prior to outbound queues.</p>
                   <button
-                    onClick={() => alert("Initiating echo-test sound loop. Speak to headset microphone.")}
+                    onClick={() => toast.info("Initiating echo-test sound loop. Speak to headset microphone.")}
                     className="py-2 px-4 bg-slate-900 hover:bg-slate-855 border border-slate-800 hover:border-slate-750 text-xs font-semibold text-white rounded-xl transition-all"
                   >
                     Start Test Call

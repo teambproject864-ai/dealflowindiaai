@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { TwilioService } from "@/lib/twilio-service";
+import { requireAuth } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) return authResult.errorResponse;
+
     const body = await req.json().catch(() => ({}));
     const { to, message } = body;
 

@@ -15,6 +15,9 @@ function parseMaxImmediateCalls() {
 export async function GET() {
   try {
     const maxImmediateCalls = parseMaxImmediateCalls();
+    if (!db) {
+      return NextResponse.json({ available: true, activeCount: 0, maxAllowed: maxImmediateCalls });
+    }
 
     const snapshot = await db
       .collection("calls")

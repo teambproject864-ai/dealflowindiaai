@@ -30,6 +30,8 @@ export async function POST(req: Request) {
   const payload = JSON.parse(bodyText);
   const { event, data } = payload;
 
+  if (!db) return NextResponse.json({ received: true });
+
   if (event === 'transcript.data') {
     const { bot_id, transcript } = data;
     const callSnapshot = await db.collection('calls').where('recallBotId', '==', bot_id).get();

@@ -26,13 +26,18 @@ async function testEndToEndDeployment() {
   const samplePlaybook: Playbook = {
     id: 'ai-experiment-001',
     version: '1.0.0',
+    name: 'Sample Playbook',
+    description: 'DGX Spark Deployment Test Playbook',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     steps: [
-      { id: '1', action: 'provision_namespace', parameters: {}, requiresApproval: false },
-      { id: '2', action: 'load_model', parameters: { modelId: 'llama-2-70b' }, requiresApproval: true }
+      { id: '1', name: 'Provision Namespace', action: 'provision_namespace', parameters: {}, requiresApproval: false },
+      { id: '2', name: 'Load Model', action: 'load_model', parameters: { modelId: 'llama-2-70b' }, requiresApproval: true }
     ]
   };
 
-  await engine.executePlaybook(samplePlaybook, 'admin-user');
+  engine.createPlaybook(samplePlaybook);
+  await engine.executePlaybook(samplePlaybook.id, 'admin-user');
   console.log('✅ End-to-end playbook execution successful.');
   
   console.log('🎉 Deployment Validation Complete.');

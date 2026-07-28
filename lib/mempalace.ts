@@ -58,16 +58,19 @@ export async function getRelevantMemories(leadId: string, queryKeywords: string[
     });
 
     // Update access stats for retrieved memories
-    const batch = db.batch();
-    results.forEach(m => {
-      if (m.id) {
-        batch.update(db.collection(MEMORY_COLLECTION).doc(m.id), {
-          accessCount: admin.firestore.FieldValue.increment(1),
-          lastAccessed: new Date().toISOString()
-        });
-      }
-    });
-    await batch.commit().catch(e => console.error('Error updating memory stats:', e));
+    if (db) {
+      const currentDb = db;
+      const batch = currentDb.batch();
+      results.forEach(m => {
+        if (m.id) {
+          batch.update(currentDb.collection(MEMORY_COLLECTION).doc(m.id), {
+            accessCount: admin.firestore.FieldValue.increment(1),
+            lastAccessed: new Date().toISOString()
+          });
+        }
+      });
+      await batch.commit().catch(e => console.error('Error updating memory stats:', e));
+    }
 
     return results;
   } catch (error) {

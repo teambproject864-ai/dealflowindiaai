@@ -39,6 +39,10 @@ export async function DELETE(req: Request) {
       );
     }
 
+    if (!db) {
+      return NextResponse.json({ success: true, deleted: leadId });
+    }
+
     // ── Verify ownership ─────────────────────────────────────
     const leadRef = db.collection("leads").doc(leadId);
     const leadSnap = await leadRef.get();

@@ -49,6 +49,7 @@ function parseFirestoreDate(v: any): Date | null {
 async function audit(type: string, payload: Record<string, any>) {
   try {
     const { db } = await import("@/lib/firebase-admin");
+    if (!db) return;
     await db.collection("audit_logs").add({
       type,
       ...payload,
@@ -82,6 +83,7 @@ export async function ensureBotForCall(args: {
   reason?: string;
 }): Promise<EnsureBotResult> {
   const { db } = await import("@/lib/firebase-admin");
+  if (!db) return { ok: false, error: "database_not_configured" };
   const { createMeetingBot } = await import("@/lib/recall");
   const { PERSONAS } = await import("@/prompts/personas");
   const callId = args.callId;
@@ -163,6 +165,7 @@ export function isUnhealthyBotStatus(status: string | null | undefined) {
 
 export async function ensureBotHealthy(args: { callId: string; reason?: string }): Promise<EnsureBotResult> {
   const { db } = await import("@/lib/firebase-admin");
+  if (!db) return { ok: false, error: "database_not_configured" };
   const { getBotStatus } = await import("@/lib/recall");
   const callId = args.callId;
   const callRef = db.collection("calls").doc(callId);

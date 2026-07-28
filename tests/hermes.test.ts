@@ -20,6 +20,7 @@ describe('HermesMemoryOS', () => {
       category: 'test',
       keywords: ['test', 'memory'],
       importance: 8,
+      metadata: {},
     });
 
     expect(stored.id).toBeDefined();
@@ -36,6 +37,7 @@ describe('HermesMemoryOS', () => {
       category: 'support',
       keywords: ['pricing', 'inquiry'],
       importance: 7,
+      metadata: {},
     });
 
     await hermes.storeMemory({
@@ -43,6 +45,7 @@ describe('HermesMemoryOS', () => {
       category: 'product',
       keywords: ['feature', 'spec'],
       importance: 6,
+      metadata: {},
     });
 
     const results = await hermes.searchMemories({
@@ -59,6 +62,7 @@ describe('HermesMemoryOS', () => {
       category: 'test',
       keywords: ['test'],
       importance: 5,
+      metadata: {},
     });
 
     const metrics = hermes.getMetrics();

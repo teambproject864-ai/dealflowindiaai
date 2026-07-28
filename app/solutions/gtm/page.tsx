@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import dynamic from "next/dynamic";
+import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { generateICPDocument, ICPDocumentData } from "@/lib/icp-document-generator";
 import { IntakeFormData } from "@/lib/types";
@@ -72,7 +73,7 @@ export default function GtmPage() {
   const handleGenerateICP = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyName) {
-      alert("Please enter a Target Company Name.");
+      toast.error("Please enter a Target Company Name.");
       return;
     }
 

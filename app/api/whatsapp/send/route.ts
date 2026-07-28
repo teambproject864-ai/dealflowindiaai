@@ -1,23 +1,26 @@
-// app/api/whatsapp/send/route.ts
 import { NextResponse } from "next/server";
 import { sendWhatsAppMessage } from "@/lib/whatsapp/evolution-whatsapp-client";
+import { requireAuth } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) return authResult.errorResponse;
+    const user = authResult.user!;
+
     const body = await req.json();
-    const { toPhone, content, senderRole, senderId, senderName, triggerType } = body;
+    const { toPhone, content, triggerType } = body;
 
     if (!toPhone || !content) {
       return NextResponse.json({ success: false, error: "toPhone and content are required parameters" }, { status: 400 });
     }
 
-    const role = (senderRole || "agent") as "customer" | "agent" | "admin" | "system";
     const result = await sendWhatsAppMessage({
       toPhone,
       content,
-      senderRole: role,
-      senderId,
-      senderName,
+      senderRole: user.role,
+      senderId: user.id,
+      senderName: user.name,
       triggerType: triggerType || "manual_chat",
     });
 

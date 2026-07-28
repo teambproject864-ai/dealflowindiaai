@@ -11,6 +11,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Missing callId" }, { status: 400 });
     }
 
+    if (!db) {
+      return NextResponse.json({ buyingSignals: [], objections: [], keyMoments: [] });
+    }
+
     const doc = await db.collection("notes").doc(callId).get();
     if (!doc.exists) {
       return NextResponse.json({ buyingSignals: [], objections: [], keyMoments: [] });

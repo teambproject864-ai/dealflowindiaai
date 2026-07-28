@@ -1,4 +1,3 @@
-// app/api/crm/route.ts
 import { NextResponse } from "next/server";
 import { 
   searchCRMRecords, 
@@ -9,9 +8,13 @@ import {
   validateCRMRecord 
 } from "@/lib/crm-store";
 import { logAuditEvent } from "@/lib/audit-logger";
+import { requireAuth } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) return authResult.errorResponse;
+
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("query") || "";
     const type = (searchParams.get("type") as any) || "all";
@@ -30,8 +33,13 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) return authResult.errorResponse;
+    const user = authResult.user!;
+
     const body = await req.json();
-    const { type, record, userId = "system_user" } = body;
+    const { type, record } = body;
+    const userId = user.id;
 
     if (!type || !["customer", "company", "deal"].includes(type)) {
       return NextResponse.json(
@@ -94,10 +102,14 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) return authResult.errorResponse;
+    const user = authResult.user!;
+
     const { searchParams } = new URL(req.url);
     const type = (searchParams.get("type") as any);
     const id = searchParams.get("id");
-    const userId = searchParams.get("userId") || "system_user";
+    const userId = user.id;
 
     if (!type || !id || !["customer", "company", "deal"].includes(type)) {
       return NextResponse.json(

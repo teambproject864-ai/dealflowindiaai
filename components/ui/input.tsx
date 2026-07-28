@@ -27,8 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               e.preventDefault();
               setIsVisible((prev) => !prev);
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 hover:text-white transition-colors"
-            tabIndex={-1}
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500"
             aria-label={isVisible ? "Hide password" : "Show password"}
           >
             {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

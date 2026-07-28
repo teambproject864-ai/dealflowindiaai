@@ -8,11 +8,11 @@ import { logger } from "./logger";
 // --- Constants & Configuration ---
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
-  if (!secret) {
+  if (!secret || secret.length < 32) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error("CRITICAL SECURITY ERROR: JWT_SECRET environment variable is not defined in production.");
+      throw new Error("CRITICAL SECURITY ERROR: JWT_SECRET environment variable must be defined and at least 32 characters long in production.");
     }
-    return "your-secret-key-in-production-env-var-only";
+    return "default-dev-jwt-secret-key-must-be-at-least-32-chars-long!";
   }
   return secret;
 }
@@ -97,7 +97,7 @@ export const DEMO_ADMINS: (DemoAdmin & { hashedPassword: string })[] = [
   {
     id: "admin-2",
     email: "admin@dealflow.ai",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.admin, 10),
+    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.admin, SALT_ROUNDS),
     name: "Admin One",
     role: "admin",
   },
@@ -107,14 +107,14 @@ export const DEMO_AGENTS: DemoAgent[] = [
   {
     id: "agent-praneeth",
     email: "praneeth@dealflow.ai",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.praneethAgent, 10),
+    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.praneethAgent, SALT_ROUNDS),
     name: "Praneeth",
     role: "agent",
   },
   {
     id: "agent-ashok",
     email: "agent.ashok@dealflow.ai",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.ashokAgent, 10),
+    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.ashokAgent, SALT_ROUNDS),
     name: "Ashok Agent",
     role: "agent",
   },
@@ -124,21 +124,21 @@ export const DEMO_CUSTOMERS: DemoCustomer[] = [
   {
     id: "customer-demo",
     email: "demo@customer.com",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.demoCustomer, 10),
+    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.demoCustomer, SALT_ROUNDS),
     name: "Demo Customer",
     role: "customer",
   },
   {
     id: "customer-praneeth",
     email: "praneethburada@gmail.com",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.praneethCustomer, 10),
+    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.praneethCustomer, SALT_ROUNDS),
     name: "Praneeth Burada",
     role: "customer",
   },
   {
     id: "customer-anil",
     email: "anil@cralgo.com",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.anilCustomer, 10),
+    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.anilCustomer, SALT_ROUNDS),
     name: "Anil Kumar",
     role: "customer",
   },
@@ -203,15 +203,6 @@ export function createToken(user: AuthUser): string {
 }
 
 export function verifyToken(token: string): JwtPayload | null {
-  if (process.env.NODE_ENV !== "production" && token.startsWith("dummyHeader.")) {
-    try {
-      const parts = token.split(".");
-      const decoded = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8")) as JwtPayload;
-      return decoded;
-    } catch (e) {
-      return null;
-    }
-  }
   try {
     const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload;
     return decoded;

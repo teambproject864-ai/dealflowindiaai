@@ -10,15 +10,17 @@ export async function runLLMPipelineTests() {
   console.log("--> [1/4] Testing Ingestion Data Quality Checks...");
   const mockSamples = [
     {
+      id: "sample-1",
+      timestamp: Date.now(),
       prompt: "Optimize RevOps outbound pipeline and calculate customer LTV",
-      systemPrompt: "You are a RevOps expert.",
-      baselineOutputs: { "llama-3.1-8b": "Sample LTV output text" },
+      baselineOutputs: { "llama-3.1-8b": "Sample LTV output text" } as Record<string, string>,
       referenceContent: "High converting B2B campaign strategy reference content."
     },
     {
+      id: "sample-2",
+      timestamp: Date.now(),
       prompt: "Generate B2B SaaS cold email sequence",
-      systemPrompt: "Outbound Sales Specialist",
-      baselineOutputs: { "mistral-7b": "Cold email copy sample" },
+      baselineOutputs: { "mistral-7b": "Cold email copy sample" } as Record<string, string>,
       referenceContent: "Cold email reference template."
     }
   ];

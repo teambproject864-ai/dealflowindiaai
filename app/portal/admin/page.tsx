@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1664,7 +1665,7 @@ function AdminPortalContent() {
                     const res = await fetch("/api/llm-manager/retrain", { method: "POST" });
                     const data = await res.json();
                     if (data.success) {
-                      alert("Retraining initiated!");
+                      toast.success("Retraining initiated!");
                     }
                   } catch (e) {
                     console.error(e);

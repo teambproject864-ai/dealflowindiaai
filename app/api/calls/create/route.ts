@@ -6,9 +6,14 @@ import { ensureBotForCall } from "@/lib/call-bot";
 import { createCallSchema, CallRecord, LeadRecord } from "@/lib/types";
 import { loadServiceAccount } from "@/lib/service-account";
 import { decryptLead } from "@/lib/security";
+import { requireAuth } from "@/lib/auth";
+import { validateSafeExternalUrl } from "@/lib/ssrf-guard";
 
 export async function POST(req: Request) {
   try {
+    const authResult = await requireAuth(req, ["admin", "agent"]);
+    if (authResult.errorResponse) return authResult.errorResponse;
+
     if (!loadServiceAccount()) {
       return NextResponse.json(
         {
@@ -32,6 +37,16 @@ export async function POST(req: Request) {
     }
 
     const { leadId, analysisId, meetingUrl, scheduledAt, guests } = validated.data;
+
+    if (meetingUrl) {
+      const urlCheck = validateSafeExternalUrl(meetingUrl);
+      if (!urlCheck.valid) {
+        return NextResponse.json(
+          { success: false, error: `Invalid meetingUrl: ${urlCheck.error}` },
+          { status: 400 }
+        );
+      }
+    }
     
     const callData: CallRecord = {
       leadId,

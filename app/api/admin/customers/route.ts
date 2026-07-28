@@ -151,9 +151,8 @@ export async function POST(req: Request) {
 
       return NextResponse.json({
         success: true,
-        message: "Customer onboarded successfully",
+        message: "Customer onboarded successfully. A password setup link has been dispatched to the customer email.",
         customer: customerRecord,
-        defaultPassword,
       });
     }
 

@@ -1,12 +1,16 @@
-// app/api/call-bot/schedule/route.ts
-
 import { NextResponse } from "next/server";
 import { isCallBotEnabled } from "@/lib/call-bot/config";
 import { createBot } from "@/lib/call-bot/meeting-client";
 import { getCallTypeConfig } from "@/lib/call-bot/call-router";
 import { logAuditEvent } from "@/lib/audit-logger";
+import { requireAuth } from "@/lib/auth";
+import { validateSafeExternalUrl } from "@/lib/ssrf-guard";
 
 export async function POST(req: Request) {
+  const authResult = await requireAuth(req, ["admin", "agent"]);
+  if (authResult.errorResponse) return authResult.errorResponse;
+  const user = authResult.user!;
+
   if (!isCallBotEnabled()) {
     return NextResponse.json({
       success: false,
@@ -23,6 +27,14 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: false,
         error: "Missing required parameters: callId and meetingUrl are mandatory."
+      }, { status: 400 });
+    }
+
+    const urlCheck = validateSafeExternalUrl(meetingUrl);
+    if (!urlCheck.valid) {
+      return NextResponse.json({
+        success: false,
+        error: `Invalid meetingUrl: ${urlCheck.error}`
       }, { status: 400 });
     }
 

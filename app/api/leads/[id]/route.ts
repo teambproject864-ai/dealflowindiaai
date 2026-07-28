@@ -14,7 +14,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   // ── Authentication ─────────────────────────────────────────
-  const { errorResponse } = await requireAuth(req);
+  const { user, errorResponse } = await requireAuth(req);
   if (errorResponse) return errorResponse;
 
   try {
@@ -37,6 +37,22 @@ export async function GET(
       return NextResponse.json(
         { success: false, error: "Lead not found" },
         { status: 404 }
+      );
+    }
+
+    // Role-based Ownership Filter (A-12)
+    const leadAny = lead as any;
+    const isOwnerOrAdmin =
+      user!.role === "admin" ||
+      lead.assignedAgentKey === user!.id ||
+      leadAny.assignedAgentId === user!.id ||
+      leadAny.customerId === user!.id ||
+      lead.contactEmail === user!.email;
+
+    if (!isOwnerOrAdmin) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: You do not have permission to view this lead" },
+        { status: 403 }
       );
     }
 

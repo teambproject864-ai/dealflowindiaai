@@ -66,11 +66,11 @@ export async function getLeadOffline(leadId: string): Promise<OfflineLead | unde
 
 export async function getAllUnsyncedLeads(): Promise<OfflineLead[]> {
   try {
-    return await db.leads.where("synced").equals(0).toArray(); // Dexie boolean store index is typically 0 or 1
-  } catch {
-    // Fallback if boolean index is stored differently
     const all = await db.leads.toArray();
-    return all.filter((l) => !l.synced);
+    return all.filter((l) => l.synced === false || (l.synced as any) === 0);
+  } catch (err) {
+    console.error("Failed to fetch unsynced offline leads:", err);
+    return [];
   }
 }
 

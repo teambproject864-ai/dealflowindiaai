@@ -8,6 +8,10 @@ export async function GET(req: Request) {
     const now = Date.now();
     const fiveMinutesAgoIso = new Date(now - 5 * 60 * 1000).toISOString();
 
+    if (!db) {
+      return NextResponse.json({ success: true, retriedCount: 0, retriedCalls: [] });
+    }
+
     const snapshot = await db
       .collection("voice_confirmations")
       .where("status", "==", "failed")

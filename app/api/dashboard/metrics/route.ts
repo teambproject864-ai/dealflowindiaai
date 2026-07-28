@@ -1,11 +1,36 @@
 import { db } from '@/lib/firebase-admin';
+import { requireAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+const sseConnectionTracker = new Map<string, number>();
+
+export async function GET(req: Request) {
+  const authResult = await requireAuth(req, ["admin"]);
+  if (authResult.errorResponse) return authResult.errorResponse;
+  const userId = authResult.user!.id;
+
+  const currentConns = sseConnectionTracker.get(userId) || 0;
+  if (currentConns >= 2) {
+    return new Response(JSON.stringify({ error: "SSE connection limit reached (max 2 active streams per admin user)" }), {
+      status: 429,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  sseConnectionTracker.set(userId, currentConns + 1);
+
   const encoder = new TextEncoder();
   let intervalId: NodeJS.Timeout | undefined;
   let isControllerClosed = false;
+
+  const cleanupUserConn = () => {
+    const conns = sseConnectionTracker.get(userId) || 1;
+    if (conns <= 1) {
+      sseConnectionTracker.delete(userId);
+    } else {
+      sseConnectionTracker.set(userId, conns - 1);
+    }
+  };
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -58,6 +83,7 @@ export async function GET() {
         } catch (err) {
           console.warn('[MetricsSSE] Failed to enqueue data, client probably closed stream:', err);
           isControllerClosed = true;
+          cleanupUserConn();
           if (intervalId) {
             clearInterval(intervalId);
             intervalId = undefined;
@@ -74,6 +100,7 @@ export async function GET() {
     cancel() {
       console.log('[MetricsSSE] Client disconnected, clearing stream interval.');
       isControllerClosed = true;
+      cleanupUserConn();
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = undefined;

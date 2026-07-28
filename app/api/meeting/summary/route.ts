@@ -11,6 +11,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Missing callId" }, { status: 400 });
     }
 
+    if (!db) {
+      return NextResponse.json({ content: "" });
+    }
+
     const doc = await db.collection("summaries").where("callId", "==", callId).where("type", "==", "post-call").limit(1).get();
     
     if (doc.empty) {

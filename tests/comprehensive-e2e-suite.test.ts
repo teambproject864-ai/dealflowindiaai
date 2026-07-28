@@ -43,8 +43,9 @@ export async function runComprehensiveE2ETestSuite() {
     // Ingestion Data Quality Check
     const qualityReport = pipelineManager.validateDataQuality([
       {
+        id: "sample-1",
+        timestamp: Date.now(),
         prompt: "Optimize enterprise RevOps deal velocity",
-        systemPrompt: "RevOps Expert",
         baselineOutputs: { "llama-3.1-8b": "Output sample text" },
         referenceContent: "High converting baseline reference content."
       }
