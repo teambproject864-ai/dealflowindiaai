@@ -50,6 +50,7 @@ import { runCustomerIntegrationHubSecurityTests } from "./customer-integration-h
 import { runCrossPortalFeaturesTestSuite } from "./cross-portal-features.test";
 import { runPortalRedesignTestSuite } from "./portal-redesign.test";
 import { runAgentTestingSuite } from "./agent-testing.test";
+import { runMAGVoiceChatLiveE2ETestSuite } from "./mag-voice-chat-e2e-live.test";
 
 
 
@@ -350,7 +351,8 @@ async function main() {
     runCustomerIntegrationHubSecurityTests,
     runCrossPortalFeaturesTestSuite,
     runPortalRedesignTestSuite,
-    runAgentTestingSuite
+    runAgentTestingSuite,
+    runMAGVoiceChatLiveE2ETestSuite
   ];
 
 
