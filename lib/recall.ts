@@ -23,9 +23,9 @@ export async function createMeetingBot(
   joinAtIso?: string
 ) {
   const baseUrl = getRecallBaseUrl();
-  const webhookUrl = `${process.env.APP_URL}/api/meeting/webhook`;
-  const workerUrl = process.env.SCREEN_SHARE_WORKER_URL;
-  if (!workerUrl) throw new Error("SCREEN_SHARE_WORKER_URL is missing");
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://dealsflowai.vercel.app";
+  const webhookUrl = `${appUrl.replace(/\/$/, "")}/api/meeting/webhook`;
+  const workerUrl = process.env.SCREEN_SHARE_WORKER_URL || appUrl;
 
   // Creating a bot immediately dispatches it to the meeting (auto-join),
   // since we do not pass `join_at`.
