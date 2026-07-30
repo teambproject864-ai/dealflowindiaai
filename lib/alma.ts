@@ -255,3 +255,71 @@ export async function applyForgetting() {
 
   await batch.commit();
 }
+
+/**
+ * Evaluates the context relevance score (0-1) for a set of retrieved memories against a user query.
+ */
+export function evaluateContextRelevance(query: string, memories: ALMAMemory[]): number {
+  if (!memories || memories.length === 0 || !query.trim()) return 0;
+
+  const queryTerms = query.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(t => t.length > 2);
+  if (queryTerms.length === 0) return 0;
+
+  let totalMatchScore = 0;
+  for (const memory of memories) {
+    const memoryText = `${memory.content} ${memory.keywords?.join(' ') || ''}`.toLowerCase();
+    const matches = queryTerms.filter(term => memoryText.includes(term)).length;
+    const itemScore = matches / queryTerms.length;
+    totalMatchScore += itemScore;
+  }
+
+  const rawRelevance = totalMatchScore / memories.length;
+  // Boost score slightly if high-importance memories are included
+  const importanceBoost = memories.reduce((acc, m) => acc + (m.importance || 5), 0) / (memories.length * 10) * 0.2;
+  return Math.min(1.0, Math.max(0.0, rawRelevance + importanceBoost));
+}
+
+/**
+ * Detects potential hallucinations by verifying claims in an AI-generated response against retrieved facts.
+ */
+export function detectMemoryHallucination(
+  response: string,
+  retrievedMemories: ALMAMemory[]
+): { hallucinationScore: number; ungroundedClaims: string[]; isHallucination: boolean } {
+  if (!response || !response.trim()) {
+    return { hallucinationScore: 0, ungroundedClaims: [], isHallucination: false };
+  }
+
+  const memoryCorpus = retrievedMemories.map(m => m.content.toLowerCase()).join(' ');
+  // Extract key sentences / claim phrases from response
+  const sentences = response
+    .split(/[.!?]+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 15);
+
+  const ungroundedClaims: string[] = [];
+
+  for (const sentence of sentences) {
+    const words = sentence.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3);
+    if (words.length < 3) continue;
+
+    // Check how many key content words appear in the memory corpus
+    const groundedWords = words.filter(w => memoryCorpus.includes(w));
+    const groundingRatio = groundedWords.length / words.length;
+
+    // If a sentence introducing specific facts has low grounding in memory, mark as ungrounded claim
+    if (groundingRatio < 0.35) {
+      ungroundedClaims.push(sentence);
+    }
+  }
+
+  const hallucinationScore = sentences.length > 0 ? ungroundedClaims.length / sentences.length : 0;
+  const isHallucination = hallucinationScore > 0.3;
+
+  return {
+    hallucinationScore: Math.round(hallucinationScore * 100) / 100,
+    ungroundedClaims,
+    isHallucination
+  };
+}
+

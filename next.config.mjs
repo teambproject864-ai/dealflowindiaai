@@ -101,7 +101,7 @@ const nextConfig = {
         headers: [
           {
             key: 'X-Frame-Options',
-            value: 'DENY',
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-Content-Type-Options',
@@ -121,7 +121,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://app.cal.com https://cal.com https://assets.calendly.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: https://assets.calendly.com; font-src 'self' data:; connect-src 'self' https://dealflow-ai-651cb.firebaseio.com https://*.firebaseio.com wss://*.firebaseio.com https://dealflow-ai-651cb.appspot.com https://*.googleapis.com https://api.huggingface.co https://calendly.com https://api.elevenlabs.io https://*.twilio.com wss://*.twilio.com; frame-src https://app.cal.com https://cal.com https://calendly.com; worker-src 'self' blob:; child-src 'self' blob:;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://assets.calendly.com https://*.calendly.com; style-src 'self' 'unsafe-inline' https://assets.calendly.com; img-src 'self' data: https: https://assets.calendly.com https://*.calendly.com; font-src 'self' data: https://assets.calendly.com; connect-src 'self' https://dealflow-ai-651cb.firebaseio.com https://*.firebaseio.com wss://*.firebaseio.com https://dealflow-ai-651cb.appspot.com https://*.googleapis.com https://api.huggingface.co https://calendly.com https://*.calendly.com https://assets.calendly.com https://api.elevenlabs.io https://*.twilio.com wss://*.twilio.com; frame-src 'self' https://calendly.com https://*.calendly.com https://assets.calendly.com; worker-src 'self' blob:; child-src 'self' blob:;",
           },
         ],
       });

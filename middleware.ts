@@ -63,13 +63,26 @@ export async function middleware(request: NextRequest) {
 
   const response = NextResponse.next();
 
-  // Content Security Policy (CSP) - strict mode but allow necessary resources
-  response.headers.set(
-    "Content-Security-Policy",
-    `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://api.openai.com https://*.firebaseio.com https://firestore.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'`
-  );
+  // Content Security Policy (CSP) - allow necessary resources including official Calendly widgets
+  const cspHeader = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://assets.calendly.com https://*.calendly.com",
+    "style-src 'self' 'unsafe-inline' https://assets.calendly.com",
+    "img-src 'self' data: blob: https: https://assets.calendly.com https://*.calendly.com",
+    "font-src 'self' data: https://assets.calendly.com",
+    "connect-src 'self' https://api.openai.com https://*.firebaseio.com wss://*.firebaseio.com https://firestore.googleapis.com https://api.huggingface.co https://calendly.com https://*.calendly.com https://assets.calendly.com https://api.elevenlabs.io https://*.twilio.com wss://*.twilio.com",
+    "frame-src 'self' https://calendly.com https://*.calendly.com https://assets.calendly.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+    "worker-src 'self' blob:",
+    "child-src 'self' blob:"
+  ].join("; ");
 
-  // X-Frame-Options: Prevent clickjacking
+  response.headers.set("Content-Security-Policy", cspHeader);
+
+  // X-Frame-Options: Prevent clickjacking while allowing sameorigin framing
   response.headers.set("X-Frame-Options", "SAMEORIGIN");
 
   // X-Content-Type-Options: Prevent MIME type sniffing

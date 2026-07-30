@@ -49,6 +49,8 @@ import { runDealflowMeetingBotTests } from "./dealflow-meeting-bot.test";
 import { runCustomerIntegrationHubSecurityTests } from "./customer-integration-hub-security.test";
 import { runCrossPortalFeaturesTestSuite } from "./cross-portal-features.test";
 import { runPortalRedesignTestSuite } from "./portal-redesign.test";
+import { runAgentTestingSuite } from "./agent-testing.test";
+
 
 
 
@@ -347,7 +349,8 @@ async function main() {
     runDealflowMeetingBotTests,
     runCustomerIntegrationHubSecurityTests,
     runCrossPortalFeaturesTestSuite,
-    runPortalRedesignTestSuite
+    runPortalRedesignTestSuite,
+    runAgentTestingSuite
   ];
 
 
