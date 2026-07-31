@@ -228,6 +228,44 @@ export const intakeSchema = z.object({
   doNotTarget: z.string().optional(),
   additionalNotes: z.string().optional(),
 
+  // --- NEW MANDATORY: Market Sizing & Financials ---
+  currentArr: z.string().min(1, "Current annual revenue / ARR is required"),
+  tamSamSom: z.string().min(1, "TAM / SAM / SOM market sizing is required"),
+  marketSharePercent: z.string().min(1, "Current market share percentage is required"),
+  companyGrowthRatePercent: z.string().min(1, "Company growth rate (%) is required"),
+  cacCustomerAcquisitionCost: z.string().min(1, "Customer Acquisition Cost (CAC) is required"),
+  ltvToCacRatio: z.string().min(1, "LTV to CAC ratio is required"),
+  churnRatePercent: z.string().min(1, "Monthly/annual churn rate (%) is required"),
+  netPromoterScoreNps: z.string().min(1, "Net Promoter Score (NPS) is required"),
+
+  // --- NEW MANDATORY: Competitive Landscape ---
+  topCompetitors: z.string().min(1, "Top 3-5 competitors are required"),
+  competitiveAdvantageMoat: z.string().min(1, "Competitive advantage / moat is required"),
+  differentiatorsVsCompetitors: z.string().min(1, "Key differentiators vs competitors are required"),
+  pricingVsCompetitors: z.string().min(1, "Pricing position vs competitors is required"),
+  competitorThreatLevel: z.enum(["Low", "Medium", "High", "Critical"]).default("Medium"),
+
+  // --- NEW MANDATORY: Pricing Model Validation ---
+  pricingModel: z.enum(["Subscription (Recurring)", "One-Time Purchase", "Usage-Based", "Freemium", "Tiered", "Hybrid", "Custom / Enterprise"]).refine(v => v.length > 0, "Pricing model selection is required"),
+  averageDealSizeAcv: z.string().min(1, "Average deal size / ACV is required"),
+  pricingTiersStructure: z.string().min(1, "Pricing tiers / structure is required"),
+  willingnessToPayFeedback: z.string().min(1, "Customer willingness-to-pay feedback is required"),
+  discountStrategy: z.string().min(1, "Discount strategy & approval process is required"),
+
+  // --- NEW MANDATORY: Channel Strategy Development ---
+  currentSalesChannels: z.array(z.string()).min(1, "Select at least one current sales channel"),
+  currentSalesChannelsOther: z.string().optional(),
+  currentMarketingChannelMix: z.string().min(1, "Current marketing channel performance (% of leads by channel) is required"),
+  idealChannelMix: z.string().min(1, "Target ideal channel mix is required"),
+  partnerReferralPrograms: z.enum(["Yes, formal program", "Yes, informal", "No active program"]).refine(v => v.length > 0, "Partner / referral program status is required"),
+
+  // --- NEW MANDATORY: Risk Mitigation Planning ---
+  keyBusinessRisks: z.string().min(1, "Key business risks (market / tech / regulatory / competitive) are required"),
+  riskMitigationPlans: z.string().min(1, "Risk mitigation plans for top risks are required"),
+  complianceRequirements: z.array(z.string()).min(1, "Select at least one compliance framework you must follow"),
+  complianceRequirementsOther: z.string().optional(),
+  dataPrivacySecurityMeasures: z.string().min(1, "Data privacy & security measures are required"),
+
   // --- BACKWARD COMPATIBILITY FIELDS (Optional) ---
   hasCaseStudies: z.enum(caseStudyOptions).optional(),
   brandTrust: z.string().optional(),

@@ -69,6 +69,28 @@ const techTools = [
   "Apollo", "HubSpot", "Salesforce", "Outreach", "Lemlist", "Clay", "Instantly", "Salesloft", "Zoho CRM", "Pipedrive", "Other"
 ];
 const giftCardOptions = ["Yes", "No", "Depends on the Prospect"];
+const salesChannelOptions = [
+  "Direct Sales (In-Person / Field)",
+  "Inside Sales (Remote / SDR-led)",
+  "E-commerce / Self-Serve",
+  "Channel Partners / Resellers",
+  "Referral Program",
+  "Affiliate Marketing",
+  "Marketplaces",
+  "Other (Specify)"
+];
+const complianceFrameworkOptions = [
+  "GDPR (EU)",
+  "CCPA / CPRA (California)",
+  "HIPAA (Healthcare)",
+  "SOC 2 Type I/II",
+  "ISO 27001",
+  "PCI DSS (Payments)",
+  "FERPA (Education)",
+  "FINRA / SEC (Financial)",
+  "NIST 800-53 (US Gov)",
+  "Other (Specify)"
+];
 
 // --- Empty Initial State, including defaults for schema-required fields ---
 const empty: Partial<IntakeFormData> & Record<string, any> = {
@@ -143,6 +165,44 @@ const empty: Partial<IntakeFormData> & Record<string, any> = {
   messagingThemes: "Not specified",
   targetGeographics: [], // Missing required field
   buyingSignals: [], // Missing required field
+
+  // --- NEW MANDATORY FIELDS: Market Sizing & Financials ---
+  currentArr: "",
+  tamSamSom: "",
+  marketSharePercent: "",
+  companyGrowthRatePercent: "",
+  cacCustomerAcquisitionCost: "",
+  ltvToCacRatio: "",
+  churnRatePercent: "",
+  netPromoterScoreNps: "",
+
+  // --- NEW MANDATORY: Competitive Landscape ---
+  topCompetitors: "",
+  competitiveAdvantageMoat: "",
+  differentiatorsVsCompetitors: "",
+  pricingVsCompetitors: "",
+  competitorThreatLevel: "Medium",
+
+  // --- NEW MANDATORY: Pricing Model Validation ---
+  pricingModel: "Subscription (Recurring)",
+  averageDealSizeAcv: "",
+  pricingTiersStructure: "",
+  willingnessToPayFeedback: "",
+  discountStrategy: "",
+
+  // --- NEW MANDATORY: Channel Strategy Development ---
+  currentSalesChannels: [],
+  currentSalesChannelsOther: "",
+  currentMarketingChannelMix: "",
+  idealChannelMix: "",
+  partnerReferralPrograms: "No active program",
+
+  // --- NEW MANDATORY: Risk Mitigation Planning ---
+  keyBusinessRisks: "",
+  riskMitigationPlans: "",
+  complianceRequirements: [],
+  complianceRequirementsOther: "",
+  dataPrivacySecurityMeasures: "",
 };
 
 const stepTitles = [
@@ -151,7 +211,12 @@ const stepTitles = [
   "Brand Presence & Positioning",
   "Offer & Sales Process",
   "Ideal Customer Profile",
-  "Tech Stack & Outreach"
+  "Tech Stack & Outreach",
+  "Market Sizing & Financials",
+  "Competitive Landscape",
+  "Pricing Model Validation",
+  "Channel Strategy",
+  "Risk Mitigation & Compliance"
 ];
 
 export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
@@ -234,6 +299,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
       if (!data.trustFactors?.trim()) e.trustFactors = "Please explain why prospects should trust your company";
     } else if (step === 2) {
       if (data.socialPlatforms.length === 0) e.socialPlatforms = "Select at least one option";
+      if (!data.publishingFrequency) e.publishingFrequency = "Content publishing frequency is required";
       if (!data.offerPromise?.trim()) e.offerPromise = "Please share your offer promise";
       if (!data.painPoint?.trim()) e.painPoint = "Please share the pain point your offer solves";
     } else if (step === 3) {
@@ -247,6 +313,52 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
       if ((data.targetCompanySizes || []).length === 0) e.targetCompanySizes = "Select at least one company size";
       if (!data.targetGeographicRegionsText?.trim()) e.targetGeographicRegionsText = "Please specify target geographic regions";
       if (data.decisionMakers.length === 0) e.decisionMakers = "Select at least one decision maker";
+    } else if (step === 5) {
+      // Tech Stack & Outreach
+      if ((data.currentTools || []).includes("Other") && !data.currentToolsOther?.trim()) {
+        e.currentToolsOther = "Please specify the 'Other' outreach/CRM tool";
+      }
+    } else if (step === 6) {
+      // Market Sizing & Financials
+      if (!data.currentArr?.trim()) e.currentArr = "Current ARR / Revenue is required";
+      if (!data.tamSamSom?.trim()) e.tamSamSom = "TAM / SAM / SOM is required";
+      if (!data.marketSharePercent?.trim()) e.marketSharePercent = "Market share % is required";
+      if (!data.companyGrowthRatePercent?.trim()) e.companyGrowthRatePercent = "Growth rate % is required";
+      if (!data.cacCustomerAcquisitionCost?.trim()) e.cacCustomerAcquisitionCost = "CAC is required";
+      if (!data.ltvToCacRatio?.trim()) e.ltvToCacRatio = "LTV:CAC ratio is required";
+      if (!data.churnRatePercent?.trim()) e.churnRatePercent = "Churn rate % is required";
+      if (!data.netPromoterScoreNps?.trim()) e.netPromoterScoreNps = "NPS is required";
+    } else if (step === 7) {
+      // Competitive Landscape
+      if (!data.topCompetitors?.trim()) e.topCompetitors = "Top competitors are required";
+      if (!data.competitiveAdvantageMoat?.trim()) e.competitiveAdvantageMoat = "Competitive advantage / moat is required";
+      if (!data.differentiatorsVsCompetitors?.trim()) e.differentiatorsVsCompetitors = "Key differentiators are required";
+      if (!data.pricingVsCompetitors?.trim()) e.pricingVsCompetitors = "Pricing vs competitors is required";
+    } else if (step === 8) {
+      // Pricing Model Validation
+      if (!data.pricingModel) e.pricingModel = "Pricing model selection is required";
+      if (!data.averageDealSizeAcv?.trim()) e.averageDealSizeAcv = "Average deal size / ACV is required";
+      if (!data.pricingTiersStructure?.trim()) e.pricingTiersStructure = "Pricing tiers structure is required";
+      if (!data.willingnessToPayFeedback?.trim()) e.willingnessToPayFeedback = "Willingness-to-pay feedback is required";
+      if (!data.discountStrategy?.trim()) e.discountStrategy = "Discount strategy is required";
+    } else if (step === 9) {
+      // Channel Strategy
+      if ((data.currentSalesChannels || []).length === 0) e.currentSalesChannels = "Select at least one sales channel";
+      if ((data.currentSalesChannels || []).includes("Other (Specify)") && !data.currentSalesChannelsOther?.trim()) {
+        e.currentSalesChannelsOther = "Please specify the 'Other' sales channel";
+      }
+      if (!data.currentMarketingChannelMix?.trim()) e.currentMarketingChannelMix = "Current marketing channel mix is required";
+      if (!data.idealChannelMix?.trim()) e.idealChannelMix = "Ideal channel mix is required";
+      if (!data.partnerReferralPrograms) e.partnerReferralPrograms = "Partner / referral program status is required";
+    } else if (step === 10) {
+      // Risk Mitigation & Compliance
+      if (!data.keyBusinessRisks?.trim()) e.keyBusinessRisks = "Key business risks are required";
+      if (!data.riskMitigationPlans?.trim()) e.riskMitigationPlans = "Risk mitigation plans are required";
+      if ((data.complianceRequirements || []).length === 0) e.complianceRequirements = "Select at least one compliance framework";
+      if ((data.complianceRequirements || []).includes("Other (Specify)") && !data.complianceRequirementsOther?.trim()) {
+        e.complianceRequirementsOther = "Please specify the 'Other' compliance framework";
+      }
+      if (!data.dataPrivacySecurityMeasures?.trim()) e.dataPrivacySecurityMeasures = "Data privacy & security measures are required";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -645,6 +757,7 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                     ))}
                   </SelectContent>
                 </Select>
+                {errors.publishingFrequency && <p className="text-xs text-red-400 font-light">{errors.publishingFrequency}</p>}
               </div>
 
               <div className="space-y-2">
@@ -975,12 +1088,15 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   ))}
                 </div>
                 {(data.currentTools || []).includes("Other") && (
-                  <Input
-                    placeholder="Specify other tool..."
-                    value={data.currentToolsOther}
-                    onChange={(e) => setData({ ...data, currentToolsOther: e.target.value })}
-                    className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 mt-2"
-                  />
+                  <div className="space-y-1 mt-2">
+                    <Input
+                      placeholder="Specify other tool..."
+                      value={data.currentToolsOther}
+                      onChange={(e) => setData({ ...data, currentToolsOther: e.target.value })}
+                      className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10"
+                    />
+                    {errors.currentToolsOther && <p className="text-xs text-red-400 font-light">{errors.currentToolsOther}</p>}
+                  </div>
                 )}
               </div>
 
@@ -1011,6 +1127,242 @@ export function IntakeForm({ onComplete }: { onComplete?: () => void }) {
                   placeholder="Tell us any other parameters, details, or custom workflow ideas..."
                   className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[110px]"
                 />
+              </div>
+            </div>
+          )}
+
+          {/* --- NEW Step 7: Market Sizing & Financials --- */}
+          {step === 6 && (
+            <div className="space-y-5">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#8a704c] border-b border-[#24252a]/40 pb-2">
+                Market Sizing & Financial Performance
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="currentArr" className="text-xs font-semibold text-slate-350">Current Annual Revenue / ARR</Label>
+                  <Input id="currentArr" value={data.currentArr} onChange={(e) => setData({ ...data, currentArr: e.target.value })} placeholder="e.g., $1.2M ARR" className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md h-10" />
+                  {errors.currentArr && <p className="text-xs text-red-400 font-light">{errors.currentArr}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="companyGrowthRatePercent" className="text-xs font-semibold text-slate-350">Company Growth Rate (%)</Label>
+                  <Input id="companyGrowthRatePercent" value={data.companyGrowthRatePercent} onChange={(e) => setData({ ...data, companyGrowthRatePercent: e.target.value })} placeholder="e.g., 45% YoY" className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md h-10" />
+                  {errors.companyGrowthRatePercent && <p className="text-xs text-red-400 font-light">{errors.companyGrowthRatePercent}</p>}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tamSamSom" className="text-xs font-semibold text-slate-350">TAM / SAM / SOM Market Sizing</Label>
+                <Textarea id="tamSamSom" value={data.tamSamSom} onChange={(e) => setData({ ...data, tamSamSom: e.target.value })} placeholder={`TAM: $X B (global market)\nSAM: $Y M (addressable market)\nSOM: $Z M (serviceable obtainable in 3 years)`} className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[90px]" />
+                {errors.tamSamSom && <p className="text-xs text-red-400 font-light">{errors.tamSamSom}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="marketSharePercent" className="text-xs font-semibold text-slate-350">Current Market Share (%)</Label>
+                  <Input id="marketSharePercent" value={data.marketSharePercent} onChange={(e) => setData({ ...data, marketSharePercent: e.target.value })} placeholder="e.g., 0.2%" className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md h-10" />
+                  {errors.marketSharePercent && <p className="text-xs text-red-400 font-light">{errors.marketSharePercent}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="netPromoterScoreNps" className="text-xs font-semibold text-slate-350">Net Promoter Score (NPS)</Label>
+                  <Input id="netPromoterScoreNps" value={data.netPromoterScoreNps} onChange={(e) => setData({ ...data, netPromoterScoreNps: e.target.value })} placeholder="e.g., +42" className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md h-10" />
+                  {errors.netPromoterScoreNps && <p className="text-xs text-red-400 font-light">{errors.netPromoterScoreNps}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cacCustomerAcquisitionCost" className="text-xs font-semibold text-slate-350">CAC ($)</Label>
+                  <Input id="cacCustomerAcquisitionCost" value={data.cacCustomerAcquisitionCost} onChange={(e) => setData({ ...data, cacCustomerAcquisitionCost: e.target.value })} placeholder="$1,200" className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md h-10" />
+                  {errors.cacCustomerAcquisitionCost && <p className="text-xs text-red-400 font-light">{errors.cacCustomerAcquisitionCost}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ltvToCacRatio" className="text-xs font-semibold text-slate-350">LTV : CAC Ratio</Label>
+                  <Input id="ltvToCacRatio" value={data.ltvToCacRatio} onChange={(e) => setData({ ...data, ltvToCacRatio: e.target.value })} placeholder="3.5 : 1" className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md h-10" />
+                  {errors.ltvToCacRatio && <p className="text-xs text-red-400 font-light">{errors.ltvToCacRatio}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="churnRatePercent" className="text-xs font-semibold text-slate-350">Churn Rate (%)</Label>
+                  <Input id="churnRatePercent" value={data.churnRatePercent} onChange={(e) => setData({ ...data, churnRatePercent: e.target.value })} placeholder="2.1% monthly" className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md h-10" />
+                  {errors.churnRatePercent && <p className="text-xs text-red-400 font-light">{errors.churnRatePercent}</p>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* --- NEW Step 8: Competitive Landscape --- */}
+          {step === 7 && (
+            <div className="space-y-5">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#8a704c] border-b border-[#24252a]/40 pb-2">
+                Competitive Landscape Assessment
+              </h3>
+
+              <div className="space-y-2">
+                <Label htmlFor="topCompetitors" className="text-xs font-semibold text-slate-350">Top 3-5 Competitors & Key Strengths/Weaknesses</Label>
+                <Textarea id="topCompetitors" value={data.topCompetitors} onChange={(e) => setData({ ...data, topCompetitors: e.target.value })} placeholder={`1. Competitor A: Strength X, Weakness Y\n2. Competitor B: ...\n3. Competitor C: ...`} className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[100px]" />
+                {errors.topCompetitors && <p className="text-xs text-red-400 font-light">{errors.topCompetitors}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="competitiveAdvantageMoat" className="text-xs font-semibold text-slate-350">Your Sustainable Competitive Advantage / Moat</Label>
+                <Textarea id="competitiveAdvantageMoat" value={data.competitiveAdvantageMoat} onChange={(e) => setData({ ...data, competitiveAdvantageMoat: e.target.value })} placeholder="Network effects, proprietary data, switching costs, patents, brand equity, distribution advantage..." className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[90px]" />
+                {errors.competitiveAdvantageMoat && <p className="text-xs text-red-400 font-light">{errors.competitiveAdvantageMoat}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="differentiatorsVsCompetitors" className="text-xs font-semibold text-slate-350">Key Differentiators vs Competitors</Label>
+                <Textarea id="differentiatorsVsCompetitors" value={data.differentiatorsVsCompetitors} onChange={(e) => setData({ ...data, differentiatorsVsCompetitors: e.target.value })} placeholder="Feature differences, pricing advantages, user experience superiority, integrations, support level, speed..." className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[90px]" />
+                {errors.differentiatorsVsCompetitors && <p className="text-xs text-red-400 font-light">{errors.differentiatorsVsCompetitors}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pricingVsCompetitors" className="text-xs font-semibold text-slate-350">Pricing Position vs Competitors</Label>
+                  <Input id="pricingVsCompetitors" value={data.pricingVsCompetitors} onChange={(e) => setData({ ...data, pricingVsCompetitors: e.target.value })} placeholder="15% more premium / 20% cheaper / same but with more features" className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md h-10" />
+                  {errors.pricingVsCompetitors && <p className="text-xs text-red-400 font-light">{errors.pricingVsCompetitors}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="competitorThreatLevel" className="text-xs font-semibold text-slate-350">Overall Competitive Threat Level</Label>
+                  <select id="competitorThreatLevel" value={data.competitorThreatLevel} onChange={(e) => setData({ ...data, competitorThreatLevel: e.target.value })} className="w-full bg-[#16181f] border border-[#24252a] text-[#f4f3f0] focus:border-[#d4a017] rounded-md px-3 py-2.5 text-xs h-10">
+                    <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* --- NEW Step 9: Pricing Model Validation --- */}
+          {step === 8 && (
+            <div className="space-y-5">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#8a704c] border-b border-[#24252a]/40 pb-2">
+                Pricing Model Validation
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pricingModel" className="text-xs font-semibold text-slate-350">Primary Pricing Model</Label>
+                  <select id="pricingModel" value={data.pricingModel} onChange={(e) => setData({ ...data, pricingModel: e.target.value })} className="w-full bg-[#16181f] border border-[#24252a] text-[#f4f3f0] focus:border-[#d4a017] rounded-md px-3 py-2.5 text-xs h-10">
+                    <option>Subscription (Recurring)</option><option>One-Time Purchase</option><option>Usage-Based</option><option>Freemium</option><option>Tiered</option><option>Hybrid</option><option>Custom / Enterprise</option>
+                  </select>
+                  {errors.pricingModel && <p className="text-xs text-red-400 font-light">{errors.pricingModel}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="averageDealSizeAcv" className="text-xs font-semibold text-slate-350">Average Deal Size / ACV</Label>
+                  <Input id="averageDealSizeAcv" value={data.averageDealSizeAcv} onChange={(e) => setData({ ...data, averageDealSizeAcv: e.target.value })} placeholder="$24,000 ACV / $5k SMB / $80k enterprise" className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md h-10" />
+                  {errors.averageDealSizeAcv && <p className="text-xs text-red-400 font-light">{errors.averageDealSizeAcv}</p>}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pricingTiersStructure" className="text-xs font-semibold text-slate-350">Pricing Tiers Structure & Features by Tier</Label>
+                <Textarea id="pricingTiersStructure" value={data.pricingTiersStructure} onChange={(e) => setData({ ...data, pricingTiersStructure: e.target.value })} placeholder={`Tier 1 - Starter ($X/mo): A, B, C features\nTier 2 - Growth ($Y/mo): +D, +E, +F\nTier 3 - Enterprise (Custom): +G, +H, +SLA`} className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[100px]" />
+                {errors.pricingTiersStructure && <p className="text-xs text-red-400 font-light">{errors.pricingTiersStructure}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="willingnessToPayFeedback" className="text-xs font-semibold text-slate-350">Customer Willingness-to-Pay Research / Feedback</Label>
+                <Textarea id="willingnessToPayFeedback" value={data.willingnessToPayFeedback} onChange={(e) => setData({ ...data, willingnessToPayFeedback: e.target.value })} placeholder="Survey data, win/loss analysis, customer interviews, price sensitivity tests..." className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[90px]" />
+                {errors.willingnessToPayFeedback && <p className="text-xs text-red-400 font-light">{errors.willingnessToPayFeedback}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="discountStrategy" className="text-xs font-semibold text-slate-350">Discount Strategy & Approval Process</Label>
+                <Textarea id="discountStrategy" value={data.discountStrategy} onChange={(e) => setData({ ...data, discountStrategy: e.target.value })} placeholder="What discounts are allowed? Who approves? Thresholds? Promo calendar? Annual vs monthly pricing? Multi-year terms?" className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[90px]" />
+                {errors.discountStrategy && <p className="text-xs text-red-400 font-light">{errors.discountStrategy}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* --- NEW Step 10: Channel Strategy --- */}
+          {step === 9 && (
+            <div className="space-y-5">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#8a704c] border-b border-[#24252a]/40 pb-2">
+                Channel Strategy Development
+              </h3>
+
+              <div className="space-y-3">
+                <Label className="text-xs font-semibold text-slate-350">Current Sales Channels (Select all that apply)</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {salesChannelOptions.map((channel) => (
+                    <div key={channel} className="flex items-center space-x-2 rounded-md border border-[#24252a] bg-[#111219]/40 px-3 py-2">
+                      <Checkbox id={`sales-channel-${channel}`} checked={(data.currentSalesChannels || []).includes(channel)} onCheckedChange={() => toggleArrayItem("currentSalesChannels", channel)} />
+                      <label htmlFor={`sales-channel-${channel}`} className="text-xs text-slate-300 cursor-pointer select-none">{channel}</label>
+                    </div>
+                  ))}
+                </div>
+                {(data.currentSalesChannels || []).includes("Other (Specify)") && (
+                  <div className="space-y-1 mt-2">
+                    <Input placeholder="Specify other sales channels..." value={data.currentSalesChannelsOther} onChange={(e) => setData({ ...data, currentSalesChannelsOther: e.target.value })} className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md h-10" />
+                    {errors.currentSalesChannelsOther && <p className="text-xs text-red-400 font-light">{errors.currentSalesChannelsOther}</p>}
+                  </div>
+                )}
+                {errors.currentSalesChannels && <p className="text-xs text-red-400 font-light">{errors.currentSalesChannels}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="currentMarketingChannelMix" className="text-xs font-semibold text-slate-350">Current Marketing Channel Performance (% of leads / revenue by channel)</Label>
+                <Textarea id="currentMarketingChannelMix" value={data.currentMarketingChannelMix} onChange={(e) => setData({ ...data, currentMarketingChannelMix: e.target.value })} placeholder={`LinkedIn: 40% leads, $18 CAC\nGoogle Ads: 25% leads, $32 CAC\nContent / SEO: 15% leads, $6 CAC\nReferral: 12% leads, $2 CAC\nPartners: 8% leads, $10 CAC`} className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[100px]" />
+                {errors.currentMarketingChannelMix && <p className="text-xs text-red-400 font-light">{errors.currentMarketingChannelMix}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="idealChannelMix" className="text-xs font-semibold text-slate-350">Target / Ideal Channel Mix in 12 Months</Label>
+                <Textarea id="idealChannelMix" value={data.idealChannelMix} onChange={(e) => setData({ ...data, idealChannelMix: e.target.value })} placeholder="How would you shift the mix? New channels to test? Channels to scale back? Budget reallocation?" className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[90px]" />
+                {errors.idealChannelMix && <p className="text-xs text-red-400 font-light">{errors.idealChannelMix}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="partnerReferralPrograms" className="text-xs font-semibold text-slate-350">Partner / Referral Programs Status</Label>
+                <select id="partnerReferralPrograms" value={data.partnerReferralPrograms} onChange={(e) => setData({ ...data, partnerReferralPrograms: e.target.value })} className="w-full bg-[#16181f] border border-[#24252a] text-[#f4f3f0] focus:border-[#d4a017] rounded-md px-3 py-2.5 text-xs h-10">
+                  <option>Yes, formal program</option><option>Yes, informal</option><option>No active program</option>
+                </select>
+                {errors.partnerReferralPrograms && <p className="text-xs text-red-400 font-light">{errors.partnerReferralPrograms}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* --- NEW Step 11: Risk Mitigation & Compliance --- */}
+          {step === 10 && (
+            <div className="space-y-5">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#8a704c] border-b border-[#24252a]/40 pb-2">
+                Risk Mitigation & Compliance Planning
+              </h3>
+
+              <div className="space-y-2">
+                <Label htmlFor="keyBusinessRisks" className="text-xs font-semibold text-slate-350">Top 5-8 Key Business Risks (Market, Tech, Regulatory, Competitive, Execution)</Label>
+                <Textarea id="keyBusinessRisks" value={data.keyBusinessRisks} onChange={(e) => setData({ ...data, keyBusinessRisks: e.target.value })} placeholder={`1. Risk: Description + Likelihood + Impact\n2. Risk: ...`} className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[110px]" />
+                {errors.keyBusinessRisks && <p className="text-xs text-red-400 font-light">{errors.keyBusinessRisks}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="riskMitigationPlans" className="text-xs font-semibold text-slate-350">Mitigation Plans & Contingency for Each Risk</Label>
+                <Textarea id="riskMitigationPlans" value={data.riskMitigationPlans} onChange={(e) => setData({ ...data, riskMitigationPlans: e.target.value })} placeholder="For each risk above, describe specific mitigation steps, owners, early warning signals, and playbooks if it materializes." className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[110px]" />
+                {errors.riskMitigationPlans && <p className="text-xs text-red-400 font-light">{errors.riskMitigationPlans}</p>}
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-xs font-semibold text-slate-350">Compliance Frameworks You Must Follow</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {complianceFrameworkOptions.map((fw) => (
+                    <div key={fw} className="flex items-center space-x-2 rounded-md border border-[#24252a] bg-[#111219]/40 px-3 py-2">
+                      <Checkbox id={`compliance-${fw}`} checked={(data.complianceRequirements || []).includes(fw)} onCheckedChange={() => toggleArrayItem("complianceRequirements", fw)} />
+                      <label htmlFor={`compliance-${fw}`} className="text-xs text-slate-300 cursor-pointer select-none">{fw}</label>
+                    </div>
+                  ))}
+                </div>
+                {(data.complianceRequirements || []).includes("Other (Specify)") && (
+                  <div className="space-y-1 mt-2">
+                    <Input placeholder="Specify other compliance requirements..." value={data.complianceRequirementsOther} onChange={(e) => setData({ ...data, complianceRequirementsOther: e.target.value })} className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md h-10" />
+                    {errors.complianceRequirementsOther && <p className="text-xs text-red-400 font-light">{errors.complianceRequirementsOther}</p>}
+                  </div>
+                )}
+                {errors.complianceRequirements && <p className="text-xs text-red-400 font-light">{errors.complianceRequirements}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="dataPrivacySecurityMeasures" className="text-xs font-semibold text-slate-350">Data Privacy & Security Measures Currently In Place / Planned</Label>
+                <Textarea id="dataPrivacySecurityMeasures" value={data.dataPrivacySecurityMeasures} onChange={(e) => setData({ ...data, dataPrivacySecurityMeasures: e.target.value })} placeholder="Encryption, access controls, audits, backups, incident response, DPA, SSO/SAML, data residency, deletion policies..." className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md min-h-[110px]" />
+                {errors.dataPrivacySecurityMeasures && <p className="text-xs text-red-400 font-light">{errors.dataPrivacySecurityMeasures}</p>}
               </div>
             </div>
           )}
