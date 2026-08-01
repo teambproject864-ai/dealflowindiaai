@@ -32,6 +32,8 @@ import { generateCampaignStrategy, regenerateSection, CampaignStrategyData } fro
 import { CampaignContentGenerator } from "@/components/portal/CampaignContentGenerator";
 import { ModelSelector } from "@/components/ModelSelector";
 import { getDefaultModelForRole, ModelConfig } from "@/lib/model-registry";
+import WorkflowNodeCanvas from "@/components/gtm/n8n/WorkflowNodeCanvas";
+import TacticPresetSelector from "@/components/gtm/n8n/TacticPresetSelector";
 
 
 interface ContentWorkflowWorkspaceProps {
@@ -47,8 +49,11 @@ export function ContentWorkflowWorkspace({
   customerName,
   initialCustomerData,
   onSaveCustomer,
-  userRole
+  userRole = "customer",
 }: ContentWorkflowWorkspaceProps) {
+  // Studio Workspace Mode
+  const [studioMode, setStudioMode] = useState<"strategy" | "n8n_dag" | "tactic_presets">("strategy");
+
   // Collapsible state for Intake Profile
   const [profileOpen, setProfileOpen] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -372,11 +377,50 @@ export function ContentWorkflowWorkspace({
               className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-2 px-4 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-indigo-500/15"
             >
               {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCw className="h-3.5 w-3.5" />}
-              Regenerate Strategy
+              <span>Regenerate Strategy</span>
             </button>
           )}
         </div>
       </GlassPanel>
+
+      {/* ── Studio Workspace Sub-Navigation Modes ── */}
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-xl">
+        <button
+          onClick={() => setStudioMode("strategy")}
+          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            studioMode === "strategy"
+              ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/20"
+              : "text-slate-400 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <Sparkles className="h-4 w-4" />
+          <span>Strategy & AI Generator</span>
+        </button>
+
+        <button
+          onClick={() => setStudioMode("n8n_dag")}
+          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            studioMode === "n8n_dag"
+              ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/20"
+              : "text-slate-400 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <Zap className="h-4 w-4" />
+          <span>n8n Workflow DAG Studio</span>
+        </button>
+
+        <button
+          onClick={() => setStudioMode("tactic_presets")}
+          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            studioMode === "tactic_presets"
+              ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+              : "text-slate-400 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <Layers className="h-4 w-4" />
+          <span>Marketing Tactics Library</span>
+        </button>
+      </div>
 
       {/* AI Model Selection Panel */}
       <GlassPanel tilt={false} overflowVisible={true} className="border-slate-800 p-5 bg-slate-900/30 relative z-30 overflow-visible">
@@ -649,8 +693,21 @@ export function ContentWorkflowWorkspace({
         </GlassPanel>
       )}
 
+      {/* ── Sub-Mode Views (n8n DAG Workflow & Tactics Presets) ── */}
+      {studioMode === "n8n_dag" && (
+        <GlassPanel tilt={false} className="border-slate-800 p-6 bg-slate-900/30">
+          <WorkflowNodeCanvas />
+        </GlassPanel>
+      )}
+
+      {studioMode === "tactic_presets" && (
+        <GlassPanel tilt={false} className="border-slate-800 p-6 bg-slate-900/30">
+          <TacticPresetSelector />
+        </GlassPanel>
+      )}
+
       {/* Main Campaign Strategy Views */}
-      {!campaignStrategy && !isGenerating && (
+      {studioMode === "strategy" && !campaignStrategy && !isGenerating && (
         <GlassPanel tilt={false} className="border-dashed border-slate-800 p-16 text-center bg-slate-900/5">
           <Sparkles className="h-10 w-10 text-slate-700 mx-auto mb-3" />
           <h4 className="text-base font-extrabold text-white">No Strategy Generated Yet</h4>
@@ -666,7 +723,7 @@ export function ContentWorkflowWorkspace({
         </GlassPanel>
       )}
 
-      {campaignStrategy && !isGenerating && (
+      {studioMode === "strategy" && campaignStrategy && !isGenerating && (
         <div className="space-y-8">
           
           {/* I. STRATEGIC FOUNDATION */}

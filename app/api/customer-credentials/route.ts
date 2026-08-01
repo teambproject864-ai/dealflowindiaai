@@ -115,9 +115,12 @@ export async function POST(req: Request) {
     // 6. Generate Credentials & Hash Password
     const hashedPassword = await hashPassword(password);
 
-    const credentials: CustomerCredentials = {
+    const customerId = `customer-${Date.now()}`;
+
+    const credentials: CustomerCredentials & { customerId?: string } = {
       id: uuidv4(),
       leadId,
+      customerId,
       email: sanitizedEmail,
       passwordHash: hashedPassword,
       createdAt: new Date().toISOString(),
@@ -132,14 +135,18 @@ export async function POST(req: Request) {
       await db.collection("customer_credentials").doc(credentials.id).set(credentials);
     }
 
-    const customerId = `customer-${Date.now()}`;
     const newUser = {
       id: customerId,
       email: sanitizedEmail,
       hashedPassword,
-      name: lead?.contactName || "Customer",
+      name: lead?.contactName || body.displayName || body.name || "Customer",
       role: "customer" as const,
-      isVerified: true, // Mark verified explicitly
+      isVerified: true, // Mark verified explicitly for GTM assessment accounts
+      isLocked: false,
+      failedLoginAttempts: 0,
+      passwordUpdatedAt: new Date().toISOString(),
+      source: "gtm_assessment",
+      status: "active",
       createdAt: new Date().toISOString(),
     };
 
@@ -149,11 +156,21 @@ export async function POST(req: Request) {
     if (db) {
       await db.collection("users").doc(customerId).set(newUser);
       
+      // Auto-link matching gtm_intakes for this email
+      try {
+        const intakesSnap = await db.collection("gtm_intakes").where("productOwnerEmail", "==", sanitizedEmail).get();
+        if (intakesSnap && !intakesSnap.empty) {
+          for (const intakeDoc of intakesSnap.docs) {
+            await db.collection("gtm_intakes").doc(intakeDoc.id).update({ customerId }).catch(() => {});
+          }
+        }
+      } catch (e) {}
+
       // Also create a customer record in the customers collection
       const agentProfile = lead?.assignedAgentKey ? getAgentByKey(lead.assignedAgentKey as any) : null;
       const customerRecord = {
         id: customerId,
-        name: lead?.contactName || "Customer",
+        name: lead?.contactName || body.displayName || body.name || "Customer",
         email: sanitizedEmail,
         phone: lead?.contactPhone || "",
         companyName: lead?.companyName || "Company",
@@ -163,7 +180,7 @@ export async function POST(req: Request) {
         assignedAgentId: lead?.assignedAgentKey ? `agent-${lead.assignedAgentKey}` : "",
         assignedAgentName: agentProfile ? agentProfile.name : "",
         personalIdentifiers: {
-          fullName: lead?.contactName || "Customer",
+          fullName: lead?.contactName || body.displayName || body.name || "Customer",
           email: sanitizedEmail,
           phoneNumber: lead?.contactPhone || "",
         },

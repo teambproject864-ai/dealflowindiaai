@@ -59,6 +59,7 @@ import { cn } from "@/lib/utils";
 import AuthProvider from "@/components/auth/AuthProvider";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
+import { AnimatedMetricCard } from "@/components/ui/AnimatedMetricCard";
 import { BarChart3 } from "lucide-react";
 
 import { CustomerICPDetailsView } from "@/components/portal/CustomerICPDetailsView";
@@ -1011,64 +1012,33 @@ function AgentPortalContent() {
 
       {/* ── QUICK STATS CARDS ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Pending Workload */}
-        <div className="group relative rounded-2xl overflow-hidden border border-purple-500/20 bg-gradient-to-br from-slate-900/90 to-purple-950/30 p-5 hover:border-purple-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full -translate-y-8 translate-x-8 group-hover:scale-150 transition-transform duration-500" />
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-purple-400/80">Pending Workload</p>
-              <h3 className="text-4xl font-extrabold text-white mt-1.5 tabular-nums">{pendingTasks}</h3>
-              <p className="text-xs text-slate-500 mt-1">Active tasks queued</p>
-            </div>
-            <div className="h-10 w-10 rounded-xl bg-purple-500/15 border border-purple-500/20 flex items-center justify-center shrink-0">
-              <Clock className="h-5 w-5 text-purple-400" />
-            </div>
-          </div>
-          <div className="mt-3 h-1 rounded-full bg-slate-800 overflow-hidden">
-            <div className="h-full rounded-full bg-gradient-to-r from-purple-600 to-violet-500" style={{width: `${Math.min(100, (pendingTasks / Math.max(totalTasks, 1)) * 100)}%`}} />
-          </div>
-        </div>
-
-        {/* Average Rating */}
-        <div className="group relative rounded-2xl overflow-hidden border border-emerald-500/20 bg-gradient-to-br from-slate-900/90 to-emerald-950/30 p-5 hover:border-emerald-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -translate-y-8 translate-x-8 group-hover:scale-150 transition-transform duration-500" />
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400/80">Average Rating</p>
-              <h3 className="text-4xl font-extrabold text-white mt-1.5 tabular-nums">{rating}</h3>
-              <p className="text-xs text-slate-500 mt-1">Customer satisfaction score</p>
-            </div>
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center shrink-0">
-              <Star className="h-5 w-5 text-emerald-400 fill-emerald-400" />
-            </div>
-          </div>
-          <div className="mt-3 flex gap-0.5">
-            {[1,2,3,4,5].map(n => (
-              <Star key={n} className={cn("h-3.5 w-3.5", parseFloat(rating) >= n ? "text-emerald-400 fill-emerald-400" : "text-slate-700")} />
-            ))}
-          </div>
-        </div>
-
-        {/* Active Customers */}
-        <div className="group relative rounded-2xl overflow-hidden border border-sky-500/20 bg-gradient-to-br from-slate-900/90 to-sky-950/30 p-5 hover:border-sky-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-sky-500/10">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-sky-500/5 rounded-full -translate-y-8 translate-x-8 group-hover:scale-150 transition-transform duration-500" />
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-sky-400/80">Active Customers</p>
-              <h3 className="text-4xl font-extrabold text-white mt-1.5 tabular-nums">{customers.length}</h3>
-              <p className="text-xs text-slate-500 mt-1">In your book of business</p>
-            </div>
-            <div className="h-10 w-10 rounded-xl bg-sky-500/15 border border-sky-500/20 flex items-center justify-center shrink-0">
-              <Users className="h-5 w-5 text-sky-400" />
-            </div>
-          </div>
-          <div className="mt-3 flex -space-x-1.5">
-            {Array.from({length: Math.min(customers.length, 5)}).map((_, i) => (
-              <div key={i} className="h-5 w-5 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 border border-slate-900 text-[8px] font-bold text-white flex items-center justify-center">{i + 1}</div>
-            ))}
-            {customers.length > 5 && <div className="h-5 w-5 rounded-full bg-slate-800 border border-slate-700 text-[8px] font-bold text-slate-400 flex items-center justify-center">+{customers.length - 5}</div>}
-          </div>
-        </div>
+        <AnimatedMetricCard
+          title="Pending Workload"
+          value={pendingTasks}
+          change={`${Math.min(100, Math.round((pendingTasks / Math.max(totalTasks, 1)) * 100))}% queued`}
+          isPositive={true}
+          subtitle="Active tasks assigned to workflow queue"
+          icon={Clock}
+          accentColor="violet"
+        />
+        <AnimatedMetricCard
+          title="Customer CSAT Score"
+          value={rating}
+          change="+0.4"
+          isPositive={true}
+          subtitle="CSAT score across customer accounts"
+          icon={Star}
+          accentColor="emerald"
+        />
+        <AnimatedMetricCard
+          title="Active Customers"
+          value={customers.length}
+          change="+12% MoM"
+          isPositive={true}
+          subtitle="Currently active in your book of business"
+          icon={Users}
+          accentColor="cyan"
+        />
       </div>
 
       {/* Progress & Dialer Stats */}

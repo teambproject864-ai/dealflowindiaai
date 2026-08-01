@@ -53,6 +53,7 @@ import { runAgentTestingSuite } from "./agent-testing.test";
 import { runMAGVoiceChatLiveE2ETestSuite } from "./mag-voice-chat-e2e-live.test";
 import { runIntakeFormGenericTests } from "./intake-form-generic.test";
 import { runPipelineSupportPromptTests } from "./pipeline-support.test";
+import { runGTMCustomerLoginTests } from "./gtm-customer-login.test";
 
 
 
@@ -356,7 +357,8 @@ async function main() {
     runAgentTestingSuite,
     runMAGVoiceChatLiveE2ETestSuite,
     runIntakeFormGenericTests,
-    runPipelineSupportPromptTests
+    runPipelineSupportPromptTests,
+    runGTMCustomerLoginTests
   ];
 
 

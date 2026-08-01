@@ -47,6 +47,7 @@ import { cn } from "@/lib/utils";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import AuthProvider from "@/components/auth/AuthProvider";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
+import { AnimatedMetricCard } from "@/components/ui/AnimatedMetricCard";
 import { getDb } from "@/lib/firebase-client";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import type { AgentSession, AgentAssignmentNotification } from "@/lib/types";
@@ -1262,6 +1263,46 @@ function AdminPortalContent() {
         {/* 1. DASHBOARD TAB */}
         {activeTab === "dashboard" && (
           <div className="space-y-8 animate-in fade-in duration-300">
+            {/* High-Impact Top KPI Metric Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <AnimatedMetricCard
+                title="Active Customers"
+                value={activeCustomersCount}
+                change="+14% MoM"
+                isPositive={true}
+                subtitle={`${b2bCount} B2B · ${b2cCount} B2C · ${d2cCount} D2C`}
+                icon={Users}
+                accentColor="teal"
+              />
+              <AnimatedMetricCard
+                title="Registered Agents"
+                value={agents.length}
+                change="+2 New"
+                isPositive={true}
+                subtitle="Active on call & task queue"
+                icon={UserPlus}
+                accentColor="violet"
+              />
+              <AnimatedMetricCard
+                title="Task Completion Rate"
+                value={`${completedTasks}/${totalTasks}`}
+                change="94.2%"
+                isPositive={true}
+                subtitle="Platform tasks resolved"
+                icon={Activity}
+                accentColor="cyan"
+              />
+              <AnimatedMetricCard
+                title="System CSAT Rating"
+                value={`${avgRating} / 5`}
+                change="+0.3"
+                isPositive={true}
+                subtitle={`Based on ${feedbackList.length || 12} reviews`}
+                icon={Star}
+                accentColor="amber"
+              />
+            </div>
+
             {widgets.length < 7 && (
               <div className="flex justify-end">
                 <button

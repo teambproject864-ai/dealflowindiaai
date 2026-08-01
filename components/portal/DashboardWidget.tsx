@@ -35,14 +35,14 @@ export function DashboardWidget({
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={cn(
-        "df-widget group/widget flex flex-col",
+        "df-widget group/widget flex flex-col rounded-2xl bg-slate-900/80 border border-white/10 backdrop-blur-2xl shadow-xl transition-all duration-300 hover:border-white/20 hover:shadow-2xl overflow-hidden",
         isLarge ? "col-span-full md:col-span-2" : "col-span-1",
         isCollapsed ? "h-auto" : "h-[360px]",
         className
       )}
     >
       {/* Widget Header */}
-      <div className="df-widget-header bg-slate-900/40 backdrop-blur-md flex items-center justify-between border-b border-white/5 px-4 py-3">
+      <div className="df-widget-header bg-slate-950/60 backdrop-blur-md flex items-center justify-between border-b border-white/8 px-4 py-3">
         <div className="flex items-center gap-2">
           <div className="text-slate-500 cursor-grab hover:text-teal-400 active:cursor-grabbing">
             <Move className="h-4 w-4" />

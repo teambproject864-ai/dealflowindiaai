@@ -97,22 +97,93 @@ export async function POST(req: NextRequest) {
     try {
       const { db } = await import("@/lib/firebase-admin");
       if (db) {
+        // Query users by email to inspect role and prevent role misclassification
         const snap = await db
           .collection("users")
           .where("email", "==", email.toLowerCase())
-          .where("role", "==", role)
           .get();
         if (snap && !snap.empty && snap.docs?.length > 0) {
           const doc = snap.docs[0];
           dbUser = { id: doc.id, ...doc.data() } as any;
+        } else {
+          // Fallback: Check customer_credentials collection for GTM Assessment accounts missing a users record
+          const credSnap = await db
+            .collection("customer_credentials")
+            .where("email", "==", email.toLowerCase())
+            .get();
+          if (credSnap && !credSnap.empty && credSnap.docs?.length > 0) {
+            const credDocSnap = credSnap.docs[0];
+            const credDoc = credDocSnap.data() as any;
+            const fallbackPasswordHash = credDoc.passwordHash || credDoc.hashedPassword;
+            if (fallbackPasswordHash) {
+              const isValidCredPassword = await verifyPassword(password, fallbackPasswordHash);
+              if (isValidCredPassword) {
+                // Auto-heal/backfill user document into users collection
+                const existingCustomerId =
+                  typeof credDoc.customerId === "string" ? credDoc.customerId.trim() : "";
+                const newUserId = existingCustomerId || credDocSnap.id || `customer-${Date.now()}`;
+                const autoHealedUser = {
+                  id: newUserId,
+                  email: email.toLowerCase(),
+                  hashedPassword: fallbackPasswordHash,
+                  name: credDoc.name || credDoc.displayName || "Customer",
+                  role: "customer" as const,
+                  isVerified: true,
+                  isLocked: false,
+                  failedLoginAttempts: 0,
+                  passwordUpdatedAt: new Date().toISOString(),
+                  source: "gtm_assessment",
+                  createdAt: credDoc.createdAt || new Date().toISOString(),
+                };
+                if (!existingCustomerId) {
+                  await db
+                    .collection("customer_credentials")
+                    .doc(credDocSnap.id)
+                    .update({ customerId: newUserId })
+                    .catch(() => {});
+                }
+                await db.collection("users").doc(newUserId).set(autoHealedUser).catch(() => {});
+                dbUser = autoHealedUser;
+              }
+            }
+          }
         }
-
       }
     } catch (e) {
       logger.warn("[Login] Firestore not configured or failed to connect", e);
     }
 
+    // Role-scoping validation: Prevent GTM Assessment customer accounts from logging into admin/agent portals, and vice-versa
     if (dbUser) {
+      const userRole = (dbUser.role || "").toLowerCase();
+      if (userRole === "customer" && role !== "customer") {
+        addAuditLog(email, role, false, `[GTM Auth Monitor] Customer account attempted login at non-customer portal (${role}) from IP: ${ip}`, ip, userAgent);
+        return NextResponse.json(
+          { success: false, error: "Customer accounts generated through GTM Assessment can only authenticate via the Customer Portal (/portal/customer/login)." },
+          { status: 403 }
+        );
+      }
+      if (userRole !== "customer" && role === "customer") {
+        addAuditLog(email, role, false, `[GTM Auth Monitor] Non-customer account (${userRole}) attempted login at Customer portal from IP: ${ip}`, ip, userAgent);
+        return NextResponse.json(
+          { success: false, error: "Internal staff/admin accounts cannot authenticate via the Customer Portal." },
+          { status: 403 }
+        );
+      }
+    }
+
+    if (dbUser) {
+      // Auto-heal isVerified if missing/undefined for customer accounts
+      if (dbUser.role === "customer" && (dbUser.isVerified === undefined || dbUser.isVerified === null)) {
+        dbUser.isVerified = true;
+        try {
+          const { db: fDb } = await import("@/lib/firebase-admin");
+          if (fDb && dbUser.id) {
+            await fDb.collection("users").doc(dbUser.id).update({ isVerified: true });
+          }
+        } catch (e) { }
+      }
+
       // Check Lockout
       if (dbUser.isLocked && dbUser.lockedUntil) {
         const lockedUntilDate = new Date(dbUser.lockedUntil);
@@ -248,28 +319,22 @@ export async function POST(req: NextRequest) {
     // Fall back to demo/hardcoded config if not found in db
     if (!user) {
       if (role === "admin") {
-        if (email.toLowerCase() === DEMO_ADMIN.email.toLowerCase()) {
-          const adminHash = process.env.ADMIN_PASSWORD_HASH;
-          if (adminHash) {
-            const isValidPassword = await verifyPassword(password, adminHash);
-            if (isValidPassword) {
-              user = { ...DEMO_ADMIN, role: "admin" as const };
-            }
-          } else {
-            // Fallback for local development when ADMIN_PASSWORD_HASH is not set
-            const isValidPassword = await verifyPassword(password, bcrypt.hashSync("Pranee@1909", 10)); // default fallback password
-            if (isValidPassword) {
-              user = { ...DEMO_ADMIN, role: "admin" as const };
-            }
+        const extraAdmin = DEMO_ADMINS.find((a) => a.email.toLowerCase() === email.toLowerCase());
+        if (extraAdmin) {
+          let isValidPassword = await verifyPassword(password, extraAdmin.hashedPassword);
+          if (!isValidPassword && process.env.ADMIN_PASSWORD_HASH) {
+            isValidPassword = await verifyPassword(password, process.env.ADMIN_PASSWORD_HASH);
           }
-        }
-        if (!user) {
-          const extraAdmin = DEMO_ADMINS.find((a) => a.email.toLowerCase() === email.toLowerCase());
-          if (extraAdmin) {
-            const isValidPassword = await verifyPassword(password, extraAdmin.hashedPassword);
-            if (isValidPassword) {
-              user = { id: extraAdmin.id, email: extraAdmin.email, name: extraAdmin.name, role: "admin" as const };
-            }
+          if (isValidPassword) {
+            user = { id: extraAdmin.id, email: extraAdmin.email, name: extraAdmin.name, role: "admin" as const };
+          }
+        } else if (email.toLowerCase() === DEMO_ADMIN.email.toLowerCase()) {
+          let isValidPassword = false;
+          if (process.env.ADMIN_PASSWORD_HASH) {
+            isValidPassword = await verifyPassword(password, process.env.ADMIN_PASSWORD_HASH);
+          }
+          if (isValidPassword) {
+            user = { ...DEMO_ADMIN, role: "admin" as const };
           }
         }
       } else if (role === "agent") {

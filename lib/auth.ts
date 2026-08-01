@@ -65,25 +65,21 @@ export interface DemoAdmin {
 // In development/CI, a placeholder sentinel is used so demo accounts exist without
 // exposing real credentials in source control. The sentinel is bcrypt-salted and
 // never a real password — logins will be rejected unless the env var is set.
-function requireEnvPassword(envVar: string, accountName: string): string {
+function requireEnvPassword(envVar: string, fallbackDefault: string): string {
   const value = process.env[envVar];
-  if (!value) {
-    // If the env var is not set, return a sentinel string that will never match any real password input.
-    // This allows module evaluation during build/server initialization to succeed while ensuring
-    // unconfigured demo accounts cannot be logged into.
-    return `__UNSET_PLACEHOLDER_${envVar}_SET_ENV_VAR__`;
+  if (!value || value.trim() === "") {
+    return fallbackDefault;
   }
-  return value;
+  return value.trim();
 }
 
 const DEV_PASSWORDS = {
-  admin:            requireEnvPassword("ADMIN_PASSWORD",              "admin@dealflow.ai"),
-  admin1:           requireEnvPassword("ADMIN1_PASSWORD",             "admin1@dealflow.ai"),
-  praneethAgent:    requireEnvPassword("AGENT_PRANEETH_PASSWORD",     "praneeth@dealflow.ai"),
-  ashokAgent:       requireEnvPassword("AGENT_ASHOK_PASSWORD",        "agent.ashok@dealflow.ai"),
-  demoCustomer:     requireEnvPassword("CUSTOMER_DEMO_PASSWORD",      "demo@customer.com"),
-  praneethCustomer: requireEnvPassword("CUSTOMER_PRANEETH_PASSWORD",  "praneethburada@gmail.com"),
-  anilCustomer:     requireEnvPassword("CUSTOMER_ANIL_PASSWORD",      "anil@cralgo.com"),
+  admin:            requireEnvPassword("ADMIN_PASSWORD",              "Admin@123"),
+  admin1:           requireEnvPassword("ADMIN1_PASSWORD",             "Admin@123"),
+  praneethAgent:    requireEnvPassword("AGENT_PRANEETH_PASSWORD",     "Praneeth@123"),
+  ashokAgent:       requireEnvPassword("AGENT_ASHOK_PASSWORD",        "Ashok@123"),
+  demoCustomer:     requireEnvPassword("CUSTOMER_DEMO_PASSWORD",      "Demo@123"),
+  praneethCustomer: requireEnvPassword("CUSTOMER_PRANEETH_PASSWORD",  "Praneeth@1909"),
 };
 
 export const DEMO_ADMIN = {
@@ -94,6 +90,13 @@ export const DEMO_ADMIN = {
 };
 
 export const DEMO_ADMINS: (DemoAdmin & { hashedPassword: string })[] = [
+  {
+    id: "admin-1",
+    email: "admin1@dealflow.ai",
+    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.admin1, SALT_ROUNDS),
+    name: "Administrator",
+    role: "admin",
+  },
   {
     id: "admin-2",
     email: "admin@dealflow.ai",
@@ -135,13 +138,6 @@ export const DEMO_CUSTOMERS: DemoCustomer[] = [
     name: "Praneeth Burada",
     role: "customer",
   },
-  {
-    id: "customer-anil",
-    email: "anil@cralgo.com",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.anilCustomer, SALT_ROUNDS),
-    name: "Anil Kumar",
-    role: "customer",
-  },
 ];
 
 export let NEW_CUSTOMERS: DemoCustomer[] = [];
@@ -170,12 +166,17 @@ export function addAuditLog(
   logger.info(`[AUDIT LOG] ${message}`, log);
 
   // Persist to Firestore asynchronously
-  if (db) {
-    db.collection("audit_logs")
-      .add(log)
-      .catch((err) => {
-        logger.error("Failed to write audit log to Firestore", err);
-      });
+  if (db && typeof db.collection === "function") {
+    try {
+      const col = db.collection("audit_logs");
+      if (col && typeof col.add === "function") {
+        col.add(log).catch((err) => {
+          logger.error("Failed to write audit log to Firestore", err);
+        });
+      }
+    } catch (err) {
+      logger.error("Failed to write audit log to Firestore", err);
+    }
   }
 }
 

@@ -10,7 +10,6 @@ const DEV_PASSWORDS = {
   ashokAgent: process.env.AGENT_ASHOK_PASSWORD || "AgentAshok456!",
   demoCustomer: process.env.CUSTOMER_DEMO_PASSWORD || "CustomerDemo123!",
   praneethCustomer: process.env.CUSTOMER_PRANEETH_PASSWORD || "Praneeth@123",
-  anilCustomer: process.env.CUSTOMER_ANIL_PASSWORD || "Anil@123!",
 };
 
 let isSeeded = false;
@@ -93,15 +92,6 @@ export async function seedFirestore() {
         createdAt: new Date().toISOString(),
         isActive: true,
       },
-      {
-        id: "customer-anil",
-        email: "anil@cralgo.com",
-        name: "Anil Kumar",
-        role: "customer",
-        hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.anilCustomer, 10),
-        createdAt: new Date().toISOString(),
-        isActive: true,
-      },
     ];
 
     for (const u of defaultUsers) {
@@ -159,28 +149,6 @@ export async function seedFirestore() {
           businessModel: "b2b",
         },
         {
-          id: "customer-anil",
-          name: "Anil Kumar",
-          email: "anil@cralgo.com",
-          phone: "+1-555-123-4567",
-          companyName: "Cralgo",
-          industry: "Fintech",
-          status: "onboarding",
-          assignedAgentId: "agent-ashok",
-          assignedAgentName: "Ashok Agent",
-          serviceConfigurations: {
-            gtmReports: true,
-            leadScoring: false,
-            aiCalls: true,
-            wrenChatbot: true,
-            automatedGtmAnalysis: true,
-            playbookGeneration: true,
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          businessModel: "b2c",
-        },
-        {
           id: "customer-praneeth",
           name: "Praneeth Burada",
           email: "praneethburada@gmail.com",
@@ -233,22 +201,6 @@ export async function seedFirestore() {
           updatedAt: "2026-05-20T14:30:00Z",
         },
         {
-          id: "task-2",
-          title: "Prepare onboarding materials",
-          description: "Create onboarding guide for new clients",
-          status: "todo",
-          assignedAgentId: "agent-ashok",
-          customerId: "customer-anil",
-          priority: "medium",
-          progressNotes: [],
-          milestones: [
-            { id: "m1", title: "Draft guide", completed: false },
-            { id: "m2", title: "Review and finalize", completed: false },
-          ],
-          createdAt: "2026-05-15T11:00:00Z",
-          updatedAt: "2026-05-15T11:00:00Z",
-        },
-        {
           id: "task-3",
           title: "Collect customer feedback",
           description: "Get feedback from Demo Customer on initial meeting",
@@ -296,24 +248,6 @@ export async function seedFirestore() {
           isNew: true,
         },
         {
-          id: "doc-2",
-          customerId: "customer-anil",
-          documentType: "requirement",
-          title: "Cralgo Project Requirements",
-          description: "Full project requirements document",
-          requirementId: "req-2",
-          createdBy: "agent-ashok",
-          createdAt: "2026-06-15T00:00:00Z",
-          updatedAt: "2026-06-15T00:00:00Z",
-          accessRoles: ["admin", "agent"],
-          name: "Q2 2026 GTM Strategy Blueprint.xlsx",
-          type: "xlsx",
-          size: "1.4 MB",
-          version: "1.0",
-          updateNotes: "Initial GTM strategy mapping.",
-          isNew: false,
-        },
-        {
           id: "doc-3",
           customerId: "customer-demo",
           documentType: "onboarding",
@@ -351,21 +285,6 @@ export async function seedFirestore() {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
-        {
-          id: "gtm-2",
-          customerId: "customer-anil",
-          reportName: "Fintech Europe Inbound Analysis",
-          category: "Channel Optimization",
-          status: "draft",
-          region: "Europe",
-          segment: "SMB",
-          revenue: 45000,
-          conversionRate: 1.8,
-          cac: 120,
-          ltv: 850,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
       ];
 
       for (const r of defaultReports) {
@@ -391,21 +310,6 @@ export async function seedFirestore() {
           status: "In Progress",
           assignedAgentId: "agent-praneeth",
           assignedAgentName: "Praneeth",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: "req-2",
-          customerId: "customer-anil",
-          customerName: "Anil Kumar",
-          requesterName: "Anil Kumar",
-          requesterEmail: "anil@cralgo.com",
-          category: "Feature Request",
-          description: "Requesting automated WhatsApp calling triggers for live chat leads",
-          priority: "Critical",
-          status: "Open",
-          assignedAgentId: "agent-ashok",
-          assignedAgentName: "Ashok Agent",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -758,34 +662,6 @@ export async function seedFirestore() {
           updatedAt: "2026-06-20T10:00:00Z"
         },
         {
-          id: "asset-6",
-          customerId: "customer-anil",
-          customerName: "Anil Kumar",
-          title: "RevOps Automation Simplified in 90 Seconds",
-          tactic: "Explainer Videos",
-          status: "published",
-          content: "Animated Explainer Video focusing on small business bottlenecks. Illustrates manual data entry errors, the anxiety of delayed outreach calls, and how DealFlow's integrated dialer connects you to hot leads instantly. Watch our explainer to see how simple integrations can be.",
-          versions: [
-            {
-              version: 1,
-              title: "RevOps Automation Simplified in 90 Seconds",
-              content: "Animated Explainer Video focusing on small business bottlenecks. Illustrates manual data entry errors, the anxiety of delayed outreach calls, and how DealFlow's integrated dialer connects you to hot leads instantly. Watch our explainer to see how simple integrations can be.",
-              updatedAt: "2026-06-21T11:00:00Z",
-              updatedBy: "agent-ashok",
-              updatedByRole: "agent"
-            }
-          ],
-          comments: [],
-          performanceMetrics: { views: 4200, clicks: 880, conversions: 90, conversionRate: 2.14, engagementRate: 4.8 },
-          publishedPlatforms: ["YouTube", "Vimeo"],
-          auditLogs: [
-            { action: "created", details: "Asset created by Ashok (Agent)", performedBy: "agent-ashok", performedByRole: "agent", createdAt: "2026-06-21T11:00:00Z" },
-            { action: "published", details: "Published to YouTube & Vimeo", performedBy: "agent-ashok", performedByRole: "agent", createdAt: "2026-06-23T14:00:00Z" }
-          ],
-          createdAt: "2026-06-21T11:00:00Z",
-          updatedAt: "2026-06-23T14:00:00Z"
-        },
-        {
           id: "asset-7",
           customerId: "customer-demo",
           customerName: "Demo Customer",
@@ -871,34 +747,6 @@ export async function seedFirestore() {
           updatedAt: "2026-06-27T10:00:00Z"
         },
         {
-          id: "asset-10",
-          customerId: "customer-anil",
-          customerName: "Anil Kumar",
-          title: "How to Build an Automated CRM Pipeline in 10 Minutes",
-          tactic: "YouTube Content",
-          status: "published",
-          content: "Comprehensive video tutorial covering: 1. Database initializations using Firestore. 2. Fetching API data in real-time. 3. Hooking up outbound calling triggers. Code repository linked in the description. Don't forget to like and subscribe!",
-          versions: [
-            {
-              version: 1,
-              title: "How to Build an Automated CRM Pipeline in 10 Minutes",
-              content: "Comprehensive video tutorial covering: 1. Database initializations using Firestore. 2. Fetching API data in real-time. 3. Hooking up outbound calling triggers. Code repository linked in the description. Don't forget to like and subscribe!",
-              updatedAt: "2026-06-28T15:00:00Z",
-              updatedBy: "agent-ashok",
-              updatedByRole: "agent"
-            }
-          ],
-          comments: [],
-          performanceMetrics: { views: 15400, clicks: 1950, conversions: 98, conversionRate: 0.63, engagementRate: 5.9 },
-          publishedPlatforms: ["YouTube"],
-          auditLogs: [
-            { action: "created", details: "Asset created by Ashok (Agent)", performedBy: "agent-ashok", performedByRole: "agent", createdAt: "2026-06-28T15:00:00Z" },
-            { action: "published", details: "Published to YouTube", performedBy: "agent-ashok", performedByRole: "agent", createdAt: "2026-06-30T09:00:00Z" }
-          ],
-          createdAt: "2026-06-28T15:00:00Z",
-          updatedAt: "2026-06-30T09:00:00Z"
-        },
-        {
           id: "asset-11",
           customerId: "customer-praneeth",
           customerName: "Praneeth Burada",
@@ -927,62 +775,6 @@ export async function seedFirestore() {
           ],
           createdAt: "2026-07-01T09:00:00Z",
           updatedAt: "2026-07-01T09:10:00Z"
-        },
-        {
-          id: "asset-12",
-          customerId: "customer-anil",
-          customerName: "Anil Kumar",
-          title: "Google Search Ads: Top Automated RevOps Platform",
-          tactic: "Google Ads",
-          status: "published",
-          content: "Headline 1: Automated RevOps Platform\nHeadline 2: Scale Sales Lead Velocity\nHeadline 3: DealFlow AI Integrations\nDescription 1: Sync your CRM data automatically, Dial hot leads instantly, and audit GTM performance.\nDescription 2: Get 100 free credits upon signup. Simple self-service onboarding. Build pipelines that convert.",
-          versions: [
-            {
-              version: 1,
-              title: "Google Search Ads: Top Automated RevOps Platform",
-              content: "Headline 1: Automated RevOps Platform\nHeadline 2: Scale Sales Lead Velocity\nHeadline 3: DealFlow AI Integrations\nDescription 1: Sync your CRM data automatically, Dial hot leads instantly, and audit GTM performance.\nDescription 2: Get 100 free credits upon signup. Simple self-service onboarding. Build pipelines that convert.",
-              updatedAt: "2026-07-02T11:00:00Z",
-              updatedBy: "agent-ashok",
-              updatedByRole: "agent"
-            }
-          ],
-          comments: [],
-          performanceMetrics: { views: 48000, clicks: 2600, conversions: 210, conversionRate: 8.08, roi: 260 },
-          publishedPlatforms: ["Google Ads"],
-          auditLogs: [
-            { action: "created", details: "Asset created by Ashok (Agent)", performedBy: "agent-ashok", performedByRole: "agent", createdAt: "2026-07-02T11:00:00Z" },
-            { action: "published", details: "Published to Google Ads Account", performedBy: "agent-ashok", performedByRole: "agent", createdAt: "2026-07-03T08:00:00Z" }
-          ],
-          createdAt: "2026-07-02T11:00:00Z",
-          updatedAt: "2026-07-03T08:00:00Z"
-        },
-        {
-          id: "asset-13",
-          customerId: "customer-anil",
-          customerName: "Anil Kumar",
-          title: "Meta Retargeting: Tired of Spreadsheet Errors?",
-          tactic: "Meta Ads",
-          status: "published",
-          content: "Ad Copy: Stop copying leads manually. Spreadsheet mistakes cost money. Let DealFlow AI sync, score, and dial leads in real-time. Click to claim your free onboarding credits today. [Image Description: RevOps engineer looking relieved with DealFlow dashboard]",
-          versions: [
-            {
-              version: 1,
-              title: "Meta Retargeting: Tired of Spreadsheet Errors?",
-              content: "Ad Copy: Stop copying leads manually. Spreadsheet mistakes cost money. Let DealFlow AI sync, score, and dial leads in real-time. Click to claim your free onboarding credits today. [Image Description: RevOps engineer looking relieved with DealFlow dashboard]",
-              updatedAt: "2026-07-03T10:00:00Z",
-              updatedBy: "customer-anil",
-              updatedByRole: "customer"
-            }
-          ],
-          comments: [],
-          performanceMetrics: { views: 68000, clicks: 3300, conversions: 235, conversionRate: 7.12, roi: 205 },
-          publishedPlatforms: ["Meta Ads Manager"],
-          auditLogs: [
-            { action: "created", details: "Asset created by Customer Anil", performedBy: "customer-anil", performedByRole: "customer", createdAt: "2026-07-03T10:00:00Z" },
-            { action: "published", details: "Published to Meta Ads Manager", performedBy: "customer-anil", performedByRole: "customer", createdAt: "2026-07-03T11:00:00Z" }
-          ],
-          createdAt: "2026-07-03T10:00:00Z",
-          updatedAt: "2026-07-03T11:00:00Z"
         },
         {
           id: "asset-14",
@@ -1070,34 +862,6 @@ export async function seedFirestore() {
           updatedAt: "2026-07-06T10:15:00Z"
         },
         {
-          id: "asset-17",
-          customerId: "customer-anil",
-          customerName: "Anil Kumar",
-          title: "Referral Program: Share DealFlow, Earn Credits",
-          tactic: "Referral Programs",
-          status: "approved",
-          content: "Introduce a colleague to DealFlow AI. When they activate their first GTM audit workflow, both of you will receive 100 platform credits absolutely free. Share your unique referral link: dealflow.ai/ref/{ref_id}",
-          versions: [
-            {
-              version: 1,
-              title: "Referral Program: Share DealFlow, Earn Credits",
-              content: "Introduce a colleague to DealFlow AI. When they activate their first GTM audit workflow, both of you will receive 100 platform credits absolutely free. Share your unique referral link: dealflow.ai/ref/{ref_id}",
-              updatedAt: "2026-07-08T11:00:00Z",
-              updatedBy: "agent-ashok",
-              updatedByRole: "agent"
-            }
-          ],
-          comments: [],
-          performanceMetrics: { views: 0, clicks: 0, conversions: 0, conversionRate: 0 },
-          publishedPlatforms: [],
-          auditLogs: [
-            { action: "created", details: "Asset created by Ashok (Agent)", performedBy: "agent-ashok", performedByRole: "agent", createdAt: "2026-07-08T11:00:00Z" },
-            { action: "approved", details: "Approved by Customer Anil", performedBy: "customer-anil", performedByRole: "customer", createdAt: "2026-07-09T10:00:00Z" }
-          ],
-          createdAt: "2026-07-08T11:00:00Z",
-          updatedAt: "2026-07-09T10:00:00Z"
-        },
-        {
           id: "asset-18",
           customerId: "customer-praneeth",
           customerName: "Praneeth Burada",
@@ -1123,118 +887,6 @@ export async function seedFirestore() {
           ],
           createdAt: "2026-07-09T12:00:00Z",
           updatedAt: "2026-07-09T12:00:00Z"
-        },
-        {
-          id: "asset-19",
-          customerId: "customer-anil",
-          customerName: "Anil Kumar",
-          title: "Community Launch: Join Our Slack Workspace",
-          tactic: "Community Building",
-          status: "published",
-          content: "Join over 500+ RevOps and Sales leaders in the DealFlow Insiders Slack. Ask questions, share workflow templates, and interact directly with DealFlow product engineers. Join link: dealflow.ai/community",
-          versions: [
-            {
-              version: 1,
-              title: "Community Launch: Join Our Slack Workspace",
-              content: "Join over 500+ RevOps and Sales leaders in the DealFlow Insiders Slack. Ask questions, share workflow templates, and interact directly with DealFlow product engineers. Join link: dealflow.ai/community",
-              updatedAt: "2026-07-10T09:00:00Z",
-              updatedBy: "customer-anil",
-              updatedByRole: "customer"
-            }
-          ],
-          comments: [],
-          performanceMetrics: { views: 1800, clicks: 520, conversions: 210, conversionRate: 11.66 },
-          publishedPlatforms: ["Slack", "LinkedIn"],
-          auditLogs: [
-            { action: "created", details: "Asset created by Customer Anil", performedBy: "customer-anil", performedByRole: "customer", createdAt: "2026-07-10T09:00:00Z" },
-            { action: "published", details: "Published to Slack and LinkedIn", performedBy: "customer-anil", performedByRole: "customer", createdAt: "2026-07-10T10:00:00Z" }
-          ],
-          createdAt: "2026-07-10T09:00:00Z",
-          updatedAt: "2026-07-10T10:00:00Z"
-        },
-        {
-          id: "asset-20",
-          customerId: "customer-anil",
-          customerName: "Anil Kumar",
-          title: "G2 Review Outreach Campaign",
-          tactic: "Customer Reviews",
-          status: "scheduled",
-          content: "Did DealFlow help you scale your RevOps strategy? Leave an honest review on G2 and receive a $10 Amazon gift card or 25 extra platform credits. Let's make DealFlow the top-rated tool on the market!",
-          versions: [
-            {
-              version: 1,
-              title: "G2 Review Outreach Campaign",
-              content: "Did DealFlow help you scale your RevOps strategy? Leave an honest review on G2 and receive a $10 Amazon gift card or 25 extra platform credits. Let's make DealFlow the top-rated tool on the market!",
-              updatedAt: "2026-07-11T10:00:00Z",
-              updatedBy: "agent-ashok",
-              updatedByRole: "agent"
-            }
-          ],
-          comments: [],
-          performanceMetrics: { views: 0, clicks: 0, conversions: 0, conversionRate: 0 },
-          publishedPlatforms: ["Mailgun"],
-          scheduledAt: "2026-07-25T09:00:00Z",
-          auditLogs: [
-            { action: "created", details: "Asset created by Ashok (Agent)", performedBy: "agent-ashok", performedByRole: "agent", createdAt: "2026-07-11T10:00:00Z" },
-            { action: "scheduled", details: "Scheduled for review invitation email blast", performedBy: "customer-anil", performedByRole: "customer", createdAt: "2026-07-12T14:00:00Z" }
-          ],
-          createdAt: "2026-07-11T10:00:00Z",
-          updatedAt: "2026-07-12T14:00:00Z"
-        },
-        {
-          id: "asset-21",
-          customerId: "customer-anil",
-          customerName: "Anil Kumar",
-          title: "Interactive GTM Sales ROI Calculator Tool",
-          tactic: "Interactive Tools (ROI Calculator, Quiz)",
-          status: "published",
-          content: "Calculate your potential RevOps savings! Input your team size, average hours spent per rep on manual logging, and monthly lead volume to see how much time and money you save with automated sync. Try it now.",
-          versions: [
-            {
-              version: 1,
-              title: "Interactive GTM Sales ROI Calculator Tool",
-              content: "Calculate your potential RevOps savings! Input your team size, average hours spent per rep on manual logging, and monthly lead volume to see how much time and money you save with automated sync. Try it now.",
-              updatedAt: "2026-07-12T11:00:00Z",
-              updatedBy: "agent-ashok",
-              updatedByRole: "agent"
-            }
-          ],
-          comments: [],
-          performanceMetrics: { views: 8400, clicks: 3900, conversions: 620, conversionRate: 7.38, roi: 450 },
-          publishedPlatforms: ["WordPress"],
-          auditLogs: [
-            { action: "created", details: "Asset created by Ashok (Agent)", performedBy: "agent-ashok", performedByRole: "agent", createdAt: "2026-07-12T11:00:00Z" },
-            { action: "published", details: "Published to WordPress integration", performedBy: "agent-ashok", performedByRole: "agent", createdAt: "2026-07-13T09:00:00Z" }
-          ],
-          createdAt: "2026-07-12T11:00:00Z",
-          updatedAt: "2026-07-13T09:00:00Z"
-        },
-        {
-          id: "asset-22",
-          customerId: "customer-anil",
-          customerName: "Anil Kumar",
-          title: "AI Video Script Repurposing Plan",
-          tactic: "AI Content Repurposing",
-          status: "draft",
-          content: "Take your top performing blog post ('Scaling B2B RevOps') and use AI content generation to automatically output: 1. A 90-second YouTube script. 2. A 3-part Twitter thread. 3. A LinkedIn carousel PDF slide structure.",
-          versions: [
-            {
-              version: 1,
-              title: "AI Video Script Repurposing Plan",
-              content: "Take your top performing blog post ('Scaling B2B RevOps') and use AI content generation to automatically output: 1. A 90-second YouTube script. 2. A 3-part Twitter thread. 3. A LinkedIn carousel PDF slide structure.",
-              updatedAt: "2026-07-13T10:00:00Z",
-              updatedBy: "agent-ashok",
-              updatedByRole: "agent"
-            }
-          ],
-          comments: [],
-          performanceMetrics: { views: 0, clicks: 0, conversions: 0, conversionRate: 0 },
-          publishedPlatforms: [],
-          auditLogs: [
-            { action: "created", details: "Asset created by Ashok (Agent)", performedBy: "agent-ashok", performedByRole: "agent", createdAt: "2026-07-13T10:00:00Z" }
-          ],
-          createdAt: "2026-07-13T10:00:00Z",
-          updatedAt: "2026-07-13T10:00:00Z"
         },
         {
           id: "asset-23",

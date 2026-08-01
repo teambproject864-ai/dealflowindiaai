@@ -25,7 +25,7 @@
   "yaml.schemas": {
     "": ["**/.github/workflows/*.yml"]
   },
-  "python.languageServer": "Pylance",
+  "python.languageServer": "None",
   "pyrefly.enable": false,
   "pyrefly.typeCheckingMode": "off",
   "pyrefly.disableTypeErrors": true,

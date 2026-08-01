@@ -82,6 +82,30 @@
   .glass-panel {
     @apply bg-dealflow-ink/80 backdrop-blur-2xl border border-white/5 shadow-2xl;
   }
+  .df-glass-card {
+    @apply bg-slate-900/70 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-xl transition-all duration-300;
+  }
+  .df-glass-interactive {
+    @apply bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-xl transition-all duration-300 hover:bg-slate-800/90 hover:border-teal-400/40 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(20,184,166,0.2)];
+  }
+  .df-glass-header {
+    @apply bg-slate-950/80 backdrop-blur-3xl border-b border-white/10 shadow-2xl sticky top-0 z-40;
+  }
+  .text-gradient-teal {
+    @apply bg-gradient-to-r from-teal-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent;
+  }
+  .text-gradient-violet {
+    @apply bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent;
+  }
+  .text-gradient-cyan {
+    @apply bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-400 bg-clip-text text-transparent;
+  }
+  .glow-teal {
+    box-shadow: 0 0 25px rgba(20, 184, 166, 0.25);
+  }
+  .glow-violet {
+    box-shadow: 0 0 25px rgba(124, 58, 237, 0.25);
+  }
 
   /* ─── Section layout ──────────────────────────── */
   .section-container {

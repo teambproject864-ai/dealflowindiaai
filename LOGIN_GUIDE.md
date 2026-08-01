@@ -1,26 +1,29 @@
-# DealFlow AI - Login Credentials Guide
-Last Updated: 2026-06-11
+# DealFlow AI - Verified Login Credentials & Portal Guide
+Last Updated: 2026-08-01
 
-## Admin Login
-| Email | Password | Notes |
-|-------|----------|-------|
-| admin@dealflow.ai | AdminDF | No 2FA required |
+## 1. Admin Portal (`/portal/admin/login`)
+| Email | Password | Role | Notes |
+|-------|----------|------|-------|
+| `admin@dealflow.ai` | `Admin@123` | `admin` | Full System Access |
+| `admin1@dealflow.ai` | `Admin@123` | `admin` | Secondary Admin Account |
 
-## Agent Logins
-| Email | Password |
-|-------|----------|
-| praneeth@dealflow.ai | Praneeth123! |
-| agent.ashok@dealflow.ai | AgentAshok456! |
+## 2. Agent Portal (`/portal/agent/login`)
+| Email | Password | Role | Assigned Workspace |
+|-------|----------|------|--------------------|
+| `praneeth@dealflow.ai` | `Praneeth@123` | `agent` | Primary Operations Agent |
+| `agent.ashok@dealflow.ai` | `Ashok@123` | `agent` | Client Support Agent |
 
-## Customer Logins
-| Email | Password |
-|-------|----------|
-| demo@customer.com | CustomerDemo123! |
-| praneethburada@gmail.com | Praneeth@123 |
-| anil@cralgo.com | Anil@123! |
+## 3. Customer Portal (`/portal/customer/login`)
+| Email | Password | Role | Company |
+|-------|----------|------|---------|
+| `demo@customer.com` | `Demo@123` | `customer` | Demo Customer |
+| `praneethburada@gmail.com` | `Praneeth@1909` | `customer` | Praneeth Burada |
 
-## Quickstart
-1. Make sure your dev server is running with `npm run dev`
-2. Navigate to the login page
-3. Select the correct "Role" in the login form
-4. Enter credentials from above
+## Quickstart Instructions
+1. Ensure your local environment server is running: `npm run dev`
+2. Navigate to the desired portal login route:
+   - **Admin Portal**: [http://localhost:3000/portal/admin/login](http://localhost:3000/portal/admin/login)
+   - **Agent Portal**: [http://localhost:3000/portal/agent/login](http://localhost:3000/portal/agent/login)
+   - **Customer Portal**: [http://localhost:3000/portal/customer/login](http://localhost:3000/portal/customer/login)
+3. Enter the corresponding verified credentials listed above to log in successfully.
+

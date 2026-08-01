@@ -6,16 +6,37 @@ const indexName = process.env.PINECONE_INDEX || 'quickstart';
 const dimension = parseInt(process.env.PINECONE_DIMENSION || '384'); // Matching HuggingFace all-MiniLM-L6-v2
 const metric = (process.env.PINECONE_METRIC as 'cosine' | 'euclidean' | 'dotproduct') || 'cosine';
 
+let pcInstance: Pinecone | null = null;
+
+export function getPineconeClient(): Pinecone | null {
+  if (!apiKey) {
+    return null;
+  }
+  if (!pcInstance) {
+    try {
+      pcInstance = new Pinecone({ apiKey });
+    } catch (err) {
+      console.warn('[Pinecone] Failed to initialize Pinecone client:', err);
+      return null;
+    }
+  }
+  return pcInstance;
+}
+
 if (!apiKey) {
   console.warn('PINECONE_API_KEY is missing or invalid. Vector operations will be limited.');
 }
-
-const pc = new Pinecone({ apiKey });
 
 /**
  * Ensures the Pinecone index exists with the correct configuration.
  */
 export async function initPineconeIndex() {
+  const pc = getPineconeClient();
+  if (!pc) {
+    console.warn('[Pinecone] Cannot initialize index: PINECONE_API_KEY is not configured.');
+    return null;
+  }
+
   try {
     const response = await pc.listIndexes();
     const indexExists = response.indexes?.some(idx => idx.name === indexName);
@@ -50,7 +71,7 @@ export async function initPineconeIndex() {
     return pc.index(indexName);
   } catch (error) {
     console.error('Failed to initialize Pinecone index:', error);
-    throw error;
+    return null;
   }
 }
 
@@ -58,6 +79,11 @@ export async function initPineconeIndex() {
  * Gets the Pinecone index instance with automatic initialization check.
  */
 export async function getPineconeIndex() {
+  const pc = getPineconeClient();
+  if (!pc) {
+    return null;
+  }
+
   try {
     return pc.index(indexName);
   } catch (error) {
@@ -66,4 +92,4 @@ export async function getPineconeIndex() {
   }
 }
 
-export default pc;
+export default getPineconeClient();

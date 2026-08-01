@@ -116,13 +116,6 @@ export const demoUsers: PortalUser[] = [
     role: "customer",
     createdAt: "2024-03-10T00:00:00Z",
   },
-  {
-    id: "customer-anil",
-    email: "anil@cralgo.com",
-    name: "Anil Kumar",
-    role: "customer",
-    createdAt: "2026-06-15T00:00:00Z",
-  },
 ];
 
 // Demo tasks
@@ -499,28 +492,6 @@ export const demoCustomerCredits: CustomerCredits[] = [
       },
     ],
   },
-  {
-    customerId: "customer-anil",
-    balance: 15,
-    totalPurchased: 15,
-    totalSpent: 0,
-    transactions: [
-      {
-        id: "ctx-anil-1",
-        type: "bonus",
-        amount: 10,
-        description: "Welcome bonus for new customers",
-        createdAt: "2026-06-15T09:00:00Z",
-      },
-      {
-        id: "ctx-anil-2",
-        type: "purchase",
-        amount: 5,
-        description: "Initial credit purchase",
-        createdAt: "2026-06-15T09:30:00Z",
-      },
-    ],
-  },
 ];
 
 // Demo Requirements
@@ -539,21 +510,6 @@ export const demoRequirements: Requirement[] = [
     assignedAgentName: "Praneeth",
     createdAt: "2026-06-14T10:00:00Z",
     updatedAt: "2026-06-14T11:30:00Z",
-  },
-  {
-    id: "req-2",
-    customerId: "customer-anil",
-    customerName: "Anil Kumar",
-    requesterName: "Anil Kumar",
-    requesterEmail: "anil@cralgo.com",
-    category: "Billing Issue",
-    description: "Invoice was charged twice this month.",
-    priority: "Critical",
-    status: "Open",
-    assignedAgentId: "agent-ashok",
-    assignedAgentName: "Ashok",
-    createdAt: "2026-06-15T08:00:00Z",
-    updatedAt: "2026-06-15T08:00:00Z",
   },
 ];
 
@@ -637,34 +593,6 @@ export const demoGTMReports: GTMReportMetric[] = [
     createdAt: "2026-06-16T00:00:00Z",
     updatedAt: "2026-06-16T00:00:00Z",
   },
-  {
-    id: "gtm-daily-2",
-    customerId: "customer-anil",
-    reportName: "Daily GTM Analysis - June 15, 2026",
-    reportType: "customer-submitted",
-    reportFrequency: "daily",
-    dateRange: {
-      start: "2026-06-15T00:00:00Z",
-      end: "2026-06-15T23:59:59Z",
-    },
-    leadConversionRate: 32.5,
-    marketPenetration: 23.3,
-    pipelineValue: 430000,
-    campaignEffectiveness: 92.8,
-    region: "Asia Pacific",
-    segment: "Mid-Market",
-    actionableSuggestions: [
-      {
-        id: "suggestion-4",
-        title: "Focus on Upsell Opportunities",
-        description: "Existing customers show 20% higher LTV potential. Launch targeted upsell campaigns.",
-        priority: "high",
-        estimatedImpact: "Increase ARR by 8-10%",
-      },
-    ],
-    createdAt: "2026-06-15T00:00:00Z",
-    updatedAt: "2026-06-15T00:00:00Z",
-  },
 ];
 
 // Demo Scheduled Reports
@@ -678,16 +606,6 @@ export const demoScheduledReports: ScheduledReport[] = [
     enabled: true,
     nextSendDate: "2026-06-16T08:00:00Z",
     createdAt: "2026-06-10T00:00:00Z",
-  },
-  {
-    id: "scheduled-2",
-    customerId: "customer-anil",
-    reportFrequency: "weekly",
-    recipients: ["anil@cralgo.com"],
-    fileFormats: ["pdf"],
-    enabled: true,
-    nextSendDate: "2026-06-17T09:00:00Z",
-    createdAt: "2026-06-13T00:00:00Z",
   },
 ];
 
@@ -708,21 +626,6 @@ export const demoTickets: Ticket[] = [
     createdAt: "2026-06-14T10:00:00Z",
     updatedAt: "2026-06-14T14:30:00Z",
   },
-  {
-    id: "ticket-2",
-    customerId: "customer-anil",
-    requesterName: "Anil Kumar",
-    requesterEmail: "anil@cralgo.com",
-    category: "billing",
-    subject: "Question about credit usage",
-    description: "Can you provide a breakdown of credit usage for the past month?",
-    priority: "medium",
-    status: "resolved",
-    assignedAgentId: "agent-john",
-    assignedAgentName: "John Doe",
-    createdAt: "2026-06-12T11:00:00Z",
-    updatedAt: "2026-06-12T15:00:00Z",
-  },
 ];
 
 // Demo Notification Preferences
@@ -733,13 +636,6 @@ export const demoNotificationPreferences: Record<string, NotificationPreferences
     preferredReportFormats: ["pdf", "xlsx"],
     dailyReportTime: "08:00",
     weeklyReportDay: "monday",
-  },
-  "customer-anil": {
-    emailNotifications: true,
-    inAppNotifications: true,
-    preferredReportFormats: ["pdf"],
-    dailyReportTime: "09:00",
-    weeklyReportDay: "wednesday",
   },
 };
 
@@ -755,18 +651,6 @@ export const demoCustomerGTMData: CustomerGTMData[] = [
       targetIndustry: "SaaS",
       currentPipeline: 200000,
       goals: ["Increase conversion rate", "Expand to Europe"],
-    },
-  },
-  {
-    id: "customer-gtm-2",
-    customerId: "customer-anil",
-    submittedBy: "Anil Kumar",
-    submittedAt: "2026-06-13T14:30:00Z",
-    data: {
-      companyName: "Cralgo",
-      targetIndustry: "Fintech",
-      currentPipeline: 350000,
-      goals: ["Improve campaign ROI", "Grow customer base"],
     },
   },
 ];
@@ -794,28 +678,6 @@ export const demoCustomers: Customer[] = [
     createdAt: "2024-03-10T00:00:00Z",
     updatedAt: "2024-03-10T00:00:00Z",
     businessModel: "b2b",
-  },
-  {
-    id: "customer-anil",
-    name: "Anil Kumar",
-    email: "anil@cralgo.com",
-    phone: "+91-9876543210",
-    companyName: "Cralgo",
-    industry: "Fintech",
-    status: "onboarding",
-    assignedAgentId: "agent-ashok",
-    assignedAgentName: "Ashok",
-    serviceConfigurations: {
-      gtmReports: true,
-      leadScoring: false,
-      aiCalls: true,
-      wrenChatbot: true,
-      automatedGtmAnalysis: true,
-      playbookGeneration: true,
-    },
-    createdAt: "2026-06-15T00:00:00Z",
-    updatedAt: "2026-06-15T00:00:00Z",
-    businessModel: "b2c",
   },
   {
     id: "customer-john",
@@ -981,18 +843,6 @@ export const demoDocuments: Document[] = [
     accessRoles: ["admin", "agent", "customer"],
   },
   {
-    id: "doc-2",
-    customerId: "customer-anil",
-    documentType: "requirement",
-    title: "Cralgo Project Requirements",
-    description: "Full project requirements document",
-    requirementId: "req-2",
-    createdBy: "agent-ashok",
-    createdAt: "2026-06-15T00:00:00Z",
-    updatedAt: "2026-06-15T00:00:00Z",
-    accessRoles: ["admin", "agent"],
-  },
-  {
     id: "doc-3",
     customerId: "customer-demo",
     documentType: "onboarding",
@@ -1007,16 +857,6 @@ export const demoDocuments: Document[] = [
 
 // Demo Audit Logs
 export const demoAuditLogs: AuditLogEntry[] = [
-  {
-    id: "audit-1",
-    actionType: "customer_onboard",
-    actionDetails: "Onboarded new customer: Anil Kumar",
-    performedBy: "demo-admin-1",
-    performedByRole: "admin",
-    targetId: "customer-anil",
-    targetType: "customer",
-    createdAt: "2026-06-15T09:00:00Z",
-  },
   {
     id: "audit-2",
     actionType: "customer_resign",

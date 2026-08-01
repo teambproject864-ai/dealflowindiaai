@@ -142,8 +142,17 @@ export async function POST(req: Request) {
     const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
     const trackingId = `GTM-${randomSuffix}`;
 
-    // Attach authenticated user's ID as customerId for portal scoping
-    const customerId = authUser?.id || sanitized.customerId || null;
+    // Attach authenticated user's ID as customerId for portal scoping, or search existing user by productOwnerEmail
+    let customerId = authUser?.id || sanitized.customerId || null;
+
+    if (!customerId && db && validated.productOwnerEmail) {
+      try {
+        const userSnap = await db.collection("users").where("email", "==", validated.productOwnerEmail.toLowerCase().trim()).get();
+        if (userSnap && !userSnap.empty) {
+          customerId = userSnap.docs[0].id;
+        }
+      } catch (e) {}
+    }
 
     const intakeRecord = {
       id: trackingId,

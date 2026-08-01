@@ -49,6 +49,7 @@ import AuthProvider from "@/components/auth/AuthProvider";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ContentWorkflowWorkspace } from "@/components/portal/ContentWorkflowWorkspace";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
+import { AnimatedMetricCard } from "@/components/ui/AnimatedMetricCard";
 import { DealflowCRMWorkspace } from "@/components/portal/DealflowCRMWorkspace";
 import { UserCheck, Key } from "lucide-react";
 import { InPortalVoiceCallWidget } from "@/components/portal/InPortalVoiceCallWidget";
@@ -824,6 +825,46 @@ function CustomerPortalContent() {
                 </select>
               </div>
             </GlassPanel>
+
+            {/* High-Impact Customer KPI Metrics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <AnimatedMetricCard
+                title="Assigned Tasks"
+                value={tasks.length}
+                change={`${tasks.filter(t => t.status === "completed" || t.status === "done").length} Completed`}
+                isPositive={true}
+                subtitle="Active deliverables in execution"
+                icon={CheckCircle2}
+                accentColor="teal"
+              />
+              <AnimatedMetricCard
+                title="Support Tickets"
+                value={tickets.length}
+                change={tickets.length === 0 ? "All Resolved" : `${tickets.filter(t => t.status === "open").length} Open`}
+                isPositive={true}
+                subtitle="Customer support ticket history"
+                icon={TicketIcon}
+                accentColor="violet"
+              />
+              <AnimatedMetricCard
+                title="GTM Analysis Reports"
+                value={gtmReports.length}
+                change="Updated Today"
+                isPositive={true}
+                subtitle="Automated market analysis dossiers"
+                icon={FileText}
+                accentColor="cyan"
+              />
+              <AnimatedMetricCard
+                title="Available Credits"
+                value="2,450"
+                change="+500 Monthly"
+                isPositive={true}
+                subtitle="AI inference & workflow credits"
+                icon={CreditCard}
+                accentColor="amber"
+              />
+            </div>
 
             {widgets.length < 6 && (
               <div className="flex justify-end">
