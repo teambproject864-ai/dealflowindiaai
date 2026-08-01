@@ -47,7 +47,7 @@ async function initAssignmentCounts() {
       inMemoryAssignmentCounts[agent.key] = 0;
     });
 
-    snapshot.docs.forEach((doc) => {
+    snapshot?.docs?.forEach((doc: any) => {
       const data = doc.data();
       if (data.agentKey) {
         inMemoryAssignmentCounts[data.agentKey] = (inMemoryAssignmentCounts[data.agentKey] || 0) + 1;

@@ -96,6 +96,9 @@ export const db: admin.firestore.Firestore | null =
   (typeof window === "undefined" && (process.env.DISABLE_FIRESTORE !== "true" || process.env.NODE_ENV === "test") && (loadServiceAccount() || process.env.NODE_ENV === "test"))
     ? new Proxy({} as admin.firestore.Firestore, {
         get(_target, prop) {
+          if (prop === "then" || prop === "catch" || prop === "toJSON" || typeof prop === "symbol") {
+            return undefined;
+          }
           const mock = (globalThis as any).firestoreMock;
           const real = mock || getDb();
           if (!real) {
