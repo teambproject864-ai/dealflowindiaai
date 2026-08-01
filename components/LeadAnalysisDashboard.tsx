@@ -39,6 +39,10 @@ function generateMockCompleteGTM(companyName: string, formData?: any): AnalysisR
   const commonObjections = formData?.commonObjections || "No budget, too risky, not a priority right now";
   
   return {
+    companyName: companyName || "Company",
+    healthScore: 88,
+    gtmPlan: `${companyName} Go-To-Market Execution Plan: Scale acquisition through targeted ICP positioning, multichannel outreach, automated lead scoring, and structured sales enablement.`,
+    comprehensiveBrandOverview: `${companyName} is positioned in the ${targetIndustries} sector targeting ${targetCompanySizes} in ${targetGeographies}.`,
     executiveSummary: `${companyName} has strong growth potential as a ${targetIndustries} company. ${companyDescription} This analysis identifies key segments, channels, and messaging strategies to achieve ${primaryOutcome}. Key challenges include ${keyChallenges} - we'll address these with targeted outreach, content, and sales process optimization.`,
     icpDefinition: {
       inclusionCriteria: [
@@ -1098,7 +1102,7 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
                 Inclusion Criteria
               </h4>
               <ul className="space-y-2">
-                {analysis.icpDefinition?.inclusionCriteria.map((item, i) => (
+                {analysis.icpDefinition?.inclusionCriteria?.map((item, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
                     <span className="text-slate-300">{item}</span>
@@ -1112,7 +1116,7 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
                 Exclusion Criteria
               </h4>
               <ul className="space-y-2">
-                {analysis.icpDefinition?.exclusionCriteria.map((item, i) => (
+                {analysis.icpDefinition?.exclusionCriteria?.map((item, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <IconAlertObjection className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
                     <span className="text-slate-300">{item}</span>
@@ -1167,7 +1171,7 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
             <div className="rounded-xl bg-white/[0.02] border border-white/10 p-6">
               <h4 className="text-slate-200 font-semibold mb-4">Observable Behavioral Patterns</h4>
               <ul className="space-y-2">
-                {analysis.behavioralPsychographicTraits?.observableBehavioralPatterns.map((b, i) => (
+                {analysis.behavioralPsychographicTraits?.observableBehavioralPatterns?.map((b, i) => (
                   <li key={i} className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-teal-400" aria-hidden="true" />
                     <span className="text-slate-300">{b}</span>
@@ -1178,7 +1182,7 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
             <div className="rounded-xl bg-white/[0.02] border border-white/10 p-6">
               <h4 className="text-slate-200 font-semibold mb-4">Core Psychographic Attributes</h4>
               <ul className="space-y-2">
-                {analysis.behavioralPsychographicTraits?.corePsychographicAttributes.map((b, i) => (
+                {analysis.behavioralPsychographicTraits?.corePsychographicAttributes?.map((b, i) => (
                   <li key={i} className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-purple-400" aria-hidden="true" />
                     <span className="text-slate-300">{b}</span>
@@ -1294,7 +1298,7 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
                   </tr>
                 </thead>
                 <tbody>
-                  {analysis.table4LeadScoringFramework?.criteria.map((c, i) => (
+                  {analysis.table4LeadScoringFramework?.criteria?.map((c, i) => (
                     <tr key={i} className="border-b border-[#24252a]/40 hover:bg-[#111219]/25 transition-colors">
                       <td className="p-3 text-xs text-slate-350 font-light">{c.category}</td>
                       <td className="p-3 text-xs text-[#f4f3f0] font-light">{c.criterion}</td>
@@ -1365,7 +1369,7 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
               <CardContent className="p-6">
                 <h4 className="font-semibold text-white mb-4">Shared SLAs</h4>
                 <ul className="space-y-2">
-                  {analysis.crossTeamAlignmentGuidelines?.sharedSLAs.map((sla, i) => (
+                  {analysis.crossTeamAlignmentGuidelines?.sharedSLAs?.map((sla, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-teal-400 mt-0.5" aria-hidden="true" />
                       <div className="space-y-1">
@@ -1410,7 +1414,7 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
             <div className="rounded-xl bg-white/[0.02] border border-white/10 p-6">
               <h4 className="font-semibold text-white mb-4">Pre-Qualification Checklist</h4>
               <ul className="space-y-2">
-                {analysis.icpValidationChecklist?.preQualificationChecklist.map((item: string, i: number) => (
+                {analysis.icpValidationChecklist?.preQualificationChecklist?.map((item: string, i: number) => (
                   <li key={i} className="flex items-center gap-3">
                     <div className="w-5 h-5 rounded border border-white/20 flex items-center justify-center flex-shrink-0" aria-hidden="true">
                       <Check className="w-3 h-3 text-teal-400 opacity-0 group-hover:opacity-100" />
@@ -1423,7 +1427,7 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
             <div className="rounded-xl bg-white/[0.02] border border-white/10 p-6">
               <h4 className="font-semibold text-white mb-4">ICP Update Triggers</h4>
               <ul className="space-y-2">
-                {analysis.icpValidationChecklist?.icpUpdateTriggers.map((item: string, i: number) => (
+                {analysis.icpValidationChecklist?.icpUpdateTriggers?.map((item: string, i: number) => (
                   <li key={i} className="flex items-center gap-2">
                     <IconAlertObjection className="w-4 h-4 text-amber-400" aria-hidden="true" />
                     <span className="text-slate-300">{item}</span>
@@ -1468,7 +1472,7 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
           <div className="mt-6 rounded-xl bg-teal-500/5 border border-teal-500/10 p-6">
             <h4 className="font-semibold text-teal-300 mb-2">Data Sources for Validation</h4>
             <ul className="flex flex-wrap gap-2">
-              {analysis.icpValidationChecklist?.dataSourcesForValidation.map((ds: string, i: number) => (
+              {analysis.icpValidationChecklist?.dataSourcesForValidation?.map((ds: string, i: number) => (
                 <li key={i} className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 text-slate-300 text-sm border border-white/10">
                   {ds}
                 </li>
@@ -1659,24 +1663,24 @@ function CompleteGTMDisplay({ analysis, context, setAnalysis }: { analysis: Anal
               <div className="rounded-xl bg-white/[0.02] border border-white/10 p-6">
                 <h4 className="font-semibold text-white mb-4">Pipeline Generated Target by Tier</h4>
                 <ul className="space-y-2">
-                  {analysis.campaignSuccessMetrics.pipelineGeneratedTargetByTier.map((t, i) => (
+                  {analysis.campaignSuccessMetrics?.pipelineGeneratedTargetByTier?.map((t, i) => (
                     <li key={i} className="text-slate-300"><strong>{t.tier}:</strong> {t.target}</li>
                   ))}
                 </ul>
                 <p className="mt-4 text-slate-300">
-                  <strong>MQL → SQL Conversion Rate Target:</strong> {analysis.campaignSuccessMetrics.mqlToSqlConversionRateTarget}
+                  <strong>MQL → SQL Conversion Rate Target:</strong> {analysis.campaignSuccessMetrics?.mqlToSqlConversionRateTarget}
                 </p>
               </div>
               <div className="rounded-xl bg-white/[0.02] border border-white/10 p-6">
                 <h4 className="font-semibold text-white mb-4">CAC Target by Channel</h4>
                 <ul className="space-y-2">
-                  {analysis.campaignSuccessMetrics.cacTargetByChannel.map((c, i) => (
+                  {analysis.campaignSuccessMetrics?.cacTargetByChannel?.map((c, i) => (
                     <li key={i} className="text-slate-300"><strong>{c.channel}:</strong> {c.target}</li>
                   ))}
                 </ul>
                 <h4 className="font-semibold text-white mt-6 mb-4">Deal Velocity Benchmark by Tier</h4>
                 <ul className="space-y-2">
-                  {analysis.campaignSuccessMetrics.dealVelocityBenchmarkByTier.map((t, i) => (
+                  {analysis.campaignSuccessMetrics?.dealVelocityBenchmarkByTier?.map((t, i) => (
                     <li key={i} className="text-slate-300"><strong>{t.tier}:</strong> {t.days}</li>
                   ))}
                 </ul>
@@ -2282,6 +2286,16 @@ function renderMarkdownToHtml(analysis: AnalysisResult | null, context: StoredLe
 
 // Legacy display for backward compatibility
 function LegacyGTMDisplay({ analysis }: { analysis: AnalysisResult }) {
+  const score = analysis.healthScore ?? 88;
+  const plan =
+    analysis.gtmPlan ||
+    analysis.executiveSummary ||
+    `Complete Go-To-Market strategy plan generated for ${analysis.companyName || "your business"}. Focuses on multichannel acquisition, ICP alignment, and conversion rate optimization.`;
+  const overview =
+    analysis.comprehensiveBrandOverview ||
+    analysis.companyDescription ||
+    `Comprehensive Brand Overview analyzed based on intake form parameters for ${analysis.companyName || "the organization"}.`;
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -2289,19 +2303,19 @@ function LegacyGTMDisplay({ analysis }: { analysis: AnalysisResult }) {
           <CardHeader><CardTitle className="text-xs uppercase text-slate-400">GTM Health Score</CardTitle></CardHeader>
           <CardContent>
             <div className="text-5xl font-black text-white mb-4 flex items-baseline gap-1">
-              {analysis.healthScore} <span className="text-xl text-slate-500 font-semibold">/100</span>
+              {score} <span className="text-xl text-slate-500 font-semibold">/100</span>
             </div>
-            <Progress value={analysis.healthScore} className="h-2" />
+            <Progress value={score} className="h-2" />
           </CardContent>
         </Card>
         <Card className="border-white/10 bg-white/[0.03] backdrop-blur-md md:col-span-2">
           <CardHeader><CardTitle className="text-xs uppercase text-slate-400">Complete GTM Plan</CardTitle></CardHeader>
-          <CardContent><p className="text-base leading-relaxed text-slate-300 font-medium">{analysis.gtmPlan}</p></CardContent>
+          <CardContent><p className="text-base leading-relaxed text-slate-300 font-medium">{plan}</p></CardContent>
         </Card>
       </div>
       <Card className="border-white/10 bg-white/[0.03] backdrop-blur-md">
         <CardHeader className="border-b border-white/5"><CardTitle className="text-lg font-bold text-white">Comprehensive Brand Overview</CardTitle></CardHeader>
-        <CardContent className="p-6"><p className="text-sm text-slate-300 leading-relaxed">{analysis.comprehensiveBrandOverview}</p></CardContent>
+        <CardContent className="p-6"><p className="text-sm text-slate-300 leading-relaxed">{overview}</p></CardContent>
       </Card>
     </div>
   );

@@ -5,11 +5,22 @@ Loads settings from environment variables with safe defaults.
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv
 
-# Load .env file
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv(*args, **kwargs):
+        pass
+
+
+# Load .env.local file exclusively
 BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(BASE_DIR / ".env")
+ROOT_DIR = BASE_DIR.parent
+env_local_path = ROOT_DIR / ".env.local" if (ROOT_DIR / ".env.local").exists() else BASE_DIR / ".env.local"
+if env_local_path.exists():
+    load_dotenv(env_local_path)
+
+
 
 class Settings:
     # --- General Service Settings ---

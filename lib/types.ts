@@ -412,6 +412,7 @@ export type AnalysisResult = {
   analysisId?: string;
   leadId?: string;
   companyName?: string;
+  companyDescription?: string;
   healthScore?: number;
   gtmPlan?: string;
   idealCustomerProfiles?: GtmInsightSection[];
@@ -644,10 +645,61 @@ export type RevenueAgentProfile = {
   name: string;
   fullName: string;
   role: string;
+  title?: string;
+  bio?: string;
   expertise: string[];
+  specialties?: string[];
   activeSessions: number;
+  maxSessions?: number;
   available: boolean;
+  onlineStatus?: "online" | "busy" | "offline";
+  rating?: number;
+  winRate?: string;
+  timeZone?: string;
+  historicalDeals?: number;
 };
+
+export interface AgentAssignmentCriteria {
+  industry?: string;
+  companySize?: string;
+  timeZone?: string;
+  challengeTags?: string[];
+  preferredKeys?: string[];
+}
+
+export interface CalendarSlot {
+  id: string;
+  startTime: string;
+  endTime: string;
+  agentKey: string;
+  customerId?: string;
+  status: "available" | "booked" | "proposed";
+  title?: string;
+}
+
+export interface MeetingBooking {
+  id: string;
+  slotId: string;
+  agentKey: string;
+  agentName: string;
+  customerId: string;
+  customerName: string;
+  startTime: string;
+  endTime: string;
+  meetingType: "weekly_standup" | "strategy_review" | "onboarding";
+  status: "scheduled" | "confirmed" | "completed" | "cancelled";
+  calendarSyncStatus?: "synced_google" | "synced_outlook" | "pending";
+}
+
+export interface PortalChatMessage {
+  id: string;
+  sender: "user" | "assistant" | "agent";
+  text: string;
+  timestamp: string;
+  escalated?: boolean;
+  escalatedToAgentKey?: string;
+  suggestedActions?: string[];
+}
 
 export function getRevenueAgentCatalog(): RevenueAgentProfile[] {
   return Object.entries(AGENT_FULL_NAMES).map(([key, name]) => ({
@@ -655,9 +707,15 @@ export function getRevenueAgentCatalog(): RevenueAgentProfile[] {
     name,
     fullName: name,
     role: "AI Revenue Agent",
-    expertise: AGENT_EXPERTISE[key as keyof typeof AGENT_EXPERTISE],
+    expertise: AGENT_EXPERTISE[key as keyof typeof AGENT_EXPERTISE] || ["gtm"],
+    specialties: AGENT_EXPERTISE[key as keyof typeof AGENT_EXPERTISE] || ["GTM"],
     activeSessions: 0,
+    maxSessions: 3,
     available: true,
+    onlineStatus: "online",
+    rating: 4.9,
+    winRate: "34%",
+    timeZone: "America/New_York (EST)"
   }));
 }
 

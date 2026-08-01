@@ -12,8 +12,13 @@ import time
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
 
-from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request, status, BackgroundTask
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv(*args, **kwargs):
+        pass
+
+from fastapi import FastAPI, HTTPException, Request, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -54,7 +59,8 @@ async def lifespan(app: FastAPI):
     try:
         await ws_listener.start()
     except Exception as e:
-        logger.warn(f"Could not start Evolution API WebSocket listener on startup: {e}")
+        logger.warning(f"Could not start Evolution API WebSocket listener on startup: {e}")
+
 
     yield
 

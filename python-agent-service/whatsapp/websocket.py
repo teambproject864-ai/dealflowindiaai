@@ -9,7 +9,11 @@ import json
 import logging
 import time
 from typing import Optional, Callable, Dict, Any, List
-import websockets
+try:
+    import websockets
+except ImportError:
+    websockets = None
+
 
 from config import settings
 from whatsapp.models import ChatMessageRecord, MessageType, ConnectionState
@@ -72,11 +76,15 @@ class EvolutionWebSocketListener:
         backoff = 1.0
         while self.is_running:
             try:
+                if not websockets:
+                    logger.warning("websockets package is not installed. WebSocket listener inactive.")
+                    break
                 # Append apikey token if not present in URL
                 connect_url = f"{self.ws_url}/{self.instance_name}?apikey={self.api_key}" if "?" not in self.ws_url else self.ws_url
                 logger.info(f"Connecting to Evolution WebSocket: {self.ws_url}...")
 
                 async with websockets.connect(connect_url, ping_interval=30, ping_timeout=10) as ws:
+
                     logger.info("Successfully connected to Evolution WebSocket stream.")
                     backoff = 1.0  # Reset backoff on clean connection
 
@@ -89,12 +97,13 @@ class EvolutionWebSocketListener:
                             payload = json.loads(message_str)
                             await self._dispatch_event(payload)
                         except json.JSONDecodeError:
-                            logger.warn(f"Failed to parse WebSocket JSON payload: {message_str[:100]}")
+                            logger.warning(f"Failed to parse WebSocket JSON payload: {message_str[:100]}")
 
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.warn(f"Evolution WebSocket connection error: {e}. Reconnecting in {backoff:.1f}s...")
+                logger.warning(f"Evolution WebSocket connection error: {e}. Reconnecting in {backoff:.1f}s...")
+
                 await asyncio.sleep(backoff)
                 backoff = min(30.0, backoff * 1.5)
 

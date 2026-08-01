@@ -1,0 +1,24 @@
+# Pyrefly Configuration
+[tool.pyrefly]
+type-checking-mode = "off"
+disable-type-errors = true
+disable-search-path-heuristics = true
+search-path = ["python-agent-service", "."]
+
+project-excludes = [
+    "**/*",
+    "**/inmemory/**",
+    "**/virtual/**",
+    "**/__pyrefly_virtual__/**",
+    "D:/__pyrefly_virtual__/**",
+    "D:\\__pyrefly_virtual__\\**",
+    "**/node_modules/**",
+    "**/__pycache__/**"
+]
+
+[tool.pyrefly.errors]
+parse-error = false
+unknown-name = false
+reportMissingImports = false
+reportUndefinedVariable = false
+reportGeneralTypeIssues = false

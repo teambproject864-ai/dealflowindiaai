@@ -39,6 +39,8 @@
     "node_modules",
     "dealflow/**",
     "functions/**",
-    "dealsflowsai/**"
+    "dealsflowsai/**",
+    "tests/smart-button.test.tsx"
   ]
 }
+

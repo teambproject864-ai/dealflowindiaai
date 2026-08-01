@@ -61,11 +61,17 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
 import { BarChart3 } from "lucide-react";
 
+import { CustomerICPDetailsView } from "@/components/portal/CustomerICPDetailsView";
+import { EmbeddedCampaignPlaybooks } from "@/components/portal/EmbeddedCampaignPlaybooks";
+import { CalendarBookingModule } from "@/components/portal/CalendarBookingModule";
 import { CustomerContactProfiles } from "@/components/portal/CustomerContactProfiles";
 import { AgentDealflowBotHub } from "@/components/portal/AgentDealflowBotHub";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "icp-details", label: "Customer ICP Breakdown", icon: Target, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
+  { id: "campaign-playbooks", label: "Campaign Playbooks", icon: FileText, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
+  { id: "standup-calendar", label: "Standup Calendar Sync", icon: Calendar, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
   { id: "dealflow-bot", label: "Dealflow Meeting Bot", icon: Bot, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
   { id: "contact-profiles", label: "Customer Contact Profiles", icon: Users, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
   { id: "customers", label: "Customers", icon: Users, color: "text-blue-400 border-blue-500/30 hover:border-blue-500/60 shadow-blue-500/10" },
@@ -1136,6 +1142,45 @@ function AgentPortalContent() {
         <AnimatePresence mode="wait">
 
           {/* 0. CUSTOMER CONTACT PROFILES TAB */}
+
+        {/* NEW: CUSTOMER ICP BREAKDOWN TAB */}
+        {activeTab === "icp-details" && (
+          <motion.div
+            key="icp-details"
+            initial={{ opacity: 0, x: 15 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -15 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <CustomerICPDetailsView />
+          </motion.div>
+        )}
+
+        {/* NEW: CAMPAIGN PLAYBOOKS TAB */}
+        {activeTab === "campaign-playbooks" && (
+          <motion.div
+            key="campaign-playbooks"
+            initial={{ opacity: 0, x: 15 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -15 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <EmbeddedCampaignPlaybooks />
+          </motion.div>
+        )}
+
+        {/* NEW: STANDUP CALENDAR SYNC TAB */}
+        {activeTab === "standup-calendar" && (
+          <motion.div
+            key="standup-calendar"
+            initial={{ opacity: 0, x: 15 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -15 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <CalendarBookingModule isAgentView={true} />
+          </motion.div>
+        )}
 
         {activeTab === "contact-profiles" && (
           <motion.div

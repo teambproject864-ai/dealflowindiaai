@@ -1,25 +1,18 @@
 {
-  "extraPaths": [
-    "python-agent-service",
-    "."
-  ],
-  "executionEnvironments": [
-    {
-      "root": "python-agent-service"
-    }
+  "include": [
+    "python-agent-service/**/*.py"
   ],
   "exclude": [
-    "**/node_modules",
-    "**/__pycache__",
-    "**/__pyrefly_virtual__",
-    "**/d:/__pyrefly_virtual__",
-    "d:/__pyrefly_virtual__/**"
+    "**/*"
+  ],
+  "ignore": [
+    "**/*"
   ],
   "pythonVersion": "3.10",
   "analysis": {
-    "autoImportCompletions": true,
-    "useLibraryCodeForTypes": true,
-    "diagnosticMode": "workspace"
+    "autoImportCompletions": false,
+    "useLibraryCodeForTypes": false,
+    "diagnosticMode": "openFilesOnly",
+    "typeCheckingMode": "off"
   }
 }
-

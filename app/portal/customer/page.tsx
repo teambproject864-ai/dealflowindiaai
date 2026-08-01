@@ -50,18 +50,25 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ContentWorkflowWorkspace } from "@/components/portal/ContentWorkflowWorkspace";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
 import { DealflowCRMWorkspace } from "@/components/portal/DealflowCRMWorkspace";
+import { UserCheck, Key } from "lucide-react";
+import { InPortalVoiceCallWidget } from "@/components/portal/InPortalVoiceCallWidget";
+import { CalendarBookingModule } from "@/components/portal/CalendarBookingModule";
+import { AIChatAssistant } from "@/components/AIChatAssistant";
 import { AgentAssignmentModule } from "@/components/portal/AgentAssignmentModule";
 import { APIKeyManagementModule } from "@/components/portal/APIKeyManagementModule";
 import { DealflowConnectHub } from "@/components/portal/DealflowConnectHub";
-import { UserCheck, Key } from "lucide-react";
+import AgentMessagingChannel from "@/components/portal/AgentMessagingChannel";
+
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart2, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "agent-assignment", label: "AI Agent Roster & Selection", icon: UserCheck, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
+  { id: "voice-call", label: "In-Portal Voice Call", icon: Phone, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "standup-calendar", label: "Standup Calendar Sync", icon: Calendar, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
   { id: "dealflow-bot", label: "Dealflow Meeting Bot", icon: Bot, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
   { id: "whatsapp-alerts", label: "Evolution API WhatsApp Integration", icon: Zap, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
   { id: "dealflow-connect", label: "Dealflow Connect & Integration Hub", icon: Layers, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
   { id: "content-hub", label: "Content & Workflow Hub", icon: Target, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
-  { id: "agent-assignment", label: "Agent Assignment", icon: UserCheck, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
   { id: "api-keys", label: "API Key Vault", icon: Key, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
   { id: "business-toolset", label: "Model Toolset", icon: Layers, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
   { id: "icp-entries", label: "ICP Entries", icon: Users, color: "text-purple-400 border-purple-500/30 hover:border-purple-500/60 shadow-purple-500/10" },
@@ -82,8 +89,24 @@ const tabs = [
 function CustomerPortalContent() {
   const { user, isLoading } = useCurrentUser();
   const [activeTab, setActiveTab] = useState<typeof tabs[number]["id"]>("dashboard");
+  const [urlAgentKey, setUrlAgentKey] = useState<string>("");
   const [businessModel, setBusinessModel] = useState<"b2b" | "b2c" | "d2c" | "custom">("b2b");
   const [serviceConfigs, setServiceConfigs] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      const agentKeyParam = params.get("agentKey");
+      if (tabParam && tabs.some((t) => t.id === tabParam)) {
+        setActiveTab(tabParam as any);
+      }
+      if (agentKeyParam) {
+        setUrlAgentKey(agentKeyParam);
+      }
+    }
+  }, []);
+
 
   // GenBI Assistant states
   const [genbMessages, setGenbMessages] = useState<Array<{
@@ -1094,6 +1117,20 @@ function CustomerPortalContent() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* IN-PORTAL VOICE CALL TAB */}
+        {activeTab === "voice-call" && (
+          <div className="animate-in fade-in duration-300">
+            <InPortalVoiceCallWidget customerName={user?.name || "Customer"} />
+          </div>
+        )}
+
+        {/* STANDUP CALENDAR SYNC TAB */}
+        {activeTab === "standup-calendar" && (
+          <div className="animate-in fade-in duration-300">
+            <CalendarBookingModule customerName={user?.name || "Customer"} />
           </div>
         )}
 
@@ -2247,40 +2284,18 @@ function CustomerPortalContent() {
         {/* 7. CHAT MESSENGER */}
         {activeTab === "chat" && (
           <div className="space-y-4 animate-in fade-in duration-300">
-            <h2 className="text-2xl font-bold text-slate-100">Workspace Chat Messenger</h2>
-            <GlassPanel className="border-slate-800 bg-slate-900/20 p-4 h-[500px] flex flex-col justify-between">
-              <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin">
-                {chatMessages.length === 0 ? (
-                  <p className="text-slate-500 text-center py-12 text-sm">No recent messages in this session.</p>
-                ) : (
-                  chatMessages.map(msg => {
-                    const isMe = msg.senderRole === "customer" || msg.senderId === user?.id;
-                    return (
-                      <div key={msg.id} className={cn("flex flex-col max-w-[70%] space-y-1", isMe ? "ml-auto items-end" : "mr-auto items-start")}>
-                        <span className="text-[10px] text-slate-500">{msg.senderName} • {new Date(msg.timestamp).toLocaleTimeString()}</span>
-                        <div className={cn(
-                          "p-3 rounded-2xl text-xs",
-                          isMe ? "bg-emerald-600 text-white rounded-tr-none" : "bg-slate-800 text-slate-200 rounded-tl-none"
-                        )}>
-                          {msg.content}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-              <form onSubmit={handleSendMessage} className="flex gap-2 pt-4 border-t border-slate-800/80 mt-4">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type message to account manager..."
-                  className="bg-slate-950 border-slate-850 rounded-xl"
-                />
-                <ExtrudedButton type="submit" className="bg-emerald-600 hover:bg-emerald-700">
-                  <Send className="h-4 w-4" />
-                </ExtrudedButton>
-              </form>
-            </GlassPanel>
+            <h2 className="text-2xl font-bold text-slate-100">Dedicated Agent Messenger</h2>
+            <AgentMessagingChannel
+              customerId={user?.id || "customer-demo"}
+              customerName={user?.name || "Valued Customer"}
+              agentKey={urlAgentKey || "praneeth"}
+              agentName={urlAgentKey === "ashok" ? "Ashok Kumar" : "Praneeth"}
+              agentTitle={urlAgentKey === "ashok" ? "Outbound SDR Manager" : "Lead SDR Specialist"}
+              currentUserId={user?.id || "customer-demo"}
+              currentUserRole={user?.role === "agent" ? "agent" : "customer"}
+              currentUserName={user?.name || "Valued Customer"}
+              agentGradient={urlAgentKey === "ashok" ? "from-emerald-500 to-teal-600" : "from-cyan-500 to-indigo-600"}
+            />
           </div>
         )}
 
@@ -2672,6 +2687,9 @@ function CustomerPortalContent() {
 
 
       </div>
+
+      {/* Floating Kimi AI Chatbot Assistant */}
+      <AIChatAssistant />
     </div>
   );
 }

@@ -76,7 +76,8 @@ class StreamingTTSProcessor:
                                     yield AudioFrame(pcm_bytes, sample_rate=self.sample_rate)
                             return
             except Exception as e:
-                logger.warn(f"ElevenLabs streaming TTS failed: {e}. Falling back to synthetic PCM audio generator.")
+                logger.warning(f"ElevenLabs streaming TTS failed: {e}. Falling back to synthetic PCM audio generator.")
+
 
         # 2. Synthetic PCM Audio Generator Fallback (for local test & dev environments without API keys)
         # Generates clean, audible synthetic speech tone frames matching target text duration

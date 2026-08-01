@@ -1,6 +1,7 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 
-const apiKey = (process.env.PINECONE_API_KEY || "dummy-test-key").trim();
+const apiKey = (process.env.PINECONE_API_KEY || "").trim();
+
 const indexName = process.env.PINECONE_INDEX || 'quickstart';
 const dimension = parseInt(process.env.PINECONE_DIMENSION || '384'); // Matching HuggingFace all-MiniLM-L6-v2
 const metric = (process.env.PINECONE_METRIC as 'cosine' | 'euclidean' | 'dotproduct') || 'cosine';

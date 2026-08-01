@@ -68,11 +68,22 @@ export async function POST(request: NextRequest) {
       customApiKey = await getActiveDecryptedKey(user.id, provider as any);
     }
 
-    // Perform content generation using Dealflow LLM pipeline
-    const llmResult = await dealflowLLM.infer(parsed.prompt, systemPrompt, {
-      modelId: modelConfig.id,
-      apiKey: customApiKey || undefined
-    });
+    // Perform content generation based on provider
+    let fusedOutput: string;
+    let confidence: number = 0.95;
+
+    if (modelConfig.provider.toLowerCase().includes("kimi") || requestedModelId.startsWith("moonshot-") || requestedModelId === "kimi-v1") {
+      const { kimiInfer } = await import("@/lib/kimi");
+      fusedOutput = await kimiInfer(parsed.prompt, systemPrompt, { model: requestedModelId });
+    } else {
+      const llmResult = await dealflowLLM.infer(parsed.prompt, systemPrompt, {
+        modelId: modelConfig.id,
+        apiKey: customApiKey || undefined
+      });
+      fusedOutput = llmResult.fusedOutput;
+      confidence = llmResult.confidence;
+    }
+
 
 
 
@@ -84,7 +95,7 @@ export async function POST(request: NextRequest) {
       user: userId,
       modelId: modelConfig.id,
       tokensIn: Math.ceil(parsed.prompt.length / 4),
-      tokensOut: Math.ceil(llmResult.fusedOutput.length / 4),
+      tokensOut: Math.ceil(fusedOutput.length / 4),
       latency: latencyMs,
       gpuId: modelConfig.gpuModel,
       timestamp: new Date().toISOString()
@@ -92,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      content: llmResult.fusedOutput,
+      content: fusedOutput,
       model: {
         id: modelConfig.id,
         name: modelConfig.name,
@@ -102,10 +113,11 @@ export async function POST(request: NextRequest) {
       },
       telemetry: {
         latencyMs,
-        tokensGenerated: Math.ceil(llmResult.fusedOutput.length / 4),
-        confidence: llmResult.confidence
+        tokensGenerated: Math.ceil(fusedOutput.length / 4),
+        confidence: confidence
       }
     });
+
 
   } catch (error) {
     console.error("[api/content/generate] Error:", error);

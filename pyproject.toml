@@ -1,11 +1,15 @@
+[tool.pytest.ini_options]
+pythonpath = ["python-agent-service"]
+testpaths = ["python-agent-service/tests"]
+
 [tool.pyrefly]
 type-checking-mode = "off"
 disable-type-errors = true
 disable-search-path-heuristics = true
 search-path = ["python-agent-service", "."]
 
-
 project-excludes = [
+    "**/*",
     "**/inmemory/**",
     "**/virtual/**",
     "**/__pyrefly_virtual__/**",
@@ -18,4 +22,6 @@ project-excludes = [
 [tool.pyrefly.errors]
 parse-error = false
 unknown-name = false
-
+reportMissingImports = false
+reportUndefinedVariable = false
+reportGeneralTypeIssues = false

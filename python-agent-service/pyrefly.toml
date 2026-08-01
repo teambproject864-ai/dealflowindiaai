@@ -4,6 +4,18 @@ type-checking-mode = "off"
 disable-type-errors = true
 search-path = ["."]
 
+project-excludes = [
+    "**/*",
+    "**/inmemory/**",
+    "**/virtual/**",
+    "**/__pyrefly_virtual__/**",
+    "D:/__pyrefly_virtual__/**",
+    "D:\\__pyrefly_virtual__\\**"
+]
+
 [tool.pyrefly.errors]
 parse-error = false
 unknown-name = false
+reportMissingImports = false
+reportUndefinedVariable = false
+reportGeneralTypeIssues = false

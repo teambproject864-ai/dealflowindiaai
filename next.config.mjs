@@ -61,8 +61,8 @@ const nextConfig = {
   // Enable compression
   compress: true,
   // Suppress Node.js deprecation warnings from third-party packages (e.g., googleapis url.parse DEP0169)
-  serverExternalPackages: ["googleapis", "google-auth-library", "twilio"],
-  webpack: (config, { dev, isServer }) => {
+  serverExternalPackages: ["googleapis", "google-auth-library", "twilio", "firebase-admin"],
+  webpack: (config, { dev, isServer, webpack }) => {
     // Suppress Node.js deprecation warnings from third-party packages in webpack
     if (isServer) {
       config.ignoreWarnings = [
@@ -71,6 +71,29 @@ const nextConfig = {
         { message: /DEP0169/ },
         { module: /rate-limiter-flexible/ },
       ];
+    } else {
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/^node:/, (resource) => {
+          resource.request = resource.request.replace(/^node:/, "");
+        })
+      );
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        buffer: false,
+        net: false,
+        tls: false,
+        fs: false,
+        dns: false,
+        child_process: false,
+        http2: false,
+        http: false,
+        https: false,
+        stream: false,
+        crypto: false,
+        zlib: false,
+        path: false,
+        os: false,
+      };
     }
     
     // Ignore critical dependency warning from rate-limiter-flexible

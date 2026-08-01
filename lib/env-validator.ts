@@ -64,14 +64,62 @@ export function validateEnv(): EnvValidationResult {
     logger.warn("Firebase Admin credentials not configured - using demo accounts only");
   }
 
-  // 3. AI configuration (Warnings only, as these are often hot-swappable)
-  const provider = process.env.AI_PROVIDER || "huggingface";
-  if (provider === "huggingface" && !process.env.HUGGINGFACE_API_TOKEN && !process.env.HF_TOKEN) {
-    logger.warn("AI_PROVIDER is set to 'huggingface' but HUGGINGFACE_API_TOKEN is missing.");
-  } else if (provider === "nvidia" && !process.env.NVIDIA_API_KEY) {
-    logger.warn("AI_PROVIDER is set to 'nvidia' but NVIDIA_API_KEY is missing.");
-  } else if (provider === "kimi" && !process.env.KIMI_API_KEY) {
-    logger.warn("AI_PROVIDER is set to 'kimi' but KIMI_API_KEY is missing.");
+  // 3. Strict API Key Location Security Audit
+  // Ensure no sensitive API keys are committed in plaintext inside .env (must be exclusively in .env.local)
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    const dotEnvPath = path.join(process.cwd(), ".env");
+    if (fs.existsSync(dotEnvPath)) {
+      const dotEnvContent = fs.readFileSync(dotEnvPath, "utf8");
+      const keyPatterns = [
+        /HUGGINGFACE_API_TOKEN\s*=\s*hf_[a-zA-Z0-9]+/i,
+        /NVIDIA_API_KEY\s*=\s*nvapi-[a-zA-Z0-9_\-]+/i,
+        /KIMI_API_KEY\s*=\s*sk-[a-zA-Z0-9]+/i,
+        /OPENROUTER_API_KEY\s*=\s*sk-or-v1-[a-zA-Z0-9]+/i,
+        /RECALL_API_KEY\s*=\s*[a-f0-9]{32,}/i,
+        /TWILIO_AUTH_TOKEN\s*=\s*[a-f0-9]{32,}/i,
+        /PINECONE_API_KEY\s*=\s*pcsk_[a-zA-Z0-9_\-]+/i,
+      ];
+      for (const pattern of keyPatterns) {
+        if (pattern.test(dotEnvContent)) {
+          errors.push("STRICT CONFIGURATION POLICY ERROR: Plaintext API keys detected in '.env'. All API keys must be exclusively stored in '.env.local'.");
+          break;
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore file system read errors in serverless/isolated runtimes
+  }
+
+  // 4. Validate Presence of Centralized API Keys in process.env (loaded from .env.local)
+  const requiredApiKeys = [
+    { name: "HUGGINGFACE_API_TOKEN", alt: "HF_TOKEN" },
+    { name: "NVIDIA_API_KEY" },
+    { name: "ENC_KIMI_API_KEY", alt: "KIMI_API_KEY" },
+    { name: "OPENROUTER_API_KEY" },
+    { name: "RECALL_API_KEY" },
+    { name: "PINECONE_API_KEY" },
+  ];
+
+  for (const keyDef of requiredApiKeys) {
+    const mainVal = process.env[keyDef.name];
+    const altVal = keyDef.alt ? process.env[keyDef.alt] : undefined;
+    if (!mainVal && !altVal && !isTest) {
+      errors.push(`Missing required API key '${keyDef.name}' in .env.local configuration.`);
+    }
+  }
+
+  // Check Kimi envelope key format if present
+  if (process.env.ENC_KIMI_API_KEY) {
+    try {
+      const { isEnvelope } = require("./secure-storage/envelope-encryption");
+      if (!isEnvelope(process.env.ENC_KIMI_API_KEY)) {
+        errors.push("ENC_KIMI_API_KEY is set in .env.local but is not a valid AES-256-GCM envelope JSON payload.");
+      }
+    } catch {
+      // Ignore module loading issues in simple validation
+    }
   }
 
   if (errors.length > 0) {
@@ -82,3 +130,14 @@ export function validateEnv(): EnvValidationResult {
   logger.info("Environment validation succeeded");
   return { valid: true, errors: [] };
 }
+
+/**
+ * Asserts environment configuration and throws error on failure.
+ */
+export function assertValidEnv(): void {
+  const result = validateEnv();
+  if (!result.valid) {
+    throw new Error(`CRITICAL CONFIGURATION ERROR:\n${result.errors.join("\n")}`);
+  }
+}
+

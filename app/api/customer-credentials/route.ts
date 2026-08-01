@@ -220,14 +220,42 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  // ── Authentication ─────────────────────────────────────────
-  const { errorResponse } = await requireAuth(req);
-  if (errorResponse) return errorResponse;
-
   try {
     const { searchParams } = new URL(req.url);
     const leadId = searchParams.get("leadId");
     const email = searchParams.get("email");
+
+    // Public email availability check (used by registration modal before login)
+    if (email && !leadId) {
+      const sanitizedEmail = email.toLowerCase().trim();
+      let emailExists = false;
+      if (db) {
+        const snapshot = await db.collection("users").where("email", "==", sanitizedEmail).get();
+        if (!snapshot.empty) emailExists = true;
+      }
+      if (!emailExists) {
+        const credsMap = getInMemoryCustomerCredentials();
+        const list = Array.from(credsMap.values());
+        if (list.some((c) => c.email.toLowerCase().trim() === sanitizedEmail)) {
+          emailExists = true;
+        }
+      }
+      if (!emailExists) {
+        emailExists = [...DEMO_CUSTOMERS, ...NEW_CUSTOMERS].some(
+          (c) => c.email.toLowerCase().trim() === sanitizedEmail
+        );
+      }
+      return NextResponse.json({
+        success: true,
+        available: !emailExists,
+        credentials: emailExists ? [{ email: sanitizedEmail }] : [],
+      });
+    }
+
+    // Authenticated query for lead credentials
+    const { errorResponse } = await requireAuth(req);
+    if (errorResponse) return errorResponse;
+
 
     let creds: CustomerCredentials[] = [];
 

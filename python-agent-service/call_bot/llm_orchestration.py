@@ -104,15 +104,19 @@ class StreamingLLMOrchestrator:
         # 1. Try Native Project API Providers
         for provider in providers:
             try:
+                url_str: str = str(provider["url"])
+                headers_dict: Dict[str, str] = dict(provider["headers"])
+                model_str: str = str(provider["model"])
                 payload = {
-                    "model": provider["model"],
+                    "model": model_str,
                     "messages": messages,
                     "stream": True,
                     "max_tokens": 200,
                     "temperature": 0.7
                 }
                 async with httpx.AsyncClient(timeout=8.0) as client:
-                    async with client.stream("POST", provider["url"], headers=provider["headers"], json=payload) as response:
+                    async with client.stream("POST", url_str, headers=headers_dict, json=payload) as response:
+
                         if response.is_success:
                             chunk_count = 0
                             async for line in response.aiter_lines():
@@ -131,7 +135,8 @@ class StreamingLLMOrchestrator:
                                         pass
                             return
             except Exception as e:
-                logger.warn(f"{provider['name']} streaming request failed: {e}. Trying next provider...")
+                logger.warning(f"{provider['name']} streaming request failed: {e}. Trying next provider...")
+
 
         # 2. Native DealFlow Core LLM Response Engine Fallback
         latency = (time.time() - start_time) * 1000.0

@@ -21,7 +21,7 @@ export class RateLimitExceededError extends Error {
 // Access Control Matrix Registry
 export interface APIKeyPermission {
   envVar: string;
-  provider: 'huggingface' | 'nvidia';
+  provider: 'huggingface' | 'nvidia' | 'kimi';
   permittedPillar: string;
   permittedSubOption: string;
 }
@@ -37,7 +37,13 @@ export const API_KEY_PERMISSIONS: Record<string, APIKeyPermission> = {
   'faq_auto_bots_nv': { envVar: 'ENC_NV_KEY_FAQ_BOT', provider: 'nvidia', permittedPillar: 'ai_automated_content', permittedSubOption: 'faq_auto_bots' },
   'synthetic_data_generator_hf': { envVar: 'ENC_HF_KEY_SYNTH_GEN', provider: 'huggingface', permittedPillar: 'ai_automated_content', permittedSubOption: 'synthetic_data_generator' },
   'synthetic_data_generator_nv': { envVar: 'ENC_NV_KEY_SYNTH_GEN', provider: 'nvidia', permittedPillar: 'ai_automated_content', permittedSubOption: 'synthetic_data_generator' },
+  // Kimi API Permissions
+  'kimi_gtm_report': { envVar: 'ENC_KIMI_API_KEY', provider: 'kimi', permittedPillar: 'ai_automated_content', permittedSubOption: 'dynamic_report_generator' },
+  'kimi_imagery_gen': { envVar: 'ENC_KIMI_API_KEY', provider: 'kimi', permittedPillar: 'ai_automated_content', permittedSubOption: 'automated_personalization' },
+  'kimi_video_blueprint': { envVar: 'ENC_KIMI_API_KEY', provider: 'kimi', permittedPillar: 'ai_automated_content', permittedSubOption: 'ai_copy_generator' },
+  'kimi_general_chat': { envVar: 'ENC_KIMI_API_KEY', provider: 'kimi', permittedPillar: 'ai_automated_content', permittedSubOption: 'faq_auto_bots' },
 };
+
 
 // Rate limiting state
 const rateLimits: Map<string, number[]> = new Map();
@@ -209,7 +215,14 @@ export function getDecryptedKey(
 
   // 5. Decrypt and return key
   try {
-    const decrypted = decryptAES(encryptedValue, getDecryptionKey());
+    const { decryptEnvelope, isEnvelope } = require('./secure-storage/envelope-encryption');
+    let decrypted: string;
+    if (isEnvelope(encryptedValue)) {
+      decrypted = decryptEnvelope(encryptedValue);
+    } else {
+      decrypted = decryptAES(encryptedValue, getDecryptionKey());
+    }
+
     logAuditEvent({
       keyId,
       provider: permission.provider,
@@ -223,4 +236,5 @@ export function getDecryptedKey(
     console.error(`[SecureAPIKeys] Error decrypting API key ${keyId}:`, error);
     throw new Error(`Failed to decrypt API Key for ${keyId}. Invalid encryption configuration.`);
   }
+
 }

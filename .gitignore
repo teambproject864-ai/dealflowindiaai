@@ -6,12 +6,20 @@ out
 .turbo
 .vercel
 
-.env
-.env.*
-dealflow_firebase.json
-firebase.json
+# Environment configuration - .env.local contains developer secrets and is NEVER committed
+.env.local
+.env.local.*
 *.json.local
+
+# Secrets (never commit)
+dealflow_firebase.json
+service-account.json
+service-account*.json
+
+# Track environment templates
+!.env
 !.env.example
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

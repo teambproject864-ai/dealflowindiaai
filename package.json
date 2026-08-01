@@ -13,8 +13,10 @@
     "test:e2e:debug": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
     "test:load": "k6 run --out json=test-results/k6-results.json k6-tests/load-test.js",
-    "test:load:smoke": "k6 run --scenario smoke k6-tests/load-test.js"
+    "test:load:smoke": "k6 run --scenario smoke k6-tests/load-test.js",
+    "check:api-keys": "tsx scripts/ci-api-key-check.ts"
   },
+
   "dependencies": {
     "@ai-sdk/openai": "^3.0.64",
     "@huggingface/inference": "^4.13.15",

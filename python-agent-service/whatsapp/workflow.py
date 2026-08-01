@@ -40,7 +40,8 @@ class WhatsAppWorkflowEngine:
             try:
                 await whatsapp_client.send_text_message(SendTextMessageRequest(number=chat_jid, text=reply_str))
             except Exception as send_err:
-                logger.warn(f"Could not send WhatsApp workflow reply to {chat_jid} (Evolution API offline/mock): {send_err}")
+                logger.warning(f"Could not send WhatsApp workflow reply to {chat_jid} (Evolution API offline/mock): {send_err}")
+
 
         # 1. Check for active multi-turn workflow session state in SQLite DB
         session = await db_manager.get_workflow_state(chat_jid)
@@ -172,9 +173,10 @@ class WhatsAppWorkflowEngine:
                     await db_manager.log_audit_event("whatsapp_crm_sync", "lead_synced", {"phone": phone, "lead": lead_data})
                     return True
                 else:
-                    logger.warn(f"CRM sync API returned status {res.status_code}: {res.text}")
+                    logger.warning(f"CRM sync API returned status {res.status_code}: {res.text}")
         except Exception as e:
-            logger.warn(f"Could not reach DealFlow CRM API at {settings.CRM_API_BASE_URL}: {e}")
+            logger.warning(f"Could not reach DealFlow CRM API at {settings.CRM_API_BASE_URL}: {e}")
+
 
         return False
 

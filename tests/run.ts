@@ -51,6 +51,8 @@ import { runCrossPortalFeaturesTestSuite } from "./cross-portal-features.test";
 import { runPortalRedesignTestSuite } from "./portal-redesign.test";
 import { runAgentTestingSuite } from "./agent-testing.test";
 import { runMAGVoiceChatLiveE2ETestSuite } from "./mag-voice-chat-e2e-live.test";
+import { runIntakeFormGenericTests } from "./intake-form-generic.test";
+import { runPipelineSupportPromptTests } from "./pipeline-support.test";
 
 
 
@@ -352,7 +354,9 @@ async function main() {
     runCrossPortalFeaturesTestSuite,
     runPortalRedesignTestSuite,
     runAgentTestingSuite,
-    runMAGVoiceChatLiveE2ETestSuite
+    runMAGVoiceChatLiveE2ETestSuite,
+    runIntakeFormGenericTests,
+    runPipelineSupportPromptTests
   ];
 
 

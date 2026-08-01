@@ -73,7 +73,8 @@ export const ICP_DEFINITIONS: ICPDefinition[] = [
 /**
  * Logic to select the best matching ICP for a company
  */
-export function matchICP(data: LeadRecord | IntakeFormData): ICPMatchResult | null {
+export function matchICP(data: Partial<LeadRecord | IntakeFormData>): ICPMatchResult | null {
+
   try {
     let bestMatch: ICPDefinition | null = null;
     let maxScore = -1;
@@ -111,12 +112,13 @@ export function matchICP(data: LeadRecord | IntakeFormData): ICPMatchResult | nu
 
     return {
       leadId: (data as LeadRecord).id || "temp-lead",
-      companyName: data.companyName,
+      companyName: data.companyName || "Unknown Company",
       matchedICP: bestMatch,
       matchScore: Math.min(100, maxScore),
-      matchReason: `Matched based on industry (${data.industry}) and company profile.`,
+      matchReason: `Matched based on industry (${data.industry || 'General'}) and company profile.`,
       timestamp: new Date().toISOString()
     };
+
   } catch (error) {
     console.error("[ICPMatch] Error matching ICP:", error);
     return null;

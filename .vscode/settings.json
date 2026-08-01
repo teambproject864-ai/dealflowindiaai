@@ -25,10 +25,24 @@
   "yaml.schemas": {
     "": ["**/.github/workflows/*.yml"]
   },
-  "python.analysis.diagnosticMode": "openFilesOnly",
+  "python.languageServer": "Pylance",
+  "pyrefly.enable": false,
+  "pyrefly.typeCheckingMode": "off",
+  "pyrefly.disableTypeErrors": true,
+  "pyrefly.disableLanguageServices": true,
+  "pyrefly.displayErrors": false,
+  "pyrefly.reportDiagnostics": false,
+  "python.pyrefly.enable": false,
   "python.pyrefly.typeCheckingMode": "off",
   "python.pyrefly.disableTypeErrors": true,
   "python.pyrefly.disableLanguageServices": true,
+  "python.analysis.diagnosticMode": "openFilesOnly",
+  "python.analysis.typeCheckingMode": "off",
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingImports": "none",
+    "reportUndefinedVariable": "none",
+    "reportGeneralTypeIssues": "none"
+  },
   "python.analysis.exclude": [
     "**/node_modules",
     "**/__pycache__",
@@ -41,6 +55,7 @@
     "D:\\__pyrefly_virtual__\\**"
   ],
   "pyrefly.projectExcludes": [
+    "**/*",
     "**/inmemory/**",
     "**/virtual/**",
     "**/__pyrefly_virtual__/**",

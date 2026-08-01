@@ -129,8 +129,9 @@ class EvolutionAPIClient:
                     raise err
 
                 backoff = min(8.0, 0.5 * (2 ** (attempt - 1)))
-                logger.warn(f"Retryable error on {method} {endpoint} (attempt {attempt}/{self.max_retries}): {err}. Backoff {backoff}s...")
+                logger.warning(f"Retryable error on {method} {endpoint} (attempt {attempt}/{self.max_retries}): {err}. Backoff {backoff}s...")
                 await asyncio.sleep(backoff)
+
 
         raise last_err or EvolutionAPIException("Request failed after max retries")
 
@@ -178,7 +179,7 @@ class EvolutionAPIClient:
                 owner_jid=data.get("instance", {}).get("ownerJid")
             )
         except Exception as e:
-            logger.warn(f"Failed to fetch status for instance {inst}: {e}")
+            logger.warning(f"Failed to fetch status for instance {inst}: {e}")
             return InstanceStatus(instance_name=inst, state=ConnectionState.DISCONNECTED)
 
     async def fetch_qrcode(self, instance_name: Optional[str] = None) -> Optional[str]:
@@ -190,8 +191,9 @@ class EvolutionAPIClient:
             data = await self._request_with_retry("GET", f"/instance/connect/{inst}")
             return data.get("base64") or data.get("code")
         except Exception as e:
-            logger.warn(f"Failed to fetch QR code for instance {inst}: {e}")
+            logger.warning(f"Failed to fetch QR code for instance {inst}: {e}")
             return None
+
 
     async def logout_instance(self, instance_name: Optional[str] = None) -> bool:
         """
@@ -379,8 +381,9 @@ class EvolutionAPIClient:
             await db_manager.save_contact(contact)
             return contact
         except Exception as e:
-            logger.warn(f"Could not fetch profile info for {phone_clean}: {e}")
+            logger.warning(f"Could not fetch profile info for {phone_clean}: {e}")
             return None
+
 
 
 # Global API Client Singleton instance

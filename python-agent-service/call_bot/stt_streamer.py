@@ -100,7 +100,8 @@ class StreamingSTTProcessor:
                         if text.strip():
                             return TranscriptChunk(text=text.strip(), is_final=True, confidence=conf)
             except Exception as e:
-                logger.warn(f"Deepgram STT API request failed: {e}. Falling back to acoustic parser.")
+                logger.warning(f"Deepgram STT API request failed: {e}. Falling back to acoustic parser.")
+
 
         # Fallback acoustic text parsing for simulation / dev environment
         # Calculates audio energy to detect spoken intent keywords if unconfigured

@@ -1,7 +1,9 @@
-import { getDb } from "@/lib/firebase-admin";
-import { PERSONAS } from "@/prompts/personas";
 import type { CallRecord, AGENT_FULL_NAMES as TYPE_AGENT_FULL_NAMES, AGENT_EXPERTISE as TYPE_AGENT_EXPERTISE, RevenueAgentProfile } from "@/lib/types";
-import { assignFairRandomAgent } from "./agent-assignment";
+import { getAgentByKey as getAgentFromAssignment } from "./agent-assignment";
+
+export function getAgentByKey(key: string): RevenueAgentProfile | undefined {
+  return getAgentFromAssignment(key);
+}
 
 // Re-export so callers can `import type { RevenueAgentProfile } from "@/lib/revenue-agents"`
 export type { RevenueAgentProfile };
@@ -20,13 +22,13 @@ export function getRevenueAgentCatalog(): Omit<RevenueAgentProfile, "activeSessi
 }
 
 export const REVENUE_AGENTS = [
-  { key: "ashok", name: "Ashok", title: "Outbound Lead Specialist", bio: "Expert in outbound pipeline generation, enterprise B2B sales development, and cold outreach.", specialties: ["B2B SaaS", "Outbound", "Pipeline"] },
-  { key: "harsha", name: "Harsha", title: "Content & GTM Architect", bio: "Specializes in product-led growth, content automation pipelines, and ICP alignment.", specialties: ["Content", "GTM", "Product-Led"] },
-  { key: "kiran", name: "Kiran", title: "Growth & Performance Strategist", bio: "Focuses on paid ad optimization, conversion funnel analytics, and CAC reduction.", specialties: ["Growth", "Paid Ads", "Metrics"] },
-  { key: "vijay", name: "Vijay", title: "Enterprise Sales Director", bio: "Strategic account executive managing multi-stakeholder enterprise deals and contract negotiations.", specialties: ["Enterprise Sales", "Strategic Planning"] },
-  { key: "avinash", name: "Avinash", title: "Customer Success & Expansion Lead", bio: "Drives account retention, expansion playbooks, and post-sale onboarding experience.", specialties: ["Account Management", "Customer Success"] },
-  { key: "kunal", name: "Kunal", title: "Marketing Automation Lead", bio: "Engineers automated lead generation workflows and multi-channel drip campaigns.", specialties: ["Marketing Automation", "Lead Generation"] },
-  { key: "praneeth", name: "Praneeth", title: "Chief RevOps & Pipeline Specialist", bio: "Pioneers B2B RevOps optimization, deal velocity acceleration, and custom GTM frameworks.", specialties: ["B2B SaaS", "GTM Strategy", "RevOps", "Pipeline Optimization"] }
+  { key: "ashok", name: "Ashok", title: "Outbound Lead Specialist", bio: "Expert in outbound pipeline generation, enterprise B2B sales development, and cold outreach.", specialties: ["B2B SaaS", "Outbound", "Pipeline"], rating: 4.9, winRate: "38%", timeZone: "America/New_York (EST)", onlineStatus: "online", maxSessions: 3 },
+  { key: "harsha", name: "Harsha", title: "Content & GTM Architect", bio: "Specializes in product-led growth, content automation pipelines, and ICP alignment.", specialties: ["Content", "GTM", "Product-Led"], rating: 4.8, winRate: "35%", timeZone: "America/Chicago (CST)", onlineStatus: "online", maxSessions: 3 },
+  { key: "kiran", name: "Kiran", title: "Growth & Performance Strategist", bio: "Focuses on paid ad optimization, conversion funnel analytics, and CAC reduction.", specialties: ["Growth", "Paid Ads", "Metrics"], rating: 4.9, winRate: "41%", timeZone: "America/Los_Angeles (PST)", onlineStatus: "online", maxSessions: 3 },
+  { key: "vijay", name: "Vijay", title: "Enterprise Sales Director", bio: "Strategic account executive managing multi-stakeholder enterprise deals and contract negotiations.", specialties: ["Enterprise Sales", "Strategic Planning"], rating: 5.0, winRate: "44%", timeZone: "America/New_York (EST)", onlineStatus: "busy", maxSessions: 3 },
+  { key: "avinash", name: "Avinash", title: "Customer Success & Expansion Lead", bio: "Drives account retention, expansion playbooks, and post-sale onboarding experience.", specialties: ["Account Management", "Customer Success"], rating: 4.8, winRate: "32%", timeZone: "Europe/London (GMT)", onlineStatus: "online", maxSessions: 3 },
+  { key: "kunal", name: "Kunal", title: "Marketing Automation Lead", bio: "Engineers automated lead generation workflows and multi-channel drip campaigns.", specialties: ["Marketing Automation", "Lead Generation"], rating: 4.7, winRate: "30%", timeZone: "Asia/Kolkata (IST)", onlineStatus: "online", maxSessions: 3 },
+  { key: "praneeth", name: "Praneeth", title: "Chief RevOps & Pipeline Specialist", bio: "Pioneers B2B RevOps optimization, deal velocity acceleration, and custom GTM frameworks.", specialties: ["B2B SaaS", "GTM Strategy", "RevOps", "Pipeline Optimization"], rating: 5.0, winRate: "46%", timeZone: "America/New_York (EST)", onlineStatus: "online", maxSessions: 4 }
 ];
 
 
@@ -37,6 +39,7 @@ async function countActiveSessionsByPersona(): Promise<Record<string, number>> {
   }
 
   try {
+    const { getDb } = await import("@/lib/firebase-admin");
     const dbInstance = getDb();
     if (dbInstance) {
       const snapshot = await dbInstance
@@ -69,16 +72,17 @@ async function countActiveSessionsByPersona(): Promise<Record<string, number>> {
 
 export async function listRevenueAgentsWithAvailability(): Promise<RevenueAgentProfile[]> {
   const activeCounts = await countActiveSessionsByPersona();
-  const maxPerAgent = Number(process.env.MAX_SESSIONS_PER_AGENT) || 2;
+  const maxPerAgent = Number(process.env.MAX_SESSIONS_PER_AGENT) || 3;
   const catalog = getRevenueAgentCatalog();
 
   // Dynamically load active agent users created by Admin
   let dbAgents: RevenueAgentProfile[] = [];
   try {
+    const { getDb } = await import("@/lib/firebase-admin");
     const db = getDb();
     if (db) {
       const snap = await db.collection("users").where("role", "==", "agent").get();
-      snap.forEach((doc) => {
+      snap.forEach((doc: any) => {
         const d = doc.data();
         if (d.isActive !== false) {
           const key = d.id || doc.id;
@@ -87,9 +91,17 @@ export async function listRevenueAgentsWithAvailability(): Promise<RevenueAgentP
             name: d.name || "Agent",
             fullName: d.name || "Agent",
             role: "AI Revenue Agent",
+            title: d.title || "Revenue Agent",
+            bio: d.bio || "Specialized AI Revenue Agent",
             expertise: d.expertise || ["gtm", "sales"],
+            specialties: d.specialties || ["GTM Strategy"],
             activeSessions: activeCounts[key] || 0,
-            available: (activeCounts[key] || 0) < maxPerAgent,
+            maxSessions: d.maxSessions || maxPerAgent,
+            available: (activeCounts[key] || 0) < (d.maxSessions || maxPerAgent),
+            onlineStatus: (activeCounts[key] || 0) >= (d.maxSessions || maxPerAgent) ? "busy" : "online",
+            rating: d.rating || 4.9,
+            winRate: d.winRate || "36%",
+            timeZone: d.timeZone || "America/New_York (EST)"
           });
         }
       });
@@ -103,11 +115,21 @@ export async function listRevenueAgentsWithAvailability(): Promise<RevenueAgentP
   }
 
   return catalog.map((agent) => {
+    const detail = REVENUE_AGENTS.find((a) => a.key === agent.key);
     const activeSessions = activeCounts[agent.key] || 0;
+    const maxCap = detail?.maxSessions || maxPerAgent;
     return {
       ...agent,
+      title: detail?.title || agent.role,
+      bio: detail?.bio || "Dedicated AI Revenue Specialist",
+      specialties: detail?.specialties || agent.expertise,
       activeSessions,
-      available: activeSessions < maxPerAgent,
+      maxSessions: maxCap,
+      available: activeSessions < maxCap,
+      onlineStatus: (detail?.onlineStatus as any) || (activeSessions >= maxCap ? "busy" : "online"),
+      rating: detail?.rating || 4.9,
+      winRate: detail?.winRate || "35%",
+      timeZone: detail?.timeZone || "America/New_York (EST)"
     };
   });
 }
@@ -116,6 +138,7 @@ export async function listRevenueAgentsWithAvailability(): Promise<RevenueAgentP
  * Picks a fair random available agent (or random if all are busy) with variance control (<=15%)
  */
 export async function assignRandomAgent(): Promise<{ agentKey: string; reason: string }> {
+  const { assignFairRandomAgent } = await import("./agent-assignment");
   const agents = await listRevenueAgentsWithAvailability();
   return await assignFairRandomAgent(agents);
 }

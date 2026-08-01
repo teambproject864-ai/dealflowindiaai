@@ -118,8 +118,55 @@ function logProviderSelection(
   );
 }
 
+// Traffic distribution state for load balancing across providers
+const providerTrafficCounter: Record<SupportedAIProvider, number> = {
+  'huggingface': 0,
+  'nvidia': 0,
+  'kimi': 0,
+  'dealflow-llm': 0
+};
+
+// Target weight distribution (percentages out of 100)
+const PROVIDER_WEIGHTS: Record<SupportedAIProvider, number> = {
+  'kimi': 35,
+  'nvidia': 30,
+  'dealflow-llm': 20,
+  'huggingface': 15
+};
+
 /**
- * Select provider based on request attributes
+ * Select provider based on weighted load distribution to prevent service overloading
+ */
+export function getLoadBalancedProvider(): SupportedAIProvider {
+  const totalCalls = Object.values(providerTrafficCounter).reduce((sum, count) => sum + count, 0);
+
+  // If initial state or zero calls, round robin starting with Kimi
+  if (totalCalls === 0) {
+    providerTrafficCounter['kimi']++;
+    return 'kimi';
+  }
+
+  // Calculate standard deviation / deviation from target ratio
+  let selectedProvider: SupportedAIProvider = 'kimi';
+  let maxDeficit = -Infinity;
+
+  for (const provider of SUPPORTED_PROVIDERS) {
+    const currentRatio = (providerTrafficCounter[provider] / totalCalls) * 100;
+    const targetRatio = PROVIDER_WEIGHTS[provider];
+    const deficit = targetRatio - currentRatio;
+
+    if (deficit > maxDeficit) {
+      maxDeficit = deficit;
+      selectedProvider = provider;
+    }
+  }
+
+  providerTrafficCounter[selectedProvider]++;
+  return selectedProvider;
+}
+
+/**
+ * Select provider based on request attributes and load distribution
  */
 export function selectAIProvider(
   attributes: ProviderRequestAttributes = {},
@@ -143,10 +190,12 @@ export function selectAIProvider(
     return selectedProvider;
   }
 
-  // No rules matched, use default
-  logProviderSelection(attributes, DEFAULT_PROVIDER);
-  return DEFAULT_PROVIDER;
+  // No high-priority rule matched, use load balanced provider distribution
+  const loadBalancedProvider = getLoadBalancedProvider();
+  logProviderSelection(attributes, loadBalancedProvider);
+  return loadBalancedProvider;
 }
+
 
 /**
  * Get provider-specific inference functions

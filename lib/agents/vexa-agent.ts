@@ -217,6 +217,7 @@ Follow this JSON structure exactly:
               gtmSystemPrompt,
               { requestType: `gtm-analysis-${leadId}` }
             );
+            gtmAnalysis = { ...generateMockCompleteGTM(structuredIntake.companyName, rawFormData), ...gtmAnalysis };
           } catch (error) {
             console.warn(`[VexaAgent] Failed to generate GTM analysis via LLM, using fallback:`, error);
             gtmAnalysis = generateMockCompleteGTM(structuredIntake.companyName, rawFormData);
@@ -315,6 +316,7 @@ Follow this JSON structure exactly:
               playbookSystemPrompt,
               { requestType: `gtm-playbook-${leadId}` }
             );
+            playbook = { ...generateMockPlaybook(structuredIntake.companyName), ...playbook };
           } catch (error) {
             console.warn(`[VexaAgent] Failed to generate playbook via LLM, using fallback:`, error);
             playbook = generateMockPlaybook(structuredIntake.companyName);

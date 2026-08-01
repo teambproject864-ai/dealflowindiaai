@@ -1,5 +1,4 @@
 import { AGENT_FULL_NAMES, getRevenueAgentCatalog, RevenueAgentProfile } from "./types";
-import { db } from "./firebase-admin";
 import { logger } from "./logger";
 
 // --- Assignment tracking interface
@@ -15,8 +14,18 @@ interface AgentAssignmentLog {
 let inMemoryAssignmentCounts: Record<string, number> = {};
 let inMemoryAssignmentHistory: AgentAssignmentLog[] = [];
 
+async function getFirestoreDb() {
+  try {
+    const { db } = await import("./firebase-admin");
+    return db;
+  } catch (e) {
+    return null;
+  }
+}
+
 // Initialize from Firestore on first use
 async function initAssignmentCounts() {
+  const db = await getFirestoreDb();
   if (!db) {
     // Fallback to in-memory only
     const agents = getRevenueAgentCatalog();
@@ -157,4 +166,80 @@ export function getRandomAvailableAgent(): string {
 export function getAgentByKey(key: string) {
   const agents = getRevenueAgentCatalog();
   return agents.find(agent => agent.key === key);
+}
+
+// --- Intelligent Multi-Criteria Auto Assignment (Industry, Workload, Timezone, Performance)
+export async function intelligentAutoAssignAgent(
+  agents: RevenueAgentProfile[],
+  customerCriteria: {
+    industry?: string;
+    companySize?: string;
+    timeZone?: string;
+    challengeTags?: string[];
+  }
+): Promise<{ agentKey: string; reason: string; matchScore: number }> {
+  await ensureInit();
+
+  if (!agents || agents.length === 0) {
+    const { getRevenueAgentCatalog } = await import("./types");
+    agents = getRevenueAgentCatalog();
+  }
+
+  const targetIndustry = (customerCriteria.industry || "").toLowerCase();
+  const targetTimeZone = (customerCriteria.timeZone || "").toLowerCase();
+  const tags = (customerCriteria.challengeTags || []).map((t) => t.toLowerCase());
+
+  const scoredAgents = agents.map((agent) => {
+    let score = 0;
+
+    // 1. Expertise & Industry Alignment (40 points)
+    const expertiseMatch = agent.expertise.some(
+      (e) => targetIndustry.includes(e.toLowerCase()) || e.toLowerCase().includes(targetIndustry)
+    );
+    const tagMatchCount = agent.expertise.filter((e) =>
+      tags.some((tag) => tag.includes(e.toLowerCase()) || e.toLowerCase().includes(tag))
+    ).length;
+    if (expertiseMatch) score += 25;
+    score += Math.min(15, tagMatchCount * 5);
+
+    // 2. Workload & Capacity Balancing (30 points)
+    const active = agent.activeSessions || 0;
+    const maxCap = agent.maxSessions || 3;
+    const capacityRatio = Math.max(0, 1 - active / maxCap);
+    score += Math.round(capacityRatio * 30);
+
+    // 3. Time Zone Compatibility (15 points)
+    const agentTZ = (agent.timeZone || "").toLowerCase();
+    if (targetTimeZone && agentTZ && (agentTZ.includes(targetTimeZone) || targetTimeZone.includes(agentTZ))) {
+      score += 15;
+    } else {
+      score += 8; // partial default overlap
+    }
+
+    // 4. Historical CSAT & Win Rate Performance (15 points)
+    const rating = agent.rating || 4.8;
+    score += Math.round((rating / 5.0) * 15);
+
+    return { agent, score };
+  });
+
+  // Sort by score descending
+  scoredAgents.sort((a, b) => b.score - a.score);
+  const best = scoredAgents[0] || { agent: agents[0], score: 50 };
+
+  // Update in-memory count
+  inMemoryAssignmentCounts[best.agent.key] = (inMemoryAssignmentCounts[best.agent.key] || 0) + 1;
+
+  const reason = `Intelligent Auto-Matched based on Industry (${targetIndustry || "General"}), Capacity (${best.agent.activeSessions}/${best.agent.maxSessions || 3}), Timezone (${best.agent.timeZone || "EST"}), and CSAT (${best.agent.rating || 4.9}/5.0)`;
+
+  logger.info(`[AgentAssignment] Auto-assigned agent: ${best.agent.key}`, {
+    score: best.score,
+    reason
+  });
+
+  return {
+    agentKey: best.agent.key,
+    reason,
+    matchScore: best.score
+  };
 }

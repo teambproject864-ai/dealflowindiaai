@@ -1,0 +1,28 @@
+name: API Key Security Policy Audit
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  api-key-security-check:
+    name: Audit Codebase for Hardcoded API Keys
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Execute Strict API Key Audit Scanner
+        run: npm run check:api-keys

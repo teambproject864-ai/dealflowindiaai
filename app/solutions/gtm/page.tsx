@@ -96,7 +96,8 @@ export default function GtmPage() {
     }
 
     // Prepare form data structure
-    const mockIntake: IntakeFormData = {
+    const mockIntake: Partial<IntakeFormData> = {
+
       name: user?.name || "GTM Analyst",
       emailPersonal: user?.email || "analyst@dealflow.ai",
       jobTitle: "GTM Consultant",
@@ -136,7 +137,8 @@ export default function GtmPage() {
       challenges: ["Manual outreach bottlenecks"],
     };
 
-    const doc = generateICPDocument(mockIntake);
+    const doc = generateICPDocument(mockIntake as IntakeFormData);
+
     setIcpDocument(doc);
     setIsGenerating(false);
   };

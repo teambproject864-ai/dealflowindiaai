@@ -18,6 +18,7 @@ export interface ModelConfig {
   description: string;
   useCases: string[];
   allowedRoles: UserRole[];
+  roleAccessDescription?: Partial<Record<UserRole, string>>;
   memoryRequirements: string;
   gpuModel: string;
   performanceProfile: ModelPerformanceProfile;
@@ -33,6 +34,11 @@ export const SUPPORTED_MODELS: ModelConfig[] = [
     description: 'Proprietary fine-tuned Dealflow intelligence engine specializing in financial metric extraction, B2B SaaS deal analysis, and automated GTM strategy & content generation.',
     useCases: ['Strategy & Content Generation', 'Deal Evaluation & ICP Scoring', 'Financial Metric Extraction', 'Outbound Campaign Drafting'],
     allowedRoles: ['customer', 'agent', 'admin'],
+    roleAccessDescription: {
+      admin: 'Full Strategy & Core Administration',
+      agent: 'Deal Analysis & Campaign Generation',
+      customer: 'ICP Review & Financial Insights'
+    },
     memoryRequirements: '48GB VRAM',
     gpuModel: 'NVIDIA A100',
     performanceProfile: {
@@ -51,6 +57,11 @@ export const SUPPORTED_MODELS: ModelConfig[] = [
     description: 'High-speed, low-latency LLM optimized for rapid content generation, summaries, and email drafts.',
     useCases: ['Fast Outbound Emails', 'Quick Deal Summaries', 'Lead Intake Notes'],
     allowedRoles: ['customer', 'agent', 'admin'],
+    roleAccessDescription: {
+      admin: 'High-speed system summaries',
+      agent: 'Rapid outbound email generation',
+      customer: 'Quick notes & intake summaries'
+    },
     memoryRequirements: '24GB VRAM',
     gpuModel: 'NVIDIA A10G',
     performanceProfile: {
@@ -69,6 +80,11 @@ export const SUPPORTED_MODELS: ModelConfig[] = [
     description: 'Balanced open-weights model for standard business content generation and customer campaign drafting.',
     useCases: ['Campaign Generation', 'Social Strategy', 'Customer Messaging'],
     allowedRoles: ['customer', 'agent', 'admin'],
+    roleAccessDescription: {
+      admin: 'Standard cluster orchestration',
+      agent: 'Campaign & messaging drafting',
+      customer: 'Messaging & feedback notes'
+    },
     memoryRequirements: '24GB VRAM',
     gpuModel: 'NVIDIA A10G',
     performanceProfile: {
@@ -87,6 +103,11 @@ export const SUPPORTED_MODELS: ModelConfig[] = [
     description: 'Versatile general-purpose model with concise instruction-following capabilities.',
     useCases: ['GTM Strategy', 'Content Studio', 'Document Summarization'],
     allowedRoles: ['customer', 'agent', 'admin'],
+    roleAccessDescription: {
+      admin: 'System prompt testing',
+      agent: 'Content studio drafting',
+      customer: 'Document summaries'
+    },
     memoryRequirements: '24GB VRAM',
     gpuModel: 'NVIDIA A10G',
     performanceProfile: {
@@ -96,6 +117,76 @@ export const SUPPORTED_MODELS: ModelConfig[] = [
       accuracyRating: '95.1%'
     }
   },
+  {
+    id: 'moonshot-v1-8k',
+    name: 'Kimi (Moonshot v1 8K)',
+    provider: 'Kimi / Moonshot AI',
+    type: 'LLM',
+    badge: 'High-Precision',
+    description: 'High-performance Kimi model optimized for GTM report generation, copy synthesis, and structural content blueprints.',
+    useCases: ['GTM Report Generation', 'Custom Imagery Blueprints', 'Structured Video Content', 'Outbound Strategy'],
+    allowedRoles: ['customer', 'agent', 'admin'],
+    roleAccessDescription: {
+      admin: 'Full Strategy, API Tuning & System Prompts',
+      agent: 'Campaign Playbooks & Content Synthesis',
+      customer: 'GTM Strategy Summaries & AI Messenger'
+    },
+    memoryRequirements: 'Cloud API',
+    gpuModel: 'Kimi Cluster',
+    performanceProfile: {
+      tokensPerSecond: 125,
+      latencyMs: 35,
+      contextWindow: 8192,
+      accuracyRating: '98.1%'
+    }
+  },
+  {
+    id: 'moonshot-v1-32k',
+    name: 'Kimi (Moonshot v1 32K)',
+    provider: 'Kimi / Moonshot AI',
+    type: 'LLM',
+    badge: 'Pro',
+    description: 'Long-context Kimi model suited for extensive documentation analysis and multi-chapter video blueprints.',
+    useCases: ['Extended GTM Strategy', 'Multi-Page Financial Audit', 'Longform Content Orchestration'],
+    allowedRoles: ['customer', 'agent', 'admin'],
+    roleAccessDescription: {
+      admin: 'Full Extended Audits & Global Configuration',
+      agent: 'Longform Content & Playbook Generation',
+      customer: 'Deep Document Analysis & Campaign Insights'
+    },
+    memoryRequirements: 'Cloud API',
+    gpuModel: 'Kimi Cluster',
+    performanceProfile: {
+      tokensPerSecond: 95,
+      latencyMs: 45,
+      contextWindow: 32768,
+      accuracyRating: '98.5%'
+    }
+  },
+  {
+    id: 'moonshot-v1-128k',
+    name: 'Kimi (Moonshot v1 128K)',
+    provider: 'Kimi / Moonshot AI',
+    type: 'LLM',
+    badge: 'Enterprise',
+    description: 'Ultra-long context Kimi model capable of processing complete company archives and complex market intelligence.',
+    useCases: ['Enterprise M&A Due Diligence', 'Comprehensive Market Synthesis', 'Full Playbook Generation'],
+    allowedRoles: ['customer', 'agent', 'admin'],
+    roleAccessDescription: {
+      admin: 'Enterprise Due Diligence & Full Control',
+      agent: 'Complete Archive Synthesis & Large Playbooks',
+      customer: 'Enterprise Repository & Market Intelligence'
+    },
+    memoryRequirements: 'Cloud API',
+    gpuModel: 'Kimi Cluster',
+    performanceProfile: {
+      tokensPerSecond: 75,
+      latencyMs: 65,
+      contextWindow: 131072,
+      accuracyRating: '99.0%'
+    }
+  },
+
 
   {
     id: 'meta-llama/llama-3.1-70b-instruct',

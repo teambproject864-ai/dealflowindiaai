@@ -83,13 +83,14 @@ class CRMSyncManager:
                 for payload in [company_payload, customer_payload, deal_payload]:
                     res = await client.post(self.crm_url, json=payload)
                     if not res.is_success:
-                        logger.warn(f"CRM Sync HTTP {res.status_code} on payload {payload.get('type')}: {res.text}")
+                        logger.warning(f"CRM Sync HTTP {res.status_code} on payload {payload.get('type')}: {res.text}")
 
             logger.info(f"Successfully completed remote CRM sync for call session {session_id}.")
             return True
 
         except Exception as e:
-            logger.warn(f"Could not reach remote CRM endpoint at {self.crm_url}: {e}. Local SQLite audit log retained.")
+            logger.warning(f"Could not reach remote CRM endpoint at {self.crm_url}: {e}. Local SQLite audit log retained.")
+
             return False
 
 
