@@ -27,7 +27,8 @@ import {
   Check,
   Code2,
   Activity,
-  Layers
+  Layers,
+  Globe
 } from "lucide-react";
 import { 
   IconAlertObjection, 
@@ -274,6 +275,20 @@ const RECENT_IMPLEMENTATIONS = [
     userBenefits: "Centralizes agent productivity in a single high-performance workspace with non-destructive session exit routing.",
     techSpecs: "`WorkspaceContent` module, sub-navigation router, isolated session state manager.",
     mediaReqs: "Workspace sidebar interface preview, exit workspace routing animation, tab switcher breakdown."
+  },
+  {
+    id: "chrome-extension-assistant",
+    name: "Dealflow AI Chrome Extension (Sales & RevOps Assistant)",
+    category: "Outreach & Communication",
+    badge: "v1.0 Active",
+    icon: Globe,
+    accent: "text-amber-400",
+    borderColor: "border-amber-500/30",
+    bgColor: "bg-amber-950/10",
+    purpose: "Browser side-panel assistant for real-time lead context extraction, prospect profile enrichment, and 1-click pipeline sync on LinkedIn, HubSpot, and Salesforce.",
+    userBenefits: "Empowers sales reps to capture uncommitted prospect drafts directly from web pages, trigger automated AI follow-ups, and auto-sync to PocketBase & Supabase.",
+    techSpecs: "Manifest V3, background service worker (`background.js`), DOM content script injector (`content.js`), PocketBase 5-minute transient draft sync API hook.",
+    mediaReqs: "Chrome extension side panel preview, 1-click lead capture button, real-time sync status indicator."
   }
 ];
 
@@ -587,6 +602,162 @@ function DealflowBotSimulator() {
   );
 }
 
+// Interactive Chrome Extension Lead Capture & Sync Simulator Component
+function ChromeExtensionSimulator() {
+  const [activeTab, setActiveTab] = useState<"linkedin" | "hubspot" | "salesforce">("linkedin");
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [captured, setCaptured] = useState(false);
+
+  const targets = {
+    linkedin: {
+      platform: "LinkedIn Sales Navigator",
+      profileName: "Sarah Jenkins",
+      role: "VP Revenue Operations at CloudScale Inc",
+      company: "CloudScale Inc",
+      signal: "Hiring 5 Enterprise AEs · Active in SaaS Growth",
+      extractedData: {
+        email: "s.jenkins@cloudscale.io",
+        intentScore: "94/100",
+        recommendedAction: "Send ROI One-Pager + Schedule 15-min Discovery",
+        transientDraftId: "pb_draft_9921_linkedin"
+      }
+    },
+    hubspot: {
+      platform: "HubSpot CRM",
+      profileName: "David Vance",
+      role: "Head of Growth at FinTech Flow",
+      company: "FinTech Flow",
+      signal: "MQL Stage · Visited Pricing Page 4x Today",
+      extractedData: {
+        email: "david@fintechflow.com",
+        intentScore: "88/100",
+        recommendedAction: "Trigger Dealflow Meeting Bot Pre-Call Training",
+        transientDraftId: "pb_draft_9922_hubspot"
+      }
+    },
+    salesforce: {
+      platform: "Salesforce Lightning",
+      profileName: "Elena Rostova",
+      role: "Chief Commercial Officer at Apex Tech",
+      company: "Apex Tech",
+      signal: "Deal Stage: Negotiation · Contract Review",
+      extractedData: {
+        email: "elena.rostova@apextech.com",
+        intentScore: "96/100",
+        recommendedAction: "Generate Custom Dealflow LLM Executive Summary",
+        transientDraftId: "pb_draft_9923_salesforce"
+      }
+    }
+  };
+
+  const current = targets[activeTab];
+
+  const handleCapture = () => {
+    setIsCapturing(true);
+    setCaptured(false);
+    setTimeout(() => {
+      setIsCapturing(false);
+      setCaptured(true);
+    }, 400);
+  };
+
+  return (
+    <div className="p-6 md:p-8 rounded-3xl border border-amber-500/30 bg-slate-950/80 backdrop-blur-xl space-y-6 shadow-2xl shadow-amber-950/20">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <Globe className="h-6 w-6" />
+          </div>
+          <div>
+            <h4 className="text-base font-bold text-white flex items-center gap-2">
+              Dealflow AI Chrome Extension Assistant
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full px-2 py-0.5">
+                Manifest V3 Active
+              </span>
+            </h4>
+            <p className="text-xs text-slate-400">Capture prospect context &amp; sync transient drafts to PocketBase/Supabase with 1 click directly from your browser.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 font-mono">
+          <Activity className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
+          <span>Sync Status: 5-Min Sync Pipeline Ready</span>
+        </div>
+      </div>
+
+      {/* Target Platform Selector */}
+      <div className="flex flex-wrap gap-2">
+        {(["linkedin", "hubspot", "salesforce"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => { setActiveTab(tab); setCaptured(false); }}
+            className={`text-xs font-semibold px-3.5 py-2 rounded-xl border transition-all flex items-center gap-2 capitalize ${
+              activeTab === tab
+                ? "bg-amber-600 text-white border-amber-500 shadow-md shadow-amber-500/25"
+                : "bg-slate-900/60 text-slate-300 border-slate-800 hover:bg-slate-800 hover:border-slate-700"
+            }`}
+          >
+            <Globe className="h-3.5 w-3.5 text-amber-300 shrink-0" />
+            <span>{targets[tab].platform}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Extension Side-Panel Simulation */}
+      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4 font-mono text-xs overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2 text-slate-300">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="font-bold text-xs">{current.platform} Active Page Injection</span>
+          </div>
+          <Button
+            onClick={handleCapture}
+            disabled={isCapturing}
+            size="sm"
+            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm"
+          >
+            {isCapturing ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+            {isCapturing ? "Extracting..." : "1-Click Lead Capture"}
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2 font-sans">
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-mono">Detected Web Profile</p>
+            <p className="text-sm font-bold text-white">{current.profileName}</p>
+            <p className="text-xs text-amber-300">{current.role}</p>
+            <p className="text-[11px] text-slate-400 bg-slate-900 p-2 rounded border border-slate-800">{current.signal}</p>
+          </div>
+
+          <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2 font-sans">
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider font-mono">Dealflow AI Intelligence</p>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400">Extracted Email:</span>
+              <span className="text-amber-400 font-mono font-bold">{current.extractedData.email}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400">Intent Score:</span>
+              <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">{current.extractedData.intentScore}</span>
+            </div>
+            <p className="text-xs text-slate-300 pt-1">
+              <span className="text-slate-400 font-bold">Action:</span> {current.extractedData.recommendedAction}
+            </p>
+          </div>
+        </div>
+
+        {captured && (
+          <div className="p-3 bg-amber-950/30 border border-amber-500/30 rounded-xl text-amber-200 font-sans text-xs flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <span>Draft saved to PocketBase transient storage (`{current.extractedData.transientDraftId}`) · Auto-syncing to Supabase Primary Store</span>
+            </span>
+            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Synced</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function FeaturesContent() {
   const { features, loading, error } = useFeatures();
   const [searchQuery, setSearchQuery] = useState("");
@@ -750,6 +921,28 @@ function FeaturesContent() {
               </div>
             </motion.div>
           ))}
+        </div>
+      </section>
+
+      {/* ── FEATURE SPOTLIGHT: DEALFLOW AI CHROME EXTENSION (SALES & REVOPS ASSISTANT) ─ */}
+      <section className="py-20 sm:py-28 max-w-7xl mx-auto px-6 border-b border-slate-200 dark:border-white/5">
+        <div className="space-y-12">
+          {/* Section Header */}
+          <div className="text-center max-w-3xl mx-auto space-y-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-bold uppercase tracking-wider">
+              <Globe className="h-4 w-4" />
+              <span>Feature Spotlight: Browser Extension Integration</span>
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Dealflow AI Chrome Extension (Sales &amp; RevOps Assistant)
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
+              Extract prospect intelligence, capture uncommitted lead drafts, and trigger 1-click pipeline sync on LinkedIn, HubSpot, and Salesforce without leaving your browser tab.
+            </p>
+          </div>
+
+          {/* Interactive Chrome Extension Simulator */}
+          <ChromeExtensionSimulator />
         </div>
       </section>
 

@@ -524,6 +524,17 @@ export const APP_FEATURES: Feature[] = [
     version: 2,
   },
   {
+    id: "chrome-extension-assistant",
+    name: "Dealflow AI Chrome Extension (Sales & RevOps Assistant)",
+    description: "Real-time revenue intelligence, automated lead context extraction, and 1-click pipeline sync directly on LinkedIn, HubSpot, and Salesforce.",
+    category: "Outreach & Communication",
+    iconName: "Globe",
+    status: "active",
+    isNew: true,
+    updatedAt: "2026-08-02T00:00:00Z",
+    version: 1,
+  },
+  {
     id: "standardized-single-logout",
     name: "Standardized Single Logout Architecture",
     description: "Unified, single-point session termination system across Admin, Agent, and Customer portals with complete storage purge and token invalidation.",
@@ -534,6 +545,7 @@ export const APP_FEATURES: Feature[] = [
     updatedAt: "2026-07-21T00:00:00Z",
     version: 2,
   },
+
 ];
 
 export const getIconComponent = (iconName: string) => getGtmFeatureIcon(iconName);
