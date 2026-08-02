@@ -12,8 +12,9 @@ A fully functional, high-performance Chrome Extension for Dealflow AI that conne
 
 ## Installation Instructions
 
-1. Open Google Chrome and navigate to `chrome://extensions/`.
-2. Enable **Developer mode** in the top right corner.
-3. Click **Load unpacked**.
-4. Select the `chrome-extension` directory in this workspace (`d:\Project\DealFlow.AI\dealsflowsai\chrome-extension`).
-5. Pin the Dealflow AI Assistant icon to your Chrome toolbar for quick access.
+1. (Optional) Run `npm run build:extension` in the workspace root if you modify any TypeScript source files in `src/`.
+2. Open Google Chrome and navigate to `chrome://extensions/`.
+3. Enable **Developer mode** in the top right corner.
+4. Click **Load unpacked**.
+5. Select the `chrome-extension` directory (`D:\Project\DealFlow.AI\dealsflowsai\chrome-extension`).
+6. Pin the Dealflow AI Assistant icon to your Chrome toolbar for quick access.

@@ -122,6 +122,23 @@ export function validateEnv(): EnvValidationResult {
     }
   }
 
+  // 5. Check Hybrid Backend Configurations (Supabase, PocketBase, Redis)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if ((!supabaseUrl || !supabaseServiceKey) && !isTest) {
+    logger.warn("Supabase credentials (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY) not set - using mock repository mode");
+  }
+
+  const pocketbaseUrl = process.env.POCKETBASE_URL;
+  if (!pocketbaseUrl && !isTest) {
+    logger.info("POCKETBASE_URL not set - defaulting to http://127.0.0.1:8090");
+  }
+
+  const redisUrl = process.env.REDIS_URL;
+  if (!redisUrl && !isTest) {
+    logger.info("REDIS_URL not set - using resilient in-memory cache/queue fallback mode");
+  }
+
   if (errors.length > 0) {
     logger.error("Environment validation failed", { errors });
     return { valid: false, errors };

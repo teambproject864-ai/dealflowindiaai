@@ -14,9 +14,9 @@
     "test:e2e:report": "playwright show-report",
     "test:load": "k6 run --out json=test-results/k6-results.json k6-tests/load-test.js",
     "test:load:smoke": "k6 run --scenario smoke k6-tests/load-test.js",
-    "check:api-keys": "tsx scripts/ci-api-key-check.ts"
+    "check:api-keys": "tsx scripts/ci-api-key-check.ts",
+    "build:extension": "tsx scripts/build-chrome-extension.ts"
   },
-
   "dependencies": {
     "@ai-sdk/openai": "^3.0.64",
     "@huggingface/inference": "^4.13.15",
@@ -35,10 +35,14 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@react-three/postprocessing": "^3.0.4",
+    "@supabase/server": "^1.4.1",
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.111.0",
     "@tanstack/react-query": "^5.101.0",
     "@tensorflow-models/handpose": "^0.1.0",
     "@tensorflow/tfjs": "^4.22.0",
     "@types/cheerio": "^0.22.35",
+    "@types/ioredis": "^5.0.0",
     "@types/three": "^0.184.0",
     "ai": "^6.0.183",
     "bcrypt": "^6.0.0",
@@ -52,6 +56,7 @@
     "framer-motion": "^12.4.7",
     "googleapis": "^144.0.0",
     "gsap": "^3.15.0",
+    "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.3",
     "libsodium-wrappers": "^0.8.4",
     "lru-cache": "^11.5.1",
@@ -61,6 +66,7 @@
     "openai": "^6.35.0",
     "pdf-parse": "^1.1.1",
     "playwright": "^1.59.1",
+    "pocketbase": "^0.21.5",
     "rate-limiter-flexible": "^11.0.1",
     "react": "19.0.0",
     "react-calendly": "^4.4.0",

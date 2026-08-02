@@ -55,6 +55,7 @@ import { runIntakeFormGenericTests } from "./intake-form-generic.test";
 import { runPipelineSupportPromptTests } from "./pipeline-support.test";
 import { runGTMCustomerLoginTests } from "./gtm-customer-login.test";
 import { runCustomerWorkflowTests } from "./customer-workflow.test";
+import { runHybridBackendTests } from "./hybrid-backend.test";
 
 
 
