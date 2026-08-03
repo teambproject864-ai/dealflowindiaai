@@ -53,6 +53,7 @@ import {
   Table2,
   RefreshCw,
   TrendingUp,
+  Video,
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
 import { cn } from "@/lib/utils";
@@ -67,9 +68,11 @@ import { EmbeddedCampaignPlaybooks } from "@/components/portal/EmbeddedCampaignP
 import { CalendarBookingModule } from "@/components/portal/CalendarBookingModule";
 import { CustomerContactProfiles } from "@/components/portal/CustomerContactProfiles";
 import { AgentDealflowBotHub } from "@/components/portal/AgentDealflowBotHub";
+import { AIWebinarModule } from "@/components/webinar/AIWebinarModule";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "ai-webinar", label: "AI Webinar Module", icon: Video, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
   { id: "icp-details", label: "Customer ICP Breakdown", icon: Target, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
   { id: "campaign-playbooks", label: "Campaign Playbooks", icon: FileText, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
   { id: "standup-calendar", label: "Standup Calendar Sync", icon: Calendar, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
@@ -1111,7 +1114,18 @@ function AgentPortalContent() {
       <div className="mt-4">
         <AnimatePresence mode="wait">
 
-          {/* 0. CUSTOMER CONTACT PROFILES TAB */}
+        {/* AI WEBINAR MODULE TAB */}
+        {activeTab === "ai-webinar" && (
+          <motion.div
+            key="ai-webinar"
+            initial={{ opacity: 0, x: 15 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -15 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <AIWebinarModule />
+          </motion.div>
+        )}
 
         {/* NEW: CUSTOMER ICP BREAKDOWN TAB */}
         {activeTab === "icp-details" && (
