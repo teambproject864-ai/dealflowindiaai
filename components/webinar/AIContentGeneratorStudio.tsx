@@ -109,7 +109,7 @@ export function AIContentGeneratorStudio({ wizardData, existingContent, onSaveCo
           </div>
           <h3 className="text-base font-bold text-slate-200">No Generated Assets Yet</h3>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            Click "Generate All AI Assets" above to synthesize customized slide decks, landing pages, email invitations, and 9-platform social copy.
+            Click &quot;Generate All AI Assets&quot; above to synthesize customized slide decks, landing pages, email invitations, and 9-platform social copy.
           </p>
         </div>
       )}

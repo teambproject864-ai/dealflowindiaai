@@ -168,7 +168,7 @@ export function WebinarAnalyticsDashboard({ existingAnalytics }: WebinarAnalytic
           </div>
 
           <p className="text-xs text-slate-400 italic">
-            Top question category: "CRM Integration API speed and multi-tenant security safeguards."
+            Top question category: &quot;CRM Integration API speed and multi-tenant security safeguards.&quot;
           </p>
         </div>
       </div>

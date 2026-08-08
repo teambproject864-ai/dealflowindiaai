@@ -38,6 +38,10 @@ async function countActiveSessionsByPersona(): Promise<Record<string, number>> {
     counts[key] = 0;
   }
 
+  if (typeof window !== "undefined") {
+    return counts;
+  }
+
   try {
     const { getDb } = await import("@/lib/firebase-admin");
     const dbInstance = getDb();
@@ -74,6 +78,27 @@ export async function listRevenueAgentsWithAvailability(): Promise<RevenueAgentP
   const activeCounts = await countActiveSessionsByPersona();
   const maxPerAgent = Number(process.env.MAX_SESSIONS_PER_AGENT) || 3;
   const catalog = getRevenueAgentCatalog();
+
+  if (typeof window !== "undefined") {
+    return catalog.map((agent) => {
+      const detail = REVENUE_AGENTS.find((a) => a.key === agent.key);
+      const activeSessions = activeCounts[agent.key] || 0;
+      const maxCap = detail?.maxSessions || maxPerAgent;
+      return {
+        ...agent,
+        title: detail?.title || agent.role,
+        bio: detail?.bio || "Dedicated AI Revenue Specialist",
+        specialties: detail?.specialties || agent.expertise,
+        activeSessions,
+        maxSessions: maxCap,
+        available: activeSessions < maxCap,
+        onlineStatus: (detail?.onlineStatus as any) || (activeSessions >= maxCap ? "busy" : "online"),
+        rating: detail?.rating || 4.9,
+        winRate: detail?.winRate || "35%",
+        timeZone: detail?.timeZone || "America/New_York (EST)"
+      };
+    });
+  }
 
   // Dynamically load active agent users created by Admin
   let dbAgents: RevenueAgentProfile[] = [];

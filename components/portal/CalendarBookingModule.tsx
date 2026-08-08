@@ -35,22 +35,21 @@ export function CalendarBookingModule({
   const [loading, setLoading] = useState(true);
   const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
 
-  const fetchCalendarData = async () => {
-    try {
-      const res = await fetch(`/api/portal/calendar?agentKey=${agentKey}`);
-      const data = await res.json();
-      if (data.success) {
-        setSlots(data.availableSlots || []);
-        setBookings(data.bookings || []);
-      }
-    } catch (err) {
-      console.error("Failed to load calendar data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchCalendarData = async () => {
+      try {
+        const res = await fetch(`/api/portal/calendar?agentKey=${agentKey}`);
+        const data = await res.json();
+        if (data.success) {
+          setSlots(data.availableSlots || []);
+          setBookings(data.bookings || []);
+        }
+      } catch (err) {
+        console.error("Failed to load calendar data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchCalendarData();
   }, [agentKey]);
 

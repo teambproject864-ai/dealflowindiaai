@@ -116,7 +116,7 @@ export function SocialMediaPublisher({ aiContent }: SocialMediaPublisherProps) {
                 </div>
 
                 <p className="text-xs text-slate-300 line-clamp-3 italic">
-                  "{creative?.caption || `Generated promotion copy ready for ${p.name}`}"
+                  &quot;{creative?.caption || `Generated promotion copy ready for ${p.name}`}&quot;
                 </p>
 
                 <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
