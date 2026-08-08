@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -35,23 +35,24 @@ export function CalendarBookingModule({
   const [loading, setLoading] = useState(true);
   const [bookingSlotId, setBookingSlotId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchCalendarData = async () => {
-      try {
-        const res = await fetch(`/api/portal/calendar?agentKey=${agentKey}`);
-        const data = await res.json();
-        if (data.success) {
-          setSlots(data.availableSlots || []);
-          setBookings(data.bookings || []);
-        }
-      } catch (err) {
-        console.error("Failed to load calendar data:", err);
-      } finally {
-        setLoading(false);
+  const fetchCalendarData = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/portal/calendar?agentKey=${agentKey}`);
+      const data = await res.json();
+      if (data.success) {
+        setSlots(data.availableSlots || []);
+        setBookings(data.bookings || []);
       }
-    };
-    fetchCalendarData();
+    } catch (err) {
+      console.error("Failed to load calendar data:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [agentKey]);
+
+  useEffect(() => {
+    fetchCalendarData();
+  }, [fetchCalendarData]);
 
   const handleConfirmBooking = async (slot: CalendarSlot) => {
     setBookingSlotId(slot.id);
