@@ -17,6 +17,7 @@ import {
   Phone,
   MessageSquare,
   Star,
+  Sparkles,
   Plus,
   Check,
   Loader2,
@@ -61,6 +62,8 @@ import AuthProvider from "@/components/auth/AuthProvider";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
 import { AnimatedMetricCard } from "@/components/ui/AnimatedMetricCard";
+import { PortalSidebar } from "@/components/portal/PortalSidebar";
+import { PortalHeader } from "@/components/portal/PortalHeader";
 import { BarChart3 } from "lucide-react";
 
 import { CustomerICPDetailsView } from "@/components/portal/CustomerICPDetailsView";
@@ -69,9 +72,11 @@ import { CalendarBookingModule } from "@/components/portal/CalendarBookingModule
 import { CustomerContactProfiles } from "@/components/portal/CustomerContactProfiles";
 import { AgentDealflowBotHub } from "@/components/portal/AgentDealflowBotHub";
 import { AIWebinarModule } from "@/components/webinar/AIWebinarModule";
+import CommunityMiningPage from "@/app/agent-portal/community-mining/page";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "community-mining", label: "Community Mining", icon: Sparkles, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
   { id: "ai-webinar", label: "AI Webinar Module", icon: Video, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
   { id: "icp-details", label: "Customer ICP Breakdown", icon: Target, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
   { id: "campaign-playbooks", label: "Campaign Playbooks", icon: FileText, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
@@ -100,6 +105,7 @@ function AgentPortalContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<typeof tabs[number]["id"]>("dashboard");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (tabParam && tabs.some((t) => t.id === tabParam)) {
@@ -944,74 +950,70 @@ function AgentPortalContent() {
       }
     });
 
+  const activeTabObj = tabs.find((t) => t.id === activeTab);
+
   return (
-    <div className="space-y-8 relative pb-12">
-      {/* Toast Notification */}
-      {notification && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-4 duration-300">
-          <GlassPanel tilt={false} depth="front" className={cn(
-            "w-80 shadow-2xl border backdrop-blur-2xl",
-            notification.type === "success" ? "border-emerald-500/40 bg-emerald-950/90 text-emerald-200" :
-            notification.type === "error" ? "border-rose-500/40 bg-rose-950/90 text-rose-200" :
-            "border-blue-500/40 bg-blue-950/90 text-blue-200"
-          )}>
-            <CardContent className="p-4 flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-teal-400 mt-0.5" />
-              <div className="flex-1">
-                <p className="font-semibold text-sm">{notification.title}</p>
-                <p className="text-xs opacity-90 mt-1">{notification.message}</p>
+    <div className="flex h-screen overflow-hidden bg-[#FBFBFD] dark:bg-[#000000] text-[#1D1D1F] dark:text-[#F5F5F7] font-sans antialiased">
+      {/* Left Sidebar Navigation */}
+      <PortalSidebar
+        role="agent"
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(t) => setActiveTab(t as any)}
+        collapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
+
+      {/* Right Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <PortalHeader
+          role="agent"
+          activeTabLabel={activeTabObj?.label || "Dashboard"}
+          userName={user?.name || "Revenue Specialist"}
+          userEmail={user?.email || "agent@dealflow.ai"}
+        />
+
+        <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar relative">
+          {/* Toast Notification */}
+          {notification && (
+            <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-4 duration-300">
+              <div className={cn(
+                "w-80 shadow-xl rounded-2xl border p-4 backdrop-blur-2xl text-xs flex items-start gap-3",
+                notification.type === "success" ? "border-[#34C759]/30 bg-white/95 dark:bg-[#161618]/95 text-[#248A3D] dark:text-[#30D158]" :
+                notification.type === "error" ? "border-[#FF3B30]/30 bg-white/95 dark:bg-[#161618]/95 text-[#D70015] dark:text-[#FF453A]" :
+                "border-[#0071E3]/30 bg-white/95 dark:bg-[#161618]/95 text-[#0071E3] dark:text-[#2997FF]"
+              )}>
+                {notification.type === "success" ? <CheckCircle2 className="h-5 w-5 text-[#34C759] shrink-0" /> :
+                 notification.type === "error" ? <AlertCircle className="h-5 w-5 text-[#FF3B30] shrink-0" /> :
+                 <AlertCircle className="h-5 w-5 text-[#0071E3] shrink-0" />}
+                <div className="flex-1">
+                  <p className="font-bold text-xs">{notification.title}</p>
+                  <p className="text-[11px] text-[#6E6E73] dark:text-[#A1A1A6] mt-0.5">{notification.message}</p>
+                </div>
+                <button onClick={() => setNotification(null)} className="text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white">
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <button onClick={() => setNotification(null)} className="text-slate-400 hover:text-white">
-                <X className="h-4 w-4" />
-              </button>
-            </CardContent>
-          </GlassPanel>
-        </div>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* AGENT PORTAL HEADER — Premium redesign                            */}
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-      <div className="relative rounded-2xl overflow-hidden border border-slate-800/80 mb-2">
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-violet-950/40 to-indigo-950/30" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-600/10 via-transparent to-transparent" />
-        {/* Subtle grid overlay */}
-        <div className="absolute inset-0 opacity-5" style={{backgroundImage: 'linear-gradient(rgba(139,92,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.3) 1px, transparent 1px)', backgroundSize: '32px 32px'}} />
-
-        <div className="relative z-10 px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
-          {/* Left: Brand + Agent identity */}
-          <div className="flex items-center gap-4">
-            {/* Brand icon */}
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30 shrink-0">
-              <Zap className="h-6 w-6 text-white" />
             </div>
+          )}
+
+          {/* Main Title Header */}
+          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-black/[0.06] dark:border-white/[0.08] pb-6">
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-extrabold tracking-tight text-white leading-none">
-                  DealFlow <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">Agent Portal</span>
-                </h1>
-                <span className="text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30 px-2 py-0.5 rounded-full uppercase tracking-widest">Live</span>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5 font-medium">
-                Welcome back, <span className="text-slate-200 font-semibold">{user?.name || "Agent"}</span> · AI-powered pipeline management
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
+                Revenue Specialist Workstation
+              </h1>
+              <p className="text-[#6E6E73] dark:text-[#A1A1A6] mt-1 text-xs">
+                Welcome back, <span className="text-[#1D1D1F] dark:text-[#F5F5F7] font-semibold">{user?.name || "Agent"}</span> · Omni-channel pipeline execution &amp; autonomous dealflow intelligence
               </p>
             </div>
-          </div>
-
-          {/* Right: Actions */}
-          <div className="flex items-center gap-3">
-            {/* Status indicator pill */}
-            <div className="hidden sm:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-semibold text-emerald-400">Online</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-[#34C759]/10 border border-[#34C759]/20 rounded-full px-3 py-1.5 text-xs font-semibold text-[#248A3D] dark:text-[#30D158]">
+                <span className="h-2 w-2 rounded-full bg-[#34C759] animate-pulse" />
+                <span>Workstation Online</span>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Bottom accent line */}
-        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
-      </div>
 
       {/* ── QUICK STATS CARDS ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1175,6 +1177,19 @@ function AgentPortalContent() {
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
             <CustomerContactProfiles />
+          </motion.div>
+        )}
+
+        {/* COMMUNITY MINING AUTOMATION TAB */}
+        {activeTab === "community-mining" && (
+          <motion.div
+            key="community-mining"
+            initial={{ opacity: 0, x: 15 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -15 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <CommunityMiningPage />
           </motion.div>
         )}
 
@@ -3207,6 +3222,8 @@ function AgentPortalContent() {
         )}
 
         </AnimatePresence>
+        </div>
+        </div>
       </div>
     </div>
   );

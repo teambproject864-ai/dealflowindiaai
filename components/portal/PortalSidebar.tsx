@@ -1,7 +1,7 @@
 // components/portal/PortalSidebar.tsx
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { LucideIcon, ChevronLeft, ChevronRight, Zap, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconBadge } from "./IconBadge";
@@ -26,23 +26,23 @@ export interface PortalSidebarProps {
 const ROLE_SIDEBAR_THEMES = {
   customer: {
     title: "Customer Portal",
-    subtitle: "Dealflow Self-Service",
-    accentBorder: "border-emerald-500/30",
-    activeGlow: "bg-emerald-500/10 text-emerald-300 border-emerald-500/40 shadow-emerald-500/10",
+    subtitle: "Self-Service Workspace",
+    accentColor: "text-[#34C759]",
+    activeGlow: "bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF] dark:bg-[#2997FF]/15 border-[#0071E3]/20 dark:border-[#2997FF]/30",
     badgeVariant: "emerald" as const,
   },
   agent: {
     title: "Agent Command",
     subtitle: "Revenue Workstation",
-    accentBorder: "border-cyan-500/30",
-    activeGlow: "bg-cyan-500/10 text-cyan-300 border-cyan-500/40 shadow-cyan-500/10",
+    accentColor: "text-[#32ADE6]",
+    activeGlow: "bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF] dark:bg-[#2997FF]/15 border-[#0071E3]/20 dark:border-[#2997FF]/30",
     badgeVariant: "cyan" as const,
   },
   admin: {
     title: "Admin Executive",
     subtitle: "System Governance",
-    accentBorder: "border-amber-500/30",
-    activeGlow: "bg-amber-500/10 text-amber-300 border-amber-500/40 shadow-amber-500/10",
+    accentColor: "text-[#FF9500]",
+    activeGlow: "bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF] dark:bg-[#2997FF]/15 border-[#0071E3]/20 dark:border-[#2997FF]/30",
     badgeVariant: "gold" as const,
   },
 };
@@ -60,18 +60,20 @@ export function PortalSidebar({
   return (
     <aside
       className={cn(
-        "relative flex flex-col border-r border-slate-800/80 bg-slate-950/80 backdrop-blur-xl transition-all duration-300 z-30 shrink-0 select-none",
+        "relative flex flex-col border-r border-black/[0.06] dark:border-white/[0.08] bg-[#FBFBFD]/90 dark:bg-[#0A0A0C]/90 backdrop-blur-2xl transition-all duration-300 z-30 shrink-0 select-none",
         collapsed ? "w-20" : "w-64"
       )}
     >
       {/* Sidebar Header */}
-      <div className="p-4 border-b border-slate-850 flex items-center justify-between">
+      <div className="p-4 border-b border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between">
         <div className="flex items-center gap-3 overflow-hidden">
-          <IconBadge icon={Zap} variant={theme.badgeVariant} size="md" glow={true} pulse={true} />
+          <div className="w-8 h-8 rounded-2xl bg-[#0071E3] text-white flex items-center justify-center shadow-sm">
+            <Zap className="w-4 h-4" />
+          </div>
           {!collapsed && (
             <div className="flex flex-col truncate">
-              <span className="font-extrabold text-sm text-slate-100 tracking-tight">{theme.title}</span>
-              <span className="text-[10px] text-slate-400 font-medium font-mono">{theme.subtitle}</span>
+              <span className="font-bold text-sm text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">{theme.title}</span>
+              <span className="text-[10px] text-[#86868B] font-medium">{theme.subtitle}</span>
             </div>
           )}
         </div>
@@ -79,7 +81,7 @@ export function PortalSidebar({
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-full bg-black/[0.03] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white transition-colors"
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -88,7 +90,7 @@ export function PortalSidebar({
       </div>
 
       {/* Tabs Navigation List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-800">
+      <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-slate-800">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -96,24 +98,19 @@ export function PortalSidebar({
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all duration-200 group text-left",
+                "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border text-xs font-semibold transition-all duration-200 group text-left",
                 isActive
-                  ? `${theme.activeGlow} shadow-md`
-                  : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 hover:border-slate-800"
+                  ? `${theme.activeGlow} shadow-sm`
+                  : "border-transparent text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#1D1D1F] dark:hover:text-white hover:bg-black/[0.03] dark:hover:bg-white/[0.05]"
               )}
             >
-              <IconBadge
-                icon={tab.icon}
-                variant={isActive ? theme.badgeVariant : "indigo"}
-                size="sm"
-                glow={isActive}
-              />
+              <tab.icon className={cn("w-4 h-4 shrink-0 transition-transform group-hover:scale-105", isActive ? "text-[#0071E3] dark:text-[#2997FF]" : "text-[#86868B]")} />
 
               {!collapsed && (
                 <div className="flex items-center justify-between flex-1 truncate">
                   <span className="truncate">{tab.label}</span>
                   {tab.badge && (
-                    <span className="px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-300 font-bold">
+                    <span className="px-2 py-0.5 rounded-full bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF] text-[10px] font-bold">
                       {tab.badge}
                     </span>
                   )}
@@ -125,13 +122,13 @@ export function PortalSidebar({
       </div>
 
       {/* Sidebar Footer */}
-      <div className="p-3 border-t border-slate-850 bg-slate-950/40">
-        <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-900/60 border border-slate-850">
-          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+      <div className="p-3 border-t border-black/[0.06] dark:border-white/[0.08] bg-black/[0.02] dark:bg-white/[0.02]">
+        <div className="flex items-center gap-3 p-2 rounded-2xl bg-white dark:bg-[#161618] border border-black/[0.06] dark:border-white/[0.08] shadow-sm">
+          <ShieldCheck className="w-4 h-4 text-[#34C759] shrink-0" />
           {!collapsed && (
             <div className="flex flex-col truncate text-[10px]">
-              <span className="font-bold text-slate-200">System Status: Online</span>
-              <span className="text-slate-400 font-mono">100% Operational</span>
+              <span className="font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">System Status: Online</span>
+              <span className="text-[#86868B]">100% Operational</span>
             </div>
           )}
         </div>

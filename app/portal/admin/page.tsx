@@ -48,6 +48,8 @@ import { PasswordInput } from "@/components/ui/PasswordInput";
 import AuthProvider from "@/components/auth/AuthProvider";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
 import { AnimatedMetricCard } from "@/components/ui/AnimatedMetricCard";
+import { PortalSidebar } from "@/components/portal/PortalSidebar";
+import { PortalHeader } from "@/components/portal/PortalHeader";
 import { getDb } from "@/lib/firebase-client";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import type { AgentSession, AgentAssignmentNotification } from "@/lib/types";
@@ -841,111 +843,93 @@ function AdminPortalContent() {
   const b2cCount = customers.filter(c => c.businessModel === "b2c").length;
   const d2cCount = customers.filter(c => c.businessModel === "d2c").length;
   const customCount = customers.filter(c => c.businessModel === "custom").length;
+  const activeCustomersCount = customers.filter(c => c.status === "active" || !c.status).length;
   const completedTasks = tasks.filter(t => t.status === "completed").length;
   const totalTasks = tasks.length;
   const avgRating = feedbackList.length
     ? (feedbackList.reduce((sum, f) => sum + f.rating, 0) / feedbackList.length).toFixed(1)
     : "4.8";
 
+  const activeTabObj = tabs.find((t) => t.id === activeTab);
+
   return (
-    <div className="df-portal-layout relative">
+    <div className="flex h-screen overflow-hidden bg-[#FBFBFD] dark:bg-[#000000] text-[#1D1D1F] dark:text-[#F5F5F7] font-sans antialiased">
       {/* Left Sidebar Navigation */}
-      <aside className={cn("df-sidebar", isSidebarCollapsed ? "w-16" : "w-64")}>
-        <div className="flex items-center justify-between p-4 border-b border-white/5">
-          {!isSidebarCollapsed && (
-            <span className="text-xs font-bold text-slate-100 uppercase tracking-widest bg-gradient-to-r from-teal-400 to-indigo-400 bg-clip-text text-transparent">
-              Admin Operations
-            </span>
-          )}
-          <button 
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-            className="p-1.5 rounded hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors mx-auto outline-none"
-            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          >
-            <Menu className="h-4 w-4" />
-          </button>
-        </div>
-        <nav className="flex-1 p-2 space-y-1 overflow-y-auto custom-scrollbar">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 border border-transparent outline-none",
-                  isActive 
-                    ? "bg-teal-500/10 border-teal-500/20 text-teal-350 shadow-md shadow-teal-500/5" 
-                    : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
-                )}
-                title={tab.label}
-              >
-                <Icon className={cn("h-4 w-4 shrink-0", tab.color.split(" ")[0])} />
-                {!isSidebarCollapsed && <span>{tab.label}</span>}
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
+      <PortalSidebar
+        role="admin"
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(t) => setActiveTab(t as any)}
+        collapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
 
       {/* Right Content Area */}
-      <div className="flex-1 p-8 space-y-8 overflow-y-auto max-h-screen custom-scrollbar relative">
-        {/* Toast Notification */}
-        {notification && (
-          <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-4 duration-300">
-            <GlassPanel tilt={false} depth="front" className={cn(
-              "w-80 shadow-2xl border backdrop-blur-2xl",
-              notification.type === "success" ? "border-emerald-500/40 bg-emerald-950/90 text-emerald-200" :
-              notification.type === "error" ? "border-rose-500/40 bg-rose-950/90 text-rose-200" :
-              "border-blue-500/40 bg-blue-950/90 text-blue-200"
-            )}>
-              <CardContent className="p-4 flex items-start gap-3">
-                {notification.type === "success" ? <CheckCircle2 className="h-5 w-5 text-emerald-400 mt-0.5" /> :
-                 notification.type === "error" ? <AlertCircle className="h-5 w-5 text-rose-400 mt-0.5" /> :
-                 <AlertCircle className="h-5 w-5 text-blue-400 mt-0.5" />}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <PortalHeader
+          role="admin"
+          activeTabLabel={activeTabObj?.label || "Dashboard"}
+          userName="System Administrator"
+          userEmail="admin@dealflow.ai"
+        />
+
+        <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar relative">
+          {/* Toast Notification */}
+          {notification && (
+            <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-4 duration-300">
+              <div className={cn(
+                "w-80 shadow-xl rounded-2xl border p-4 backdrop-blur-2xl text-xs flex items-start gap-3",
+                notification.type === "success" ? "border-[#34C759]/30 bg-white/95 dark:bg-[#161618]/95 text-[#248A3D] dark:text-[#30D158]" :
+                notification.type === "error" ? "border-[#FF3B30]/30 bg-white/95 dark:bg-[#161618]/95 text-[#D70015] dark:text-[#FF453A]" :
+                "border-[#0071E3]/30 bg-white/95 dark:bg-[#161618]/95 text-[#0071E3] dark:text-[#2997FF]"
+              )}>
+                {notification.type === "success" ? <CheckCircle2 className="h-5 w-5 text-[#34C759] shrink-0" /> :
+                 notification.type === "error" ? <AlertCircle className="h-5 w-5 text-[#FF3B30] shrink-0" /> :
+                 <AlertCircle className="h-5 w-5 text-[#0071E3] shrink-0" />}
                 <div className="flex-1">
-                  <p className="font-semibold text-sm">{notification.title}</p>
-                  <p className="text-xs opacity-90 mt-1">{notification.message}</p>
+                  <p className="font-bold text-xs">{notification.title}</p>
+                  <p className="text-[11px] text-[#6E6E73] dark:text-[#A1A1A6] mt-0.5">{notification.message}</p>
                 </div>
-                <button onClick={() => setNotification(null)} className="text-slate-400 hover:text-white">
+                <button onClick={() => setNotification(null)} className="text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white">
                   <X className="h-4 w-4" />
                 </button>
-              </CardContent>
-            </GlassPanel>
-          </div>
-        )}
+              </div>
+            </div>
+          )}
 
-        {/* Main Title Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-800 pb-6">
-          <div>
-            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-teal-400 via-cyan-400 to-indigo-500 bg-clip-text text-transparent">
-              Administrator Dashboard
-            </h1>
-            <p className="text-slate-400 mt-1 text-sm font-medium">
-              Centralized orchestration dashboard for real-time customer, agent, and AI bot management
-            </p>
+          {/* Main Title Header */}
+          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-black/[0.06] dark:border-white/[0.08] pb-6">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
+                Administrator Governance Center
+              </h1>
+              <p className="text-[#6E6E73] dark:text-[#A1A1A6] mt-1 text-xs">
+                Centralized orchestration dashboard for user governance, LLM metrics, CRM queues, and platform security
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowChangeOwnPassword(true)}
+                className="btn-apple-secondary text-xs h-9 px-4"
+              >
+                <KeyRound className="h-3.5 w-3.5 mr-1.5 text-[#FF9500]" />
+                Change Password
+              </Button>
+              <Button
+                variant="outline"
+                className="btn-apple-secondary relative text-xs h-9 px-4"
+              >
+                <Bell className="h-3.5 w-3.5 mr-1.5 text-[#0071E3]" />
+                Notifications
+                {(agentAssignments.length + localAuditLogs.length) > 0 && (
+                  <span className="ml-1.5 bg-[#0071E3] text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+                    {agentAssignments.length + localAuditLogs.length}
+                  </span>
+                )}
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <ExtrudedButton
-              variant="outline"
-              onClick={() => setShowChangeOwnPassword(true)}
-              className="border-slate-800 hover:border-slate-700 bg-slate-900/60 text-slate-200"
-            >
-              <KeyRound className="h-4 w-4 mr-2 text-teal-400" />
-              Change Password
-            </ExtrudedButton>
-            <ExtrudedButton variant="outline" className="relative border-slate-800 hover:border-slate-700 bg-slate-900/60">
-              <Bell className="h-5 w-5 mr-2 text-teal-400" />
-              Notifications
-              {(agentAssignments.length + localAuditLogs.length) > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-teal-500 to-indigo-500 text-[10px] text-white px-2 py-0.5 rounded-full font-bold">
-                  {agentAssignments.length + localAuditLogs.length}
-                </span>
-              )}
-            </ExtrudedButton>
-          </div>
-        </div>
 
         {/* Tab Content Display Panels */}
         <div className="mt-4">
@@ -2690,6 +2674,7 @@ function AdminPortalContent() {
           </div>
         )}
 
+        </div>
       </div>
     </div>
   );

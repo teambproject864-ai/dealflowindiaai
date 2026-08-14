@@ -50,6 +50,8 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ContentWorkflowWorkspace } from "@/components/portal/ContentWorkflowWorkspace";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
 import { AnimatedMetricCard } from "@/components/ui/AnimatedMetricCard";
+import { PortalSidebar } from "@/components/portal/PortalSidebar";
+import { PortalHeader } from "@/components/portal/PortalHeader";
 import { DealflowCRMWorkspace } from "@/components/portal/DealflowCRMWorkspace";
 import { UserCheck, Key } from "lucide-react";
 import { InPortalVoiceCallWidget } from "@/components/portal/InPortalVoiceCallWidget";
@@ -59,7 +61,6 @@ import { AgentAssignmentModule } from "@/components/portal/AgentAssignmentModule
 import { APIKeyManagementModule } from "@/components/portal/APIKeyManagementModule";
 import { DealflowConnectHub } from "@/components/portal/DealflowConnectHub";
 import AgentMessagingChannel from "@/components/portal/AgentMessagingChannel";
-
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart2, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
@@ -90,6 +91,7 @@ const tabs = [
 function CustomerPortalContent() {
   const { user, isLoading } = useCurrentUser();
   const [activeTab, setActiveTab] = useState<typeof tabs[number]["id"]>("dashboard");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [urlAgentKey, setUrlAgentKey] = useState<string>("");
   const [businessModel, setBusinessModel] = useState<"b2b" | "b2c" | "d2c" | "custom">("b2b");
   const [serviceConfigs, setServiceConfigs] = useState<Record<string, any>>({});
@@ -734,32 +736,54 @@ function CustomerPortalContent() {
     );
   }
 
+  const activeTabObj = tabs.find((t) => t.id === activeTab);
+
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8 relative">
-      {/* Top Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-800 pb-6">
-        <div>
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-450 via-teal-400 to-cyan-500 bg-clip-text text-transparent">
-            DealFlow Customer Hub
-          </h1>
-          <p className="text-slate-400 mt-1 text-sm font-medium">
-            Manage operating models, GTM campaigns, and sync task execution in real-time
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="bg-slate-900 border border-slate-800 px-4 py-2 rounded-2xl flex items-center gap-2">
-            <span className="text-xs text-slate-500 font-bold uppercase">Active Flow:</span>
-            <span className={cn(
-              "text-xs px-2.5 py-0.5 rounded-md font-extrabold uppercase",
-              businessModel === "b2b" ? "bg-indigo-950 text-indigo-400 border border-indigo-800" :
-              businessModel === "b2c" ? "bg-emerald-950 text-emerald-400 border border-emerald-800" :
-              "bg-pink-950 text-pink-400 border border-pink-850"
-            )}>
-              {businessModel}
-            </span>
+    <div className="flex h-screen overflow-hidden bg-[#FBFBFD] dark:bg-[#000000] text-[#1D1D1F] dark:text-[#F5F5F7] font-sans antialiased">
+      {/* Left Sidebar Navigation */}
+      <PortalSidebar
+        role="customer"
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(t) => setActiveTab(t as any)}
+        collapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
+
+      {/* Right Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <PortalHeader
+          role="customer"
+          activeTabLabel={activeTabObj?.label || "Dashboard"}
+          userName={user?.name || "Customer Account"}
+          userEmail={user?.email || "customer@dealflow.ai"}
+        />
+
+        <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar relative">
+          {/* Top Header */}
+          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-black/[0.06] dark:border-white/[0.08] pb-6">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
+                Customer Self-Service Command Center
+              </h1>
+              <p className="text-[#6E6E73] dark:text-[#A1A1A6] mt-1 text-xs">
+                Manage operating models, GTM campaigns, support tickets, and live automated dealflow
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="bg-white dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.12] px-3.5 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
+                <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider">Active Model:</span>
+                <span className={cn(
+                  "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase",
+                  businessModel === "b2b" ? "bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF]" :
+                  businessModel === "b2c" ? "bg-[#34C759]/10 text-[#34C759]" :
+                  "bg-[#FF9500]/10 text-[#FF9500]"
+                )}>
+                  {businessModel}
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
       {/* Tabs List — responsive wrap layout */}
       <div className="w-full pb-1">
@@ -2727,6 +2751,8 @@ function CustomerPortalContent() {
         )}
 
 
+        </div>
+        </div>
       </div>
 
       {/* Floating Kimi AI Chatbot Assistant */}

@@ -1,52 +1,104 @@
+/**
+ * Apple Minimalist + Modern SaaS Dashboard Design System
+ * DealsFlow AI — Premium Clean Aesthetic
+ * 
+ * Palette:
+ * - Apple Canvas: #FBFBFD (Light) / #000000 (OLED Dark)
+ * - Apple Blue (Primary): #0071E3 (Light) / #2997FF (Dark)
+ * - System Mint / Emerald: #34C759 (Growth / Success)
+ * - System Cyan: #32ADE6 (Automation & Flow)
+ * - System Amber / Orange: #FF9500 (Strategy & Intelligence)
+ * - System Coral / Red: #FF3B30 (Intervention & Alerts)
+ * - Frosted Liquid Acrylic: backdrop-blur-2xl with hairline borders
+ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 220 50% 4%;
-    --foreground: 0 0% 98%; /* Increased lightness for max contrast */
-    --card: 220 42% 7%;
-    --card-foreground: 0 0% 98%;
-    --popover: 220 42% 7%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 262 88% 62%;
+    --apple-bg: #FBFBFD;
+    --apple-bg-subtle: #F5F5F7;
+    --apple-blue: #0071E3;
+    --apple-blue-hover: #0077ED;
+    --apple-blue-light: rgba(0, 113, 227, 0.08);
+    --apple-text-primary: #1D1D1F;
+    --apple-text-secondary: #6E6E73;
+    --apple-text-tertiary: #86868B;
+    --apple-card: rgba(255, 255, 255, 0.85);
+    --apple-card-elevated: #FFFFFF;
+    --apple-border: rgba(0, 0, 0, 0.08);
+    --apple-border-strong: rgba(0, 0, 0, 0.14);
+
+    --accent-mint: #34C759;
+    --accent-cyan: #32ADE6;
+    --accent-amber: #FF9500;
+    --accent-coral: #FF3B30;
+    --accent-indigo: #5856D6;
+
+    --background: 240 14% 99%; /* #FBFBFD */
+    --foreground: 240 6% 12%; /* #1D1D1F */
+    --card: 0 0% 100%;
+    --card-foreground: 240 6% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 12%;
+    --primary: 211 100% 45%; /* #0071E3 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 217 32% 12%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 217 26% 10%;
-    --muted-foreground: 215 30% 85%; /* Increased lightness from 70% to 85% for better contrast */
-    --accent: 174 86% 45%;
-    --accent-foreground: 220 50% 4%;
-    --destructive: 0 72% 51%;
+    --secondary: 240 6% 96%; /* #F5F5F7 */
+    --secondary-foreground: 240 6% 12%;
+    --muted: 240 6% 96%;
+    --muted-foreground: 240 4% 44%; /* #6E6E73 */
+    --accent: 211 100% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 100% 59%; /* #FF3B30 */
     --destructive-foreground: 0 0% 100%;
-    --border: 217 26% 20%; /* Darker border for better visibility */
-    --input: 217 26% 15%;
-    --ring: 262 88% 62%;
-    --radius: 0.75rem;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 211 100% 45%;
+    --radius: 1.25rem;
     --scroll-progress: 0%;
   }
 
-  .light {
-    --background: 40 20% 98%;
-    --foreground: 220 40% 12%;
-    --card: 40 15% 94%;
-    --card-foreground: 220 40% 12%;
-    --popover: 40 15% 94%;
-    --popover-foreground: 220 40% 12%;
-    --primary: 262 80% 50%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 15% 90%;
-    --secondary-foreground: 220 40% 12%;
-    --muted: 220 15% 92%;
-    --muted-foreground: 220 15% 42%;
-    --accent: 262 80% 50%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 15% 85%;
-    --input: 220 15% 85%;
-    --ring: 262 80% 50%;
+  .dark {
+    --apple-bg: #000000;
+    --apple-bg-subtle: #0A0A0C;
+    --apple-blue: #2997FF;
+    --apple-blue-hover: #0071E3;
+    --apple-blue-light: rgba(41, 151, 255, 0.15);
+    --apple-text-primary: #F5F5F7;
+    --apple-text-secondary: #A1A1A6;
+    --apple-text-tertiary: #6E6E73;
+    --apple-card: rgba(22, 22, 24, 0.8);
+    --apple-card-elevated: #161618;
+    --apple-border: rgba(255, 255, 255, 0.12);
+    --apple-border-strong: rgba(255, 255, 255, 0.2);
+
+    --accent-mint: #30D158;
+    --accent-cyan: #64D2FF;
+    --accent-amber: #FF9F0A;
+    --accent-coral: #FF453A;
+    --accent-indigo: #5E5CE6;
+
+    --background: 0 0% 0%; /* #000000 */
+    --foreground: 240 5% 96%; /* #F5F5F7 */
+    --card: 240 5% 8%; /* #161618 */
+    --card-foreground: 240 5% 96%;
+    --popover: 240 5% 8%;
+    --popover-foreground: 240 5% 96%;
+    --primary: 211 100% 59%; /* #2997FF */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 240 5% 12%;
+    --secondary-foreground: 240 5% 96%;
+    --muted: 240 5% 12%;
+    --muted-foreground: 240 4% 64%;
+    --accent: 211 100% 59%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 4 100% 61%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 5% 16%;
+    --input: 240 5% 16%;
+    --ring: 211 100% 59%;
   }
 }
 
@@ -61,18 +113,180 @@
 
   /* Skip to content for accessibility */
   .skip-to-content {
-    @apply fixed top-0 left-0 z-[9999] px-6 py-3 bg-violet-600 text-white font-semibold text-sm rounded-br-xl -translate-y-full focus:translate-y-0 transition-transform duration-200;
+    @apply fixed top-0 left-0 z-[9999] px-6 py-3 bg-[#0071E3] text-white font-semibold text-sm rounded-br-2xl -translate-y-full focus:translate-y-0 transition-transform duration-200;
   }
 
   /* Focus visible ring — WCAG 2.1 AA */
   :focus-visible {
-    outline: 2px solid hsl(var(--accent));
+    outline: 2px solid #0071E3;
     outline-offset: 2px;
   }
 }
 
 @layer utilities {
-  /* ─── Glass utilities ─────────────────────────── */
+  /* ─── Apple Minimalist & Modern SaaS Dashboard Utilities ──────── */
+  .apple-glass-card {
+    background-color: var(--apple-card);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--apple-border);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .dark .apple-glass-card {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  }
+  .apple-glass-card:hover {
+    box-shadow: 0 16px 44px 0 rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border-color: var(--apple-border-strong);
+  }
+  .dark .apple-glass-card:hover {
+    box-shadow: 0 16px 44px 0 rgba(0, 0, 0, 0.6);
+  }
+
+  .apple-glass-nav {
+    background-color: rgba(251, 251, 253, 0.8);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--apple-border);
+  }
+  .dark .apple-glass-nav {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+
+  .btn-apple-primary {
+    background-color: var(--apple-blue);
+    color: #FFFFFF;
+    font-weight: 600;
+    border-radius: 9999px;
+    padding: 0.625rem 1.375rem;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px 0 rgba(0, 113, 227, 0.25);
+  }
+  .btn-apple-primary:hover {
+    background-color: var(--apple-blue-hover);
+    transform: scale(1.02);
+    box-shadow: 0 4px 14px 0 rgba(0, 113, 227, 0.35);
+  }
+  .btn-apple-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-apple-secondary {
+    background-color: var(--apple-bg-subtle);
+    color: var(--apple-text-primary);
+    font-weight: 600;
+    border-radius: 9999px;
+    border: 1px solid var(--apple-border);
+    padding: 0.625rem 1.375rem;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-apple-secondary:hover {
+    background-color: var(--apple-card-elevated);
+    border-color: var(--apple-border-strong);
+    transform: scale(1.02);
+  }
+  .btn-apple-secondary:active {
+    transform: scale(0.98);
+  }
+
+  .apple-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    background-color: var(--apple-bg-subtle);
+    border: 1px solid var(--apple-border);
+    color: var(--apple-text-secondary);
+  }
+
+  .apple-segmented-control {
+    background-color: var(--apple-bg-subtle);
+    border: 1px solid var(--apple-border);
+    border-radius: 9999px;
+    padding: 0.25rem;
+  }
+
+  .btn-signal-indigo {
+    background-color: var(--signal-indigo);
+    color: #FFFFFF;
+    font-weight: 700;
+    transition: all 0.16s ease;
+    box-shadow: 0 4px 14px 0 rgba(90, 75, 255, 0.28);
+  }
+  .btn-signal-indigo:hover {
+    background-color: var(--signal-indigo-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px 0 rgba(90, 75, 255, 0.38);
+  }
+  .btn-signal-indigo:active {
+    transform: scale(0.98);
+  }
+
+  .signal-line {
+    background: linear-gradient(90deg, #5A4BFF, #61D8DC, #C7E86B);
+  }
+
+  .badge-editorial {
+    font-family: var(--font-sans), sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+  }
+
+  /* Semantic functional badges */
+  .badge-cyan {
+    background-color: rgba(97, 216, 220, 0.15);
+    color: #0E777B;
+    border: 1px solid rgba(97, 216, 220, 0.35);
+  }
+  .dark .badge-cyan {
+    background-color: rgba(97, 216, 220, 0.2);
+    color: #61D8DC;
+    border-color: rgba(97, 216, 220, 0.4);
+  }
+
+  .badge-coral {
+    background-color: rgba(255, 128, 109, 0.15);
+    color: #C23321;
+    border: 1px solid rgba(255, 128, 109, 0.35);
+  }
+  .dark .badge-coral {
+    background-color: rgba(255, 128, 109, 0.2);
+    color: #FF806D;
+    border-color: rgba(255, 128, 109, 0.4);
+  }
+
+  .badge-lime {
+    background-color: rgba(199, 232, 107, 0.2);
+    color: #4A6E08;
+    border: 1px solid rgba(199, 232, 107, 0.45);
+  }
+  .dark .badge-lime {
+    background-color: rgba(199, 232, 107, 0.2);
+    color: #C7E86B;
+    border-color: rgba(199, 232, 107, 0.4);
+  }
+
+  .badge-marigold {
+    background-color: rgba(243, 200, 91, 0.2);
+    color: #8C6203;
+    border: 1px solid rgba(243, 200, 91, 0.45);
+  }
+  .dark .badge-marigold {
+    background-color: rgba(243, 200, 91, 0.2);
+    color: #F3C85B;
+    border-color: rgba(243, 200, 91, 0.4);
+  }
+
+  /* ─── Glass utilities (backwards compatible) ─────────────────────────── */
   .glass {
     @apply bg-white/5 backdrop-blur-lg border border-white/10 shadow-xl;
   }

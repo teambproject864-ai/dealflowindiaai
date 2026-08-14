@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   Search, 
   ChevronRight, 
@@ -30,15 +30,11 @@ import {
   Send,
   BookOpen,
   MessageSquare,
-  Tv,
-  Radio,
-  PieChart,
-  Cpu,
-  DollarSign,
-  Users,
-  Calendar,
-  Rocket,
-  Mail
+  RotateCw,
+  History,
+  Code,
+  Eye,
+  X,
 } from "lucide-react";
 import { GlassPanel } from "@/components/immersive/GlassPanel";
 import { ExtrudedButton } from "@/components/immersive/ExtrudedButton";
@@ -54,60 +50,12 @@ import {
 } from "@/lib/campaign-options-schema";
 import { DeliverableBuilder } from "@/lib/deliverable-builder";
 import { PrePublishValidationReport } from "@/lib/pre-publish-validator";
-
+import type { DiscoveredKeywordSet, ContentVersion } from "@/app/api/content/keyword-studio/route";
 
 interface CampaignContentGeneratorProps {
   customerData?: any;
   customerName?: string;
   onSaveContent?: (contentData: any) => Promise<boolean>;
-}
-
-// Dynamic Content Generation Function
-function generateDynamicContent(
-  category: CoreContentType,
-  subType: ContentSubType,
-  formValues: Record<string, string>,
-  customerName: string
-): string {
-  const dateStr = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  
-  return `# 🚀 Generated Deliverable: ${subType.title}
-**Category Domain:** ${category.title} (${category.typeGroup === "marketing_tactics" ? "Marketing Tactic" : "Content Type Asset"})  
-**Target Brand / Account:** ${customerName}  
-**Generation Timestamp:** ${dateStr}  
-**Execution Badge:** [${subType.badge}]
-
----
-
-## 📋 Campaign Strategy & Execution Blueprint
-Custom-generated deliverable engineered from multi-level validated inputs for **${subType.title}**.
-
-### 1. Validated Target Parameters
-${Object.entries(formValues)
-  .map(([key, value]) => `- **${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:** ${value}`)
-  .join("\n")}
-
----
-
-## ✍️ Campaign Copy & Deliverable Assets
-
-### Primary Hook / Headline Focus
-> "${formValues.openingHook || formValues.primaryKeyword || formValues.targetPersona || formValues.primaryObjective || "Accelerating B2B deal flow and pipeline velocity for " + customerName}"
-
-### Execution Step-by-Step Breakdown
-${Object.entries(formValues)
-  .map(([key, val], idx) => `#### Step ${idx + 1}: ${key.replace(/([A-Z])/g, ' $1').toUpperCase()}\n${val}\n`)
-  .join("\n")}
-
----
-
-### 🌐 Channel Deployment & Call-to-Action
-- **Primary CTA:** ${formValues.callToAction || formValues.primaryCta || "Schedule a 15-Minute Strategy Call with " + customerName}
-- **Deployment Channels:** Integrated across ${category.title} touchpoints.
-- **Tracking Parameters:** UTM parameters pre-configured for ${customerName} analytics dashboard.
-
----
-*Generated via DealFlow.AI Autonomous Multi-Agent Consensus Engine.*`;
 }
 
 export function CampaignContentGenerator({
@@ -139,16 +87,31 @@ export function CampaignContentGenerator({
 
   // Generation & Output State
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationStage, setGenerationStage] = useState("");
   const [generatedOutput, setGeneratedOutput] = useState<string | null>(null);
+  const [htmlOutput, setHtmlOutput] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"preview" | "code">("preview");
   const [copiedState, setCopiedState] = useState(false);
   const [isEditingOutput, setIsEditingOutput] = useState(false);
   const [editedText, setEditedText] = useState("");
   const [deliverableReport, setDeliverableReport] = useState<PrePublishValidationReport | null>(null);
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  // SEO & GEO Keywords Automation State
+  const [keywordSet, setKeywordSet] = useState<DiscoveredKeywordSet | null>(null);
+  const [isLoadingKeywords, setIsLoadingKeywords] = useState(false);
+  const [showKeywordPanel, setShowKeywordPanel] = useState(true);
 
+  // Version History & Rewrite Log State
+  const [versionHistory, setVersionHistory] = useState<ContentVersion[]>([]);
+  const [currentVersionNumber, setCurrentVersionNumber] = useState(1);
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+
+  // Refs for stable identity
+  const previousSubTypeIdRef = useRef<string>(selectedSubTypeId);
+  const formValuesMapRef = useRef<Record<string, Record<string, string>>>({});
+  const STORAGE_KEY_PREFIX = "dealflow_studio_form_";
 
   // Filter Categories Logic
   const filteredCategories = COMPLETE_CAMPAIGN_SCHEMA.map(cat => {
@@ -176,19 +139,75 @@ export function CampaignContentGenerator({
   const activeCategory = COMPLETE_CAMPAIGN_SCHEMA.find(c => c.id === selectedCategoryId) || COMPLETE_CAMPAIGN_SCHEMA[0];
   const activeSubType = activeCategory.subTypes.find(s => s.id === selectedSubTypeId) || activeCategory.subTypes[0];
 
-  // LocalStorage Persistence Helpers for Studio Inputs
-  const STORAGE_KEY_PREFIX = "dealflow_studio_form_";
+  const getSavedFormValues = (subTypeId: string): Record<string, string> | null => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${subTypeId}`);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed && parsed._manuallySaved ? parsed : null;
+    } catch (e) {
+      return null;
+    }
+  };
 
-  const formValuesMapRef = useRef<Record<string, Record<string, string>>>({});
+  const setSavedFormValues = (subTypeId: string, values: Record<string, string>) => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(`${STORAGE_KEY_PREFIX}${subTypeId}`, JSON.stringify(values));
+    } catch (e) {
+      // ignore
+    }
+  };
 
-  // Load and retain form values across subType switches, re-renders, and page navigation
+  // Auto-Discover SEO & GEO Keywords grounded in customer profile
+  const fetchKeywords = useCallback(async () => {
+    setIsLoadingKeywords(true);
+    try {
+      const res = await fetch("/api/content/keyword-studio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discover_keywords",
+          customerProfile: {
+            companyName: customerName,
+            ...(customerData?.companyInformation || {}),
+            ...(customerData || {}),
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.keywordSet) {
+        setKeywordSet(data.keywordSet);
+      }
+    } catch (err) {
+      console.error("Keyword discovery error:", err);
+    } finally {
+      setIsLoadingKeywords(false);
+    }
+  }, [customerData, customerName]);
+
+  // Discover keywords once on mount or when customer data changes
+  useEffect(() => {
+    fetchKeywords();
+  }, [fetchKeywords]);
+
+  // Load and retain form values across subType switches (FIX FOR SCROLL BUG: does NOT reset generated output on page scroll / re-renders)
   useEffect(() => {
     if (!activeSubType) return;
     
-    // 1. Check in-memory map first
+    // Only reset generated output if the user deliberately switched to a DIFFERENT subType
+    const hasSubTypeChanged = previousSubTypeIdRef.current !== selectedSubTypeId;
+    if (hasSubTypeChanged) {
+      previousSubTypeIdRef.current = selectedSubTypeId;
+      setGeneratedOutput(null);
+      setHtmlOutput(null);
+      setDeliverableReport(null);
+    }
+
     let currentVals = formValuesMapRef.current[selectedSubTypeId];
 
-    // 2. If not in memory, check localStorage for previously saved user input
     if (!currentVals) {
       const saved = getSavedFormValues(selectedSubTypeId);
       if (saved) {
@@ -197,7 +216,6 @@ export function CampaignContentGenerator({
       }
     }
 
-    // 3. If no saved data exists, construct initial defaults
     if (!currentVals) {
       const initialVals: Record<string, string> = {};
       const company = customerData?.companyInformation || {};
@@ -224,58 +242,16 @@ export function CampaignContentGenerator({
     setFormValues(currentVals);
     setFieldErrors({});
     setFormTouched(false);
-    setGeneratedOutput(null);
   }, [selectedSubTypeId, activeSubType, customerData, customerName]);
 
-
-  // Expand/Collapse category
-  const toggleCategoryExpand = (catId: string) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [catId]: !prev[catId]
-    }));
-  };
-
-  // Expand All / Collapse All
-  const handleToggleExpandAll = (expand: boolean) => {
-    const newState: Record<string, boolean> = {};
-    COMPLETE_CAMPAIGN_SCHEMA.forEach(cat => {
-      newState[cat.id] = expand;
-    });
-    setExpandedCategories(newState);
-  };
-
-  const getSavedFormValues = (subTypeId: string): Record<string, string> | null => {
-    if (typeof window === "undefined") return null;
-    try {
-      const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${subTypeId}`);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      return parsed && parsed._manuallySaved ? parsed : null;
-    } catch (e) {
-      return null;
-    }
-  };
-
-  const setSavedFormValues = (subTypeId: string, values: Record<string, string>) => {
-    if (typeof window === "undefined") return;
-    try {
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}${subTypeId}`, JSON.stringify(values));
-    } catch (e) {
-      // ignore storage quota errors
-    }
-  };
-
-  // Handle Form Change (Preserves raw un-trimmed input mid-entry in local state and memory cache; background auto-save disabled)
+  // Handle Form Input Change
   const handleInputChange = (fieldId: string, value: string) => {
     setFormValues(prev => {
       const updated = { ...prev, [fieldId]: value };
-      // Synchronously update in-memory cache for currently selected subType so text is retained during typing
       formValuesMapRef.current[selectedSubTypeId] = updated;
       return updated;
     });
     
-    // Clear error for field if now valid according to schema validation
     if (fieldErrors[fieldId]) {
       const fieldDef = activeSubType.fields.find(f => f.id === fieldId);
       if (fieldDef) {
@@ -291,18 +267,15 @@ export function CampaignContentGenerator({
     }
   };
 
-  // Handle Input Blur (Triggers validation after user finishes typing in a field)
   const handleInputBlur = (fieldId: string) => {
     const fieldDef = activeSubType.fields.find(f => f.id === fieldId);
     if (!fieldDef) return;
-
     const { errors } = validateFieldInputs([fieldDef], formValues);
     if (errors[fieldId]) {
       setFieldErrors(prev => ({ ...prev, [fieldId]: errors[fieldId] }));
     }
   };
 
-  // Input Validation (Runs on submit or full form check post-entry)
   const validateInputs = (): boolean => {
     const { isValid, errors } = validateFieldInputs(activeSubType.fields, formValues);
     setFieldErrors(errors);
@@ -310,113 +283,159 @@ export function CampaignContentGenerator({
     return isValid;
   };
 
-  // Generation Trigger
-  const handleInitiateGeneration = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Real-Time HTML Streaming Generation / Rewrite Action
+  const executeGenerationWithStreaming = async (isRewrite = false) => {
     if (!validateInputs()) return;
 
     setIsGenerating(true);
-    setGenerationProgress(20);
-    setGenerationStage("Indexing campaign parameters & ICP context...");
-    await new Promise(r => setTimeout(r, 350));
+    setIsStreaming(true);
+    setGenerationProgress(15);
+    setGenerationStage(isRewrite ? "Analyzing existing deliverable & applying SEO/GEO rewrite..." : "Connecting to Multi-Agent LLM Engine & Discovering Keywords...");
+    setHtmlOutput("");
 
-    setGenerationProgress(50);
-    setGenerationStage(`Synthesizing deliverable-ready copy for ${activeSubType.title}...`);
-    await new Promise(r => setTimeout(r, 450));
-
-    setGenerationProgress(80);
-    setGenerationStage("Curating high-resolution images & running pre-publishing validation...");
-    await new Promise(r => setTimeout(r, 350));
-
-    const deliverable = DeliverableBuilder.buildDeliverable({
-      categoryKey: activeCategory.id,
-      categoryTitle: activeCategory.title,
-      subTypeKey: activeSubType.id,
-      subTypeTitle: activeSubType.title,
-      badge: activeSubType.badge,
-      customerName,
-      formValues
-    });
-
-    setGenerationProgress(100);
-    setGeneratedOutput(deliverable.rawMarkdown);
-    setEditedText(deliverable.rawMarkdown);
-    setDeliverableReport(deliverable.validationReport);
-    setIsGenerating(false);
-    setIsEditingOutput(false);
-  };
-
-
-  // Manual Save for Option Deliverable Inputs
-  const [isSavingInputs, setIsSavingInputs] = useState(false);
-  const [savedInputsState, setSavedInputsState] = useState(false);
-
-  const handleManualSaveInputs = async () => {
-    const subTypeId = selectedSubTypeId;
-    setIsSavingInputs(true);
-    // Explicitly persist form values on manual save with _manuallySaved flag
-    const dataToSave = { ...formValues, _manuallySaved: "true" };
-    setSavedFormValues(subTypeId, dataToSave);
-    formValuesMapRef.current[subTypeId] = dataToSave;
-
-    if (onSaveContent) {
-      await onSaveContent({
-        type: subTypeId,
-        category: activeCategory.id,
-        inputs: formValues,
-        savedAt: new Date().toISOString()
+    try {
+      const response = await fetch("/api/content/keyword-studio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: isRewrite ? "rewrite_stream" : "generate_stream",
+          categoryTitle: activeCategory.title,
+          subTypeTitle: activeSubType.title,
+          badge: activeSubType.badge,
+          customerName,
+          formValues,
+          keywordSet,
+          customerProfile: {
+            companyName: customerName,
+            ...(customerData?.companyInformation || {}),
+            ...(customerData || {}),
+          },
+          isRewrite,
+        }),
       });
-    }
 
-    setIsSavingInputs(false);
-    setSavedInputsState(true);
-    setTimeout(() => setSavedInputsState(false), 2500);
+      if (!response.ok || !response.body) {
+        throw new Error("Streaming generation request failed");
+      }
+
+      setGenerationProgress(50);
+      setGenerationStage("Streaming semantic HTML tokens in real-time...");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedHtml = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        accumulatedHtml += chunk;
+        setHtmlOutput(accumulatedHtml);
+      }
+
+      setGenerationProgress(100);
+      setGeneratedOutput(accumulatedHtml);
+      setEditedText(accumulatedHtml);
+
+      // Pre-publishing Validation
+      const deliverable = DeliverableBuilder.buildDeliverable({
+        categoryKey: activeCategory.id,
+        categoryTitle: activeCategory.title,
+        subTypeKey: activeSubType.id,
+        subTypeTitle: activeSubType.title,
+        badge: activeSubType.badge,
+        customerName,
+        formValues,
+      });
+      setDeliverableReport(deliverable.validationReport);
+
+      // Save version to rewrite history
+      const newVerNum = isRewrite ? currentVersionNumber + 1 : 1;
+      setCurrentVersionNumber(newVerNum);
+
+      const versionRecord: ContentVersion = {
+        versionId: `v_${Date.now()}`,
+        versionNumber: newVerNum,
+        subTypeId: activeSubType.id,
+        subTypeTitle: activeSubType.title,
+        categoryTitle: activeCategory.title,
+        customerName,
+        customerId: customerData?.id || "default_customer",
+        htmlContent: accumulatedHtml,
+        keywordsUsed: keywordSet ? keywordSet.seoKeywords.map((k) => k.keyword) : [],
+        actionType: isRewrite ? "rewrite" : "generate",
+        createdAt: new Date().toISOString(),
+      };
+
+      setVersionHistory((prev) => [versionRecord, ...prev]);
+
+      // Persist to server version history
+      if (customerData?.id) {
+        fetch("/api/content/keyword-studio", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "save_version",
+            customerId: customerData.id,
+            versionData: versionRecord,
+          }),
+        }).catch(() => {});
+      }
+    } catch (err) {
+      console.error("Streaming generation error:", err);
+    } finally {
+      setIsGenerating(false);
+      setIsStreaming(false);
+    }
   };
 
-  // Manual Save to Database / Customer Profile
+  // Copy Clipboard
+  const handleCopyOutput = () => {
+    const textToCopy = isEditingOutput ? editedText : (htmlOutput || generatedOutput || "");
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedState(true);
+    setTimeout(() => setCopiedState(false), 2000);
+  };
+
+  // Manual Save to Profile
   const [isSaving, setIsSaving] = useState(false);
   const [savedState, setSavedState] = useState(false);
 
   const handleManualSave = async () => {
-    if (!generatedOutput || !onSaveContent) return;
+    if (!htmlOutput && !generatedOutput) return;
+    if (!onSaveContent) return;
+
     setIsSaving(true);
     await onSaveContent({
       type: activeSubType.id,
       category: activeCategory.id,
       inputs: formValues,
-      output: isEditingOutput ? editedText : generatedOutput,
-      createdAt: new Date().toISOString()
+      output: isEditingOutput ? editedText : (htmlOutput || generatedOutput),
+      format: "html",
+      keywordsUsed: keywordSet?.seoKeywords?.map((k) => k.keyword) || [],
+      version: currentVersionNumber,
+      createdAt: new Date().toISOString(),
     });
     setIsSaving(false);
     setSavedState(true);
     setTimeout(() => setSavedState(false), 2500);
   };
 
-  // Copy Clipboard
-  const handleCopyOutput = () => {
-    if (!generatedOutput) return;
-    navigator.clipboard.writeText(isEditingOutput ? editedText : generatedOutput);
-    setCopiedState(true);
-    setTimeout(() => setCopiedState(false), 2000);
-  };
-
   return (
     <GlassPanel tilt={false} className="border-slate-850 p-6 lg:p-8 bg-slate-950/60 space-y-8 relative overflow-hidden">
-      
-      {/* BACKGROUND DECORATIVE ACCENTS */}
+      {/* Decorative Blur Accents */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-violet-600/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-600/5 blur-[120px] rounded-full pointer-events-none" />
 
-      {/* HEADER BANNER & STATS DASHBOARD */}
+      {/* HEADER BANNER & STATS */}
       <div className="space-y-6 border-b border-slate-850 pb-6 relative z-10">
-        
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] bg-gradient-to-r from-violet-500/20 to-indigo-500/20 text-violet-300 border border-violet-500/40 px-2.5 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
-                <Sparkles className="h-3 w-3 text-violet-400" /> Complete Campaign Taxonomy
+                <Sparkles className="h-3 w-3 text-violet-400" /> Complete Campaign Taxonomy & SEO/GEO Studio
               </span>
-              <span className="text-[10px] text-slate-500 font-mono">Integrated Studio Hub</span>
+              <span className="text-[10px] text-slate-500 font-mono">Real-Time HTML Streaming</span>
             </div>
             
             <h2 className="text-xl lg:text-2xl font-black text-white tracking-tight mt-2 flex items-center gap-3">
@@ -424,11 +443,10 @@ export function CampaignContentGenerator({
               Content Types & Marketing Tactics Studio
             </h2>
             <p className="text-xs text-slate-400 mt-1 max-w-3xl font-light leading-relaxed">
-              Explore all <span className="text-violet-400 font-bold">20 major categories</span> and <span className="text-white font-bold">{metrics.totalOptions} selectable sub-options</span>. Click any option to load required input fields, auto-prefill ICP context, and generate campaign deliverables.
+              Explore all <span className="text-violet-400 font-bold">20 major categories</span> and <span className="text-white font-bold">{metrics.totalOptions} selectable options</span>. Automated SEO and GEO keyword extraction, live streaming HTML generation, and rewrite versioning.
             </p>
           </div>
 
-          {/* STAT COUNTERS BADGES */}
           <div className="grid grid-cols-3 gap-3 w-full lg:w-auto shrink-0 font-mono">
             <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl text-center">
               <span className="text-[10px] text-slate-500 font-bold uppercase block">Total Options</span>
@@ -439,23 +457,93 @@ export function CampaignContentGenerator({
               <span className="text-lg font-black text-violet-300">{metrics.contentTypesCount}</span>
             </div>
             <div className="bg-emerald-950/30 border border-emerald-850/60 p-3 rounded-2xl text-center">
-              <span className="text-[10px] text-emerald-400 font-bold uppercase block">Marketing Tactics</span>
+              <span className="text-[10px] text-emerald-400 font-bold uppercase block">Tactics</span>
               <span className="text-lg font-black text-emerald-300">{metrics.marketingTacticsCount}</span>
             </div>
           </div>
         </div>
 
-        {/* GROUP FILTER TABS & SEARCH BAR */}
+        {/* SECTION 8: SEO & GEO KEYWORDS AUTOMATION PANEL */}
+        <div className="p-4 bg-slate-900/40 border border-violet-500/30 rounded-2xl space-y-3">
+          <div className="flex justify-between items-center flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-violet-400" />
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                Auto-Discovered SEO & GEO Keywords (Client-Grounded)
+              </h3>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={fetchKeywords}
+                disabled={isLoadingKeywords}
+                className="text-[11px] bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-300 px-3 py-1 rounded-xl font-mono flex items-center gap-1.5"
+              >
+                {isLoadingKeywords ? <Loader2 className="h-3 w-3 animate-spin text-violet-400" /> : <RotateCw className="h-3 w-3" />}
+                Refresh Keywords
+              </button>
+
+              <button
+                onClick={() => setShowKeywordPanel(!showKeywordPanel)}
+                className="text-[11px] text-slate-400 hover:text-white font-mono px-2 py-1"
+              >
+                {showKeywordPanel ? "Collapse" : "Expand"}
+              </button>
+            </div>
+          </div>
+
+          {showKeywordPanel && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 text-xs animate-in fade-in duration-200">
+              {/* SEO Keywords Column */}
+              <div className="space-y-2 p-3 rounded-xl bg-slate-950/80 border border-slate-850">
+                <span className="text-[10px] font-mono uppercase font-bold text-violet-400 block">
+                  🎯 SEO Target Keywords (Volume & Intent)
+                </span>
+                {isLoadingKeywords ? (
+                  <p className="text-[11px] text-slate-500 font-mono">Analyzing customer profile...</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {keywordSet?.seoKeywords?.map((kw, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-violet-950/40 border border-violet-850/60 rounded-lg text-violet-300 text-[11px] font-mono flex items-center gap-1.5">
+                        <strong>{kw.keyword}</strong>
+                        <span className="text-[9px] text-slate-400 bg-slate-900 px-1 rounded">{kw.searchVolumeEstimate}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* GEO Keywords Column */}
+              <div className="space-y-2 p-3 rounded-xl bg-slate-950/80 border border-slate-850">
+                <span className="text-[10px] font-mono uppercase font-bold text-cyan-400 block">
+                  🤖 GEO (Generative Engine Optimization) Queries
+                </span>
+                {isLoadingKeywords ? (
+                  <p className="text-[11px] text-slate-500 font-mono">Extracting citation patterns...</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {keywordSet?.geoKeywords?.map((geo, i) => (
+                      <div key={i} className="p-1.5 bg-cyan-950/20 border border-cyan-850/40 rounded-lg text-cyan-200 text-[11px] font-mono flex justify-between items-center gap-2">
+                        <span className="truncate">"{geo.query}"</span>
+                        <span className="text-[9px] text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded shrink-0 border border-cyan-800/40">
+                          {geo.engineTarget}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* GROUP FILTER TABS & SEARCH */}
         <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-slate-900/50 p-2.5 rounded-2xl border border-slate-850">
-          
-          {/* Group Filter Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 md:pb-0">
             <button
               onClick={() => setActiveGroupFilter("all")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                activeGroupFilter === "all" 
-                  ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400" 
-                  : "text-slate-400 hover:text-white hover:bg-slate-850"
+                activeGroupFilter === "all" ? "bg-violet-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
               }`}
             >
               All {metrics.totalOptions} Options
@@ -463,310 +551,150 @@ export function CampaignContentGenerator({
             <button
               onClick={() => setActiveGroupFilter("content_types")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                activeGroupFilter === "content_types" 
-                  ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400" 
-                  : "text-slate-400 hover:text-white hover:bg-slate-850"
+                activeGroupFilter === "content_types" ? "bg-violet-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
               }`}
             >
-              <Grid className="h-3.5 w-3.5 text-violet-300" /> 
-              Content Types ({metrics.contentTypesCount})
+              <Grid className="h-3.5 w-3.5 text-violet-300" /> Content Types ({metrics.contentTypesCount})
             </button>
             <button
               onClick={() => setActiveGroupFilter("marketing_tactics")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                activeGroupFilter === "marketing_tactics" 
-                  ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400" 
-                  : "text-slate-400 hover:text-white hover:bg-slate-850"
+                activeGroupFilter === "marketing_tactics" ? "bg-violet-600 text-white shadow-lg" : "text-slate-400 hover:text-white"
               }`}
             >
-              <Target className="h-3.5 w-3.5 text-emerald-400" /> 
-              Marketing Tactics ({metrics.marketingTacticsCount})
+              <Target className="h-3.5 w-3.5 text-emerald-400" /> Marketing Tactics ({metrics.marketingTacticsCount})
             </button>
           </div>
 
-          {/* Search & Collapse Controls */}
-          <div className="flex items-center gap-2">
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search across all options..."
-                className="bg-slate-950 border-slate-800 text-xs pl-9 py-1.5 h-9 rounded-xl focus:border-violet-500"
-              />
-            </div>
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search taxonomy options..."
+              className="bg-slate-950 border-slate-800 text-xs pl-9 py-1.5 h-9 rounded-xl focus:border-violet-500"
+            />
+          </div>
+        </div>
+      </div>
 
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                onClick={() => handleToggleExpandAll(true)}
-                className="text-[10px] bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-white border border-slate-800 px-2 py-1.5 rounded-lg font-mono"
-                title="Expand All Categories"
-              >
-                Expand All
-              </button>
-              <button
-                onClick={() => handleToggleExpandAll(false)}
-                className="text-[10px] bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-white border border-slate-800 px-2 py-1.5 rounded-lg font-mono"
-                title="Collapse All Categories"
-              >
-                Collapse All
-              </button>
-            </div>
+      {/* WORKSPACE 2-COLUMN LAYOUT */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* LEFT COLUMN (4/12): Interactive Taxonomy Sidebar */}
+        <div className="lg:col-span-4 space-y-3">
+          <div className="flex justify-between items-center pb-2 border-b border-slate-850">
+            <span className="text-[11px] font-mono text-slate-400 uppercase font-bold">Categories & Sub-Options</span>
+            <span className="text-[10px] text-slate-500 font-mono">{filteredCategories.length} Categories</span>
           </div>
 
-        </div>
+          <div className="space-y-3.5 max-h-[720px] overflow-y-auto pr-1.5 custom-scrollbar">
+            {filteredCategories.map((category) => {
+              const isExpanded = expandedCategories[category.id] ?? true;
+              const hasActiveChild = category.subTypes.some(s => s.id === selectedSubTypeId);
 
-        {/* 20 CATEGORY QUICK JUMP MATRIX CHIPS */}
-        <div className="space-y-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono flex items-center gap-1.5">
-            <Sliders className="h-3 w-3 text-violet-400" /> Quick Jump Category Matrix (20 Major Categories)
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {filteredCategories.map(cat => {
-              const isSelected = selectedCategoryId === cat.id;
               return (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategoryId(cat.id);
-                    setSelectedSubTypeId(cat.subTypes[0]?.id || "");
-                    setExpandedCategories(prev => ({ ...prev, [cat.id]: true }));
-                  }}
-                  className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1.5 ${
-                    isSelected 
-                      ? "bg-violet-600 text-white border-violet-400 shadow-md shadow-violet-500/20" 
-                      : "bg-slate-900/60 text-slate-400 border-slate-850 hover:border-slate-750 hover:text-slate-200"
-                  }`}
-                >
-                  <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-violet-400"}`} />
-                  {cat.title}
-                  <span className="opacity-60 font-normal">({cat.subTypes.length})</span>
-                </button>
+                <div key={category.id} className="border border-slate-850/80 rounded-2xl overflow-hidden bg-slate-900/30">
+                  <button
+                    onClick={() => setExpandedCategories(prev => ({ ...prev, [category.id]: !isExpanded }))}
+                    className={`w-full p-3 flex items-center justify-between text-left transition-colors ${
+                      hasActiveChild ? "bg-slate-900/90 text-white" : "hover:bg-slate-900/50 text-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <span className={`w-2 h-2 rounded-full ${category.typeGroup === "marketing_tactics" ? "bg-emerald-500" : "bg-violet-500"}`} />
+                      <span className="text-xs font-bold truncate">{category.title}</span>
+                    </div>
+                    {isExpanded ? <ChevronDown className="h-4 w-4 text-slate-500 shrink-0" /> : <ChevronRight className="h-4 w-4 text-slate-500 shrink-0" />}
+                  </button>
+
+                  {isExpanded && (
+                    <div className="p-2 space-y-1 bg-slate-950/40 border-t border-slate-850/60">
+                      {category.subTypes.map((sub) => {
+                        const isSelected = selectedSubTypeId === sub.id;
+                        return (
+                          <button
+                            key={sub.id}
+                            onClick={() => {
+                              setSelectedCategoryId(category.id);
+                              setSelectedSubTypeId(sub.id);
+                            }}
+                            className={`w-full p-2.5 rounded-xl text-left text-xs transition-all flex items-center justify-between gap-2 ${
+                              isSelected
+                                ? "bg-violet-600 text-white font-bold shadow-md shadow-violet-500/20"
+                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
+                            }`}
+                          >
+                            <span className="truncate">{sub.title}</span>
+                            <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded uppercase font-bold shrink-0 ${
+                              isSelected ? "bg-white/20 text-white" : "bg-slate-900 text-slate-400 border border-slate-800"
+                            }`}>
+                              {sub.badge}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
         </div>
 
-      </div>
-
-      {/* MAIN SPLIT WORKSPACE: LEFT HIERARCHICAL TREE (5/12) & RIGHT DYNAMIC STUDIO (7/12) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
-        
-        {/* LEFT COLUMN: HIERARCHICAL TAXONOMY BROWSER (5/12) */}
-        <div className="lg:col-span-5 space-y-4 bg-slate-900/40 border border-slate-850 rounded-2xl p-4 lg:p-5">
-          <div className="flex justify-between items-center px-1 pb-3 border-b border-slate-850/80">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1.5">
-              <Filter className="h-3.5 w-3.5 text-violet-400" /> 
-              Options Taxonomy Browser
-            </span>
-            <span className="text-[10px] text-slate-500 font-mono">
-              {filteredCategories.reduce((acc, c) => acc + c.subTypes.length, 0)} Active Options
-            </span>
-          </div>
-
-          <div className="space-y-3.5 max-h-[720px] overflow-y-auto pr-1.5 custom-scrollbar">
-            {filteredCategories.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-500 bg-slate-950/40 rounded-xl border border-slate-900">
-                No matching categories or sub-options found for &quot;{searchQuery}&quot;
+        {/* RIGHT COLUMN (8/12): Form Input, Real-Time HTML Streaming, & Preview */}
+        <div className="lg:col-span-8 space-y-6">
+          
+          {/* Active Deliverable Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/40 border border-slate-850 p-5 rounded-2xl">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase bg-slate-950 border border-slate-800 px-2 py-0.5 rounded text-slate-300">
+                  {activeCategory.title}
+                </span>
+                <span className="text-[10px] font-mono uppercase bg-violet-950/40 border border-violet-850 text-violet-300 px-2 py-0.5 rounded">
+                  [{activeSubType.badge}]
+                </span>
+                {currentVersionNumber > 1 && (
+                  <span className="text-[10px] font-mono uppercase bg-emerald-950/40 border border-emerald-850 text-emerald-300 px-2 py-0.5 rounded">
+                    v{currentVersionNumber}
+                  </span>
+                )}
               </div>
-            ) : (
-              filteredCategories.map((category) => {
-                const IconComp: any = category.icon;
-                const isExpanded = expandedCategories[category.id] !== false;
+              <h3 className="text-lg font-black text-white">{activeSubType.title}</h3>
+              <p className="text-xs text-slate-400">{activeSubType.description}</p>
+            </div>
 
-                return (
-                  <div key={category.id} className="space-y-1.5">
-                    
-                    {/* Category Header */}
-                    <button
-                      onClick={() => toggleCategoryExpand(category.id)}
-                      className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all duration-200 ${
-                        selectedCategoryId === category.id 
-                          ? "bg-slate-850/80 border-slate-700 text-white shadow-md shadow-violet-950/30" 
-                          : "bg-slate-950/40 border-slate-900 text-slate-300 hover:border-slate-800 hover:bg-slate-900/60"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 shrink-0">
-                          <IconComp className="h-4 w-4 text-violet-400" />
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-xs font-bold truncate tracking-tight block text-white">{category.title}</span>
-                          <span className="text-[9px] text-slate-500 font-mono block uppercase">
-                            {category.typeGroup === "marketing_tactics" ? "Marketing Tactic" : "Content Type Asset"}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-md border ${category.badgeColor}`}>
-                          {category.subTypes.length} options
-                        </span>
-                        {isExpanded ? (
-                          <ChevronDown className="h-4 w-4 text-slate-500" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4 text-slate-500" />
-                        )}
-                      </div>
-                    </button>
-
-                    {/* Indented Options Tree */}
-                    {isExpanded && (
-                      <div className="pl-4 ml-3.5 space-y-1.5 border-l-2 border-slate-800/80 pt-1 pb-1">
-                        {category.subTypes.map((subType) => {
-                          const isSelected = selectedCategoryId === category.id && selectedSubTypeId === subType.id;
-
-                          return (
-                            <button
-                              key={subType.id}
-                              onClick={() => {
-                                setSelectedCategoryId(category.id);
-                                setSelectedSubTypeId(subType.id);
-                              }}
-                              className={`w-full text-left p-3 rounded-xl border text-xs transition-all duration-200 group relative flex flex-col gap-1.5 ${
-                                isSelected
-                                  ? "bg-gradient-to-r from-violet-950/70 via-slate-900 to-slate-900 border-violet-500/70 text-white shadow-lg shadow-violet-500/10 ring-1 ring-violet-500/40"
-                                  : "bg-slate-950/20 border-slate-900/80 text-slate-400 hover:text-slate-200 hover:bg-slate-900/50 hover:border-slate-800"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="font-bold text-xs flex items-center gap-1.5 truncate">
-                                  {isSelected ? (
-                                    <CheckCircle2 className="h-3.5 w-3.5 text-violet-400 shrink-0" />
-                                  ) : (
-                                    <span className="h-1.5 w-1.5 rounded-full bg-slate-700 shrink-0 group-hover:bg-violet-400" />
-                                  )}
-                                  {subType.title}
-                                </span>
-                                <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded border shrink-0 ${
-                                  isSelected ? "bg-violet-500/20 text-violet-300 border-violet-400/40 font-bold" : "bg-slate-900 text-slate-500 border-slate-850"
-                                }`}>
-                                  {subType.badge}
-                                </span>
-                              </div>
-                              <p className="text-[11px] text-slate-500 font-light line-clamp-1 group-hover:text-slate-400">
-                                {subType.description}
-                              </p>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                  </div>
-                );
-              })
+            {/* Version History Trigger */}
+            {versionHistory.length > 0 && (
+              <button
+                onClick={() => setShowHistoryDrawer(!showHistoryDrawer)}
+                className="text-xs bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300 px-3 py-1.5 rounded-xl font-mono flex items-center gap-1.5"
+              >
+                <History className="h-3.5 w-3.5 text-violet-400" />
+                History ({versionHistory.length})
+              </button>
             )}
           </div>
-        </div>
 
-        {/* RIGHT COLUMN: DYNAMIC STUDIO GENERATOR & OUTPUT WORKSPACE (7/12) */}
-        <div className="lg:col-span-7 space-y-6">
-          
-          {/* BREADCRUMB NAV & ACTIVE OPTION HEADER */}
-          <div className="bg-slate-900/60 border border-slate-850 p-6 rounded-2xl space-y-3 relative overflow-hidden">
-            <div className="flex justify-between items-center flex-wrap gap-2 text-xs font-mono text-slate-400 border-b border-slate-850 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-slate-500">Taxonomy Path:</span>
-                <span className="text-violet-400 font-bold uppercase">{activeCategory.typeGroup.replace("_", " ")}</span>
-                <span>/</span>
-                <span className="text-slate-300 font-bold">{activeCategory.title}</span>
-                <span>/</span>
-                <span className="text-white font-bold underline decoration-violet-500">{activeSubType.title}</span>
-              </div>
-
-              <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${activeCategory.badgeColor}`}>
-                {activeSubType.badge}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-start flex-wrap gap-4">
-              <div className="space-y-1 max-w-xl">
-                <h3 className="text-lg font-black text-white flex items-center gap-2">
-                  Option Deliverable: {activeSubType.title}
-                </h3>
-                <p className="text-xs text-slate-400 font-light leading-relaxed">
-                  {activeSubType.description}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleManualSaveInputs}
-                disabled={isSavingInputs}
-                className="bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/40 text-violet-200 text-xs font-bold py-1.5 px-3.5 rounded-xl flex items-center gap-1.5 transition-all shrink-0"
-              >
-                {isSavingInputs ? (
-                  <><Loader2 className="h-3.5 w-3.5 animate-spin text-violet-400" /> Saving...</>
-                ) : savedInputsState ? (
-                  <><Check className="h-3.5 w-3.5 text-emerald-400" /> Saved Option Deliverable!</>
-                ) : (
-                  <><Bookmark className="h-3.5 w-3.5 text-violet-400" /> Save Option Deliverable</>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* VALIDATION ERROR ALERT BANNER */}
-          {formTouched && Object.keys(fieldErrors).length > 0 && (
-            <div className="bg-red-500/10 border border-red-500/40 rounded-2xl p-4 flex items-start gap-3 animate-in fade-in duration-200">
-              <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <h5 className="text-xs font-bold text-red-300">Mandatory Data Missing</h5>
-                <p className="text-[11px] text-red-400/90 font-light">
-                  Please complete all required fields highlighted in red below to generate campaign content for this option.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* DYNAMIC FORM INPUTS */}
-          <form onSubmit={handleInitiateGeneration} className="bg-slate-900/30 border border-slate-850 p-6 rounded-2xl space-y-6">
-            
-            <div className="grid grid-cols-1 gap-5">
+          {/* Form Fields Grid */}
+          <form onSubmit={(e) => { e.preventDefault(); executeGenerationWithStreaming(false); }} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeSubType.fields.map((field) => {
-                const hasError = !!fieldErrors[field.id];
                 const rawVal = formValues[field.id] ?? "";
-                const maxLen = field.maxLength ?? (field.type === "textarea" ? 2000 : 300);
-                const isOverLimit = rawVal.length > maxLen;
-                const isNearLimit = rawVal.length >= maxLen * 0.9 && !isOverLimit;
+                const hasError = Boolean(fieldErrors[field.id]);
 
                 return (
-                  <div key={field.id} className="space-y-2">
-                    <div className="flex justify-between items-center flex-wrap gap-1">
-                      <Label className="text-xs font-bold text-slate-200 flex items-center gap-1">
-                        {field.label}
-                        {field.required && <span className="text-red-400 font-bold">*</span>}
-                      </Label>
-                      
-                      <div className="flex items-center gap-2">
-                        {field.helperText && (
-                          <span className="text-[10px] text-slate-500 font-light">{field.helperText}</span>
-                        )}
-                        
-                        {(field.type === "text" || field.type === "textarea") && (
-                          <span className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border transition-colors ${
-                            isOverLimit
-                              ? "bg-red-500/10 text-red-400 border-red-500/40 font-bold"
-                              : isNearLimit
-                              ? "bg-amber-500/10 text-amber-300 border-amber-500/40"
-                              : "bg-slate-900 text-slate-500 border-slate-800"
-                          }`}>
-                            {rawVal.length} / {maxLen}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
+                  <div key={field.id} className={field.type === "textarea" ? "md:col-span-2 space-y-1.5" : "space-y-1.5"}>
+                    <Label className="text-xs text-slate-300 font-semibold">{field.label}</Label>
+                    
                     {field.type === "text" && (
                       <Input
                         value={rawVal}
                         onChange={(e) => handleInputChange(field.id, e.target.value)}
                         onBlur={() => handleInputBlur(field.id)}
                         placeholder={field.placeholder}
-                        className={`bg-slate-950/80 border text-xs py-2.5 h-10 rounded-xl text-slate-100 placeholder:text-slate-600 transition-colors ${
-                          hasError || isOverLimit ? "border-red-500/80 focus:border-red-400 ring-1 ring-red-500/20" : "border-slate-800 focus:border-violet-500"
-                        }`}
+                        className="bg-slate-950/80 border-slate-800 text-xs h-10 rounded-xl text-slate-200"
                       />
                     )}
 
@@ -777,182 +705,110 @@ export function CampaignContentGenerator({
                         onChange={(e) => handleInputChange(field.id, e.target.value)}
                         onBlur={() => handleInputBlur(field.id)}
                         placeholder={field.placeholder}
-                        className={`w-full bg-slate-950/80 border text-xs p-3 rounded-xl text-slate-100 placeholder:text-slate-600 focus:outline-none transition-colors ${
-                          hasError || isOverLimit ? "border-red-500/80 focus:border-red-400 ring-1 ring-red-500/20" : "border-slate-800 focus:border-violet-500"
-                        }`}
+                        className="w-full bg-slate-950/80 border border-slate-800 text-xs p-3 rounded-xl text-slate-200 focus:outline-none focus:border-violet-500"
                       />
                     )}
 
                     {field.type === "select" && (
                       <select
-                        value={formValues[field.id] ?? field.defaultValue ?? ""}
+                        value={rawVal}
                         onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        onBlur={() => handleInputBlur(field.id)}
-                        className={`w-full bg-slate-950 border text-xs px-3 py-2.5 h-10 rounded-xl text-slate-200 focus:outline-none transition-colors ${
-                          hasError ? "border-red-500/80" : "border-slate-800 focus:border-violet-500"
-                        }`}
+                        className="w-full bg-slate-950 border border-slate-800 text-xs px-3 h-10 rounded-xl text-slate-200"
                       >
-                        {field.options?.map(opt => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
+                        {field.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
                     )}
 
-                    {hasError && (
-                      <p className="text-[10px] text-red-400 font-semibold flex items-center gap-1 mt-0.5">
-                        <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors[field.id]}
-                      </p>
-                    )}
+                    {hasError && <p className="text-[10px] text-red-400">{fieldErrors[field.id]}</p>}
                   </div>
                 );
               })}
             </div>
 
-            {/* FORM FOOTER ACTION BUTTONS */}
+            {/* ACTION BUTTONS: AUTO-GENERATE & REWRITE */}
             <div className="pt-4 border-t border-slate-850 flex justify-between items-center flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  const resetVals: Record<string, string> = {};
-                  activeSubType.fields.forEach(f => resetVals[f.id] = f.defaultValue || "");
-                  setFormValues(resetVals);
-                  formValuesMapRef.current[selectedSubTypeId] = resetVals;
-                  setFieldErrors({});
-                  setFormTouched(false);
-                }}
-                className="text-xs text-slate-400 hover:text-slate-200 font-semibold font-mono"
-              >
-                Reset Fields
-              </button>
+              <div className="text-[10px] text-slate-500 font-mono">
+                Outputs clean semantic HTML in real-time
+              </div>
 
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleManualSaveInputs}
-                  disabled={isSavingInputs}
-                  className="bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-200 hover:text-white text-xs font-bold py-2.5 px-4 rounded-xl flex items-center gap-1.5 transition-all shadow-md"
-                >
-                  {isSavingInputs ? (
-                    <><Loader2 className="h-3.5 w-3.5 animate-spin text-violet-400" /> Saving...</>
-                  ) : savedInputsState ? (
-                    <><Check className="h-3.5 w-3.5 text-emerald-400" /> Saved Option Deliverable!</>
-                  ) : (
-                    <><Bookmark className="h-3.5 w-3.5 text-violet-400" /> Save Option Deliverable</>
-                  )}
-                </button>
+                {/* REWRITE ACTION */}
+                {htmlOutput && (
+                  <button
+                    type="button"
+                    onClick={() => executeGenerationWithStreaming(true)}
+                    disabled={isGenerating}
+                    className="bg-slate-900 hover:bg-slate-850 border border-violet-500/40 text-violet-300 text-xs font-bold py-2.5 px-4 rounded-xl flex items-center gap-1.5 transition-all shadow-md"
+                  >
+                    <RotateCw className="h-3.5 w-3.5 text-violet-400" /> Rewrite Content
+                  </button>
+                )}
 
+                {/* AUTO-GENERATE ACTION */}
                 <ExtrudedButton
                   type="submit"
                   disabled={isGenerating}
-                  className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs py-3 px-7 rounded-xl shadow-lg shadow-indigo-500/20 inline-flex items-center gap-2"
+                  className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs py-3 px-7 rounded-xl shadow-lg shadow-violet-500/20 inline-flex items-center gap-2"
                 >
                   {isGenerating ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Generating Deliverable...</>
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Streaming Deliverable...</>
                   ) : (
-                    <><Sparkles className="h-4 w-4" /> Generate {activeSubType.title}</>
+                    <><Sparkles className="h-4 w-4" /> Auto-Generate (HTML Stream)</>
                   )}
                 </ExtrudedButton>
               </div>
             </div>
           </form>
 
-          {/* GENERATION PROGRESS INDICATOR */}
+          {/* REAL-TIME STREAMING PROGRESS INDICATOR */}
           {isGenerating && (
-            <div className="bg-slate-900/60 border border-slate-800 p-8 rounded-2xl text-center space-y-4 animate-in fade-in duration-200">
-              <Loader2 className="h-8 w-8 animate-spin text-violet-400 mx-auto" />
-              <h5 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Multi-Agent Content & Tactic Engine Running</h5>
-              <div className="max-w-xs mx-auto h-2 bg-slate-950 rounded-full overflow-hidden border border-white/5">
-                <div 
-                  className="h-full bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 transition-all duration-300"
-                  style={{ width: `${generationProgress}%` }}
-                />
+            <div className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl text-center space-y-3 animate-in fade-in duration-200">
+              <Loader2 className="h-7 w-7 animate-spin text-violet-400 mx-auto" />
+              <div className="max-w-xs mx-auto h-1.5 bg-slate-950 rounded-full overflow-hidden border border-white/5">
+                <div className="h-full bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-400 transition-all duration-300" style={{ width: `${generationProgress}%` }} />
               </div>
-              <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wider">{generationStage}</p>
+              <p className="text-[11px] text-slate-400 font-mono">{generationStage}</p>
             </div>
           )}
 
-          {/* GENERATED OUTPUT PREVIEW PANEL & PRE-PUBLISHING VALIDATION REPORT */}
-          {generatedOutput && !isGenerating && (
-            <div className="bg-slate-900/40 border border-violet-500/40 p-6 lg:p-8 rounded-2xl space-y-6 shadow-xl shadow-violet-950/20 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          {/* GENERATED DELIVERABLE OUTPUT PANEL (PRESERVED ACROSS SCROLL) */}
+          {(htmlOutput || generatedOutput) && (
+            <div className="bg-slate-900/40 border border-violet-500/40 p-6 lg:p-8 rounded-2xl space-y-6 shadow-xl shadow-violet-950/20 animate-in fade-in duration-300 relative">
               
-              {/* PRE-PUBLISHING READINESS SCORE CARD */}
-              {deliverableReport && (
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 font-sans">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-slate-850">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-2 rounded-lg ${deliverableReport.isDeliverableReady ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
-                        <Sparkles className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <h6 className="text-xs font-bold text-white flex items-center gap-2">
-                          Pre-Publishing Validation Score
-                          <span className={`text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded-full border ${deliverableReport.isDeliverableReady ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-amber-500/20 text-amber-300 border-amber-500/30"}`}>
-                            {deliverableReport.statusBadge}
-                          </span>
-                        </h6>
-                        <p className="text-[11px] text-slate-400">Technical specification & format compliance check</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <span className="text-xl font-black text-emerald-400">{deliverableReport.overallScore}</span>
-                        <span className="text-xs text-slate-500 font-bold"> / 100</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Validation Checks Breakdown Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1 text-[11px]">
-                    {deliverableReport.checks.map(c => (
-                      <div key={c.id} className={`p-2 rounded-lg border flex items-start gap-2 ${c.passed ? "bg-emerald-950/20 border-emerald-850/50 text-emerald-200" : "bg-amber-950/20 border-amber-850/50 text-amber-200"}`}>
-                        {c.passed ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" /> : <AlertCircle className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />}
-                        <div>
-                          <span className="font-bold block text-[10px] uppercase tracking-wider">{c.name}</span>
-                          <span className="text-[10px] text-slate-300">{c.message}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Platform Specifications Banner */}
-                  <div className="pt-2 flex flex-wrap justify-between items-center text-[10px] font-mono text-slate-400 border-t border-slate-850/60">
-                    <span>Platform Spec: <strong className="text-white uppercase">{deliverableReport.platformSpec.targetPlatform}</strong></span>
-                    <span>Length: <strong className="text-white">{deliverableReport.characterCount} chars</strong> / {deliverableReport.platformSpec.maxRecommendedLength} max</span>
-                    <span>Image Embeds: <strong className="text-emerald-400">{deliverableReport.imageEmbedCount} Asset(s)</strong></span>
-                  </div>
-                </div>
-              )}
-
-              {/* Output Header Toolbar */}
+              {/* Header Toolbar */}
               <div className="flex justify-between items-center border-b border-slate-850 pb-4 flex-wrap gap-3">
-
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                   <div>
-                    <h5 className="text-xs font-extrabold text-white uppercase tracking-wider">Generated Option Deliverable</h5>
-                    <span className="text-[10px] text-slate-400 font-mono">Deliverable Ready</span>
+                    <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">
+                      Generated Semantic HTML Deliverable
+                    </h4>
+                    <span className="text-[10px] text-slate-400 font-mono">Format: Clean Semantic HTML • Version {currentVersionNumber}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setIsEditingOutput(!isEditingOutput)}
-                    className="text-[11px] bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-300 font-semibold px-3 py-1.5 rounded-xl flex items-center gap-1.5"
-                  >
-                    <Edit3 className="h-3.5 w-3.5 text-violet-400" />
-                    {isEditingOutput ? "Preview Markdown" : "Edit Copy"}
-                  </button>
+                  {/* View Mode Toggle: Preview vs Code */}
+                  <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-0.5 text-xs font-mono">
+                    <button
+                      onClick={() => setViewMode("preview")}
+                      className={`px-3 py-1 rounded-lg flex items-center gap-1 ${viewMode === "preview" ? "bg-violet-600 text-white font-bold" : "text-slate-400 hover:text-white"}`}
+                    >
+                      <Eye className="h-3 w-3" /> Rendered HTML
+                    </button>
+                    <button
+                      onClick={() => setViewMode("code")}
+                      className={`px-3 py-1 rounded-lg flex items-center gap-1 ${viewMode === "code" ? "bg-violet-600 text-white font-bold" : "text-slate-400 hover:text-white"}`}
+                    >
+                      <Code className="h-3 w-3" /> HTML Code
+                    </button>
+                  </div>
 
                   <button
                     onClick={handleCopyOutput}
                     className="text-[11px] bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-200 font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5"
                   >
-                    {copiedState ? (
-                      <><Check className="h-3.5 w-3.5 text-emerald-400" /> Copied!</>
-                    ) : (
-                      <><Copy className="h-3.5 w-3.5 text-slate-400" /> Copy Content</>
-                    )}
+                    {copiedState ? <><Check className="h-3.5 w-3.5 text-emerald-400" /> Copied!</> : <><Copy className="h-3.5 w-3.5 text-slate-400" /> Copy HTML</>}
                   </button>
 
                   {onSaveContent && (
@@ -961,44 +817,47 @@ export function CampaignContentGenerator({
                       disabled={isSaving}
                       className="text-[11px] bg-violet-600 hover:bg-violet-500 text-white font-bold px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-md shadow-violet-500/20"
                     >
-                      {isSaving ? (
-                        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving...</>
-                      ) : savedState ? (
-                        <><Check className="h-3.5 w-3.5 text-white" /> Saved to Profile!</>
-                      ) : (
-                        <><Bookmark className="h-3.5 w-3.5" /> Save to Profile</>
-                      )}
+                      {isSaving ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving...</> : savedState ? <><Check className="h-3.5 w-3.5 text-white" /> Saved!</> : <><Bookmark className="h-3.5 w-3.5" /> Save to Profile</>}
                     </button>
                   )}
+
+                  {/* Explicit Close / Dismiss Button (Section 9) */}
+                  <button
+                    onClick={() => {
+                      setGeneratedOutput(null);
+                      setHtmlOutput(null);
+                    }}
+                    className="p-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white transition-colors"
+                    title="Dismiss deliverable view"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
 
-              {/* Output Display Area */}
-              {isEditingOutput ? (
-                <textarea
-                  rows={16}
-                  value={editedText}
-                  onChange={(e) => setEditedText(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 text-xs font-mono p-4 rounded-xl text-slate-200 focus:outline-none focus:border-violet-500"
+              {/* Display Area: Live Semantic HTML Render vs Raw HTML Code */}
+              {viewMode === "preview" ? (
+                <div 
+                  className="bg-slate-950/90 border border-slate-850 rounded-xl p-6 text-slate-100 max-h-[600px] overflow-y-auto custom-scrollbar"
+                  dangerouslySetInnerHTML={{ __html: htmlOutput || generatedOutput || "" }}
                 />
               ) : (
-                <div className="bg-slate-950/90 border border-slate-850 rounded-xl p-5 text-xs text-slate-200 font-mono whitespace-pre-line leading-relaxed max-h-[550px] overflow-y-auto custom-scrollbar">
-                  {editedText}
-                </div>
+                <textarea
+                  rows={18}
+                  value={editedText || htmlOutput || generatedOutput || ""}
+                  onChange={(e) => {
+                    setEditedText(e.target.value);
+                    setHtmlOutput(e.target.value);
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 text-xs font-mono p-4 rounded-xl text-slate-200 focus:outline-none focus:border-violet-500 leading-relaxed"
+                />
               )}
-
-              {/* Output Footer */}
-              <div className="flex justify-between items-center text-[10px] text-slate-500 pt-2 font-mono border-t border-slate-850/60">
-                <span>Format: Markdown / Plain Text</span>
-                <span>Target Brand: {customerName}</span>
-              </div>
             </div>
           )}
 
         </div>
 
       </div>
-
     </GlassPanel>
   );
 }

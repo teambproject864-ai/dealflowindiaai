@@ -113,9 +113,55 @@ service cloud.firestore {
       allow write: if true; // Public event logging
     }
 
+    // ─── Community Mining (cm_*) ──────────────────────────────
+    // cm_sources: Registered data sources
+    match /cm_sources/{sourceId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // cm_raw_items: Ingested raw feedback items
+    match /cm_raw_items/{itemId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // cm_insights: Processed LLM insight documents (writes via Server Admin SDK)
+    match /cm_insights/{insightId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Server Admin SDK only
+    }
+
+    // cm_themes: Clustered themes and trends (writes via Server Admin SDK)
+    match /cm_themes/{themeId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Server Admin SDK only
+    }
+
+    // cm_routing_rules: Routing and notification rules
+    match /cm_routing_rules/{ruleId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // cm_notifications: Notification queue records
+    match /cm_notifications/{notificationId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Server Admin SDK only
+    }
+
+    // cm_ingestion_logs & cm_processing_logs: System observability & cost logs
+    match /cm_ingestion_logs/{logId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Server Admin SDK only
+    }
+
+    match /cm_processing_logs/{logId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Server Admin SDK only
+    }
+
     // ─── Catch-all: deny everything else ─────────────────────
     match /{document=**} {
       allow read, write: if false;
     }
   }
 }
+

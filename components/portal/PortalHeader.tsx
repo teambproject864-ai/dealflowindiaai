@@ -4,7 +4,6 @@
 import React, { useState } from "react";
 import { Search, Bell, Sparkles, User, Shield, ChevronRight, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { IconBadge } from "./IconBadge";
 
 export interface PortalHeaderProps {
   role: "customer" | "agent" | "admin";
@@ -18,17 +17,17 @@ const ROLE_HEADER_METADATA = {
   customer: {
     portalName: "Customer Portal",
     badgeText: "Customer Pro",
-    badgeVariant: "emerald" as const,
+    badgeColor: "bg-[#34C759]/10 text-[#34C759]",
   },
   agent: {
     portalName: "Agent Portal",
     badgeText: "Revenue Specialist",
-    badgeVariant: "cyan" as const,
+    badgeColor: "bg-[#32ADE6]/10 text-[#0071A4] dark:text-[#64D2FF]",
   },
   admin: {
     portalName: "Admin Portal",
     badgeText: "Executive Admin",
-    badgeVariant: "gold" as const,
+    badgeColor: "bg-[#FF9500]/10 text-[#FF9500]",
   },
 };
 
@@ -43,27 +42,27 @@ export function PortalHeader({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-20 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl px-6 py-3 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-20 w-full border-b border-black/[0.06] dark:border-white/[0.08] bg-[#FBFBFD]/80 dark:bg-[#0A0A0C]/80 backdrop-blur-2xl px-6 py-3.5 flex items-center justify-between gap-4">
       {/* Breadcrumb Trail */}
-      <div className="flex items-center gap-2 text-xs text-slate-400 font-medium truncate">
-        <span className="text-slate-500 font-mono">Dealflow.AI</span>
-        <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-        <span className="text-slate-300 font-semibold">{meta.portalName}</span>
-        <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-        <span className="text-slate-100 font-bold tracking-tight">{activeTabLabel}</span>
+      <div className="flex items-center gap-2 text-xs text-[#6E6E73] dark:text-[#A1A1A6] font-medium truncate">
+        <span className="text-[#86868B]">Dealflow.AI</span>
+        <ChevronRight className="w-3.5 h-3.5 text-[#86868B]" />
+        <span className="text-[#1D1D1F] dark:text-[#F5F5F7] font-semibold">{meta.portalName}</span>
+        <ChevronRight className="w-3.5 h-3.5 text-[#86868B]" />
+        <span className="text-[#0071E3] dark:text-[#2997FF] font-semibold tracking-tight">{activeTabLabel}</span>
       </div>
 
       {/* Global Quick Search Bar */}
       <div className="flex-1 max-w-md hidden md:block">
         <button
           onClick={onSearchOpen}
-          className="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-400 hover:text-slate-200 hover:border-slate-700 transition-all flex items-center justify-between group"
+          className="w-full bg-black/[0.03] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] rounded-full px-4 py-2 text-xs text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#1D1D1F] dark:hover:text-white hover:border-[#0071E3]/40 transition-all flex items-center justify-between group shadow-sm"
         >
           <div className="flex items-center gap-2">
-            <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-400 transition-colors" />
+            <Search className="w-3.5 h-3.5 text-[#86868B] group-hover:text-[#0071E3] transition-colors" />
             <span>Search features, tickets, deals, KB articles...</span>
           </div>
-          <kbd className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-[10px] font-mono text-slate-500">
+          <kbd className="px-2 py-0.5 rounded-full bg-white dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.12] text-[10px] font-mono text-[#86868B]">
             ⌘K
           </kbd>
         </button>
@@ -72,8 +71,8 @@ export function PortalHeader({
       {/* Right Controls & User Profile */}
       <div className="flex items-center gap-3">
         {/* Real-time Health Meter */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-850 text-xs font-mono text-slate-300">
-          <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#34C759]/10 border border-[#34C759]/25 text-xs text-[#248A3D] dark:text-[#30D158] font-semibold">
+          <Activity className="w-3.5 h-3.5 text-[#34C759] animate-pulse" />
           <span>API 100%</span>
         </div>
 
@@ -81,27 +80,27 @@ export function PortalHeader({
         <div className="relative">
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors relative"
+            className="p-2 rounded-full bg-black/[0.03] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#1D1D1F] dark:hover:text-white transition-colors relative"
             title="Notifications"
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#0071E3] animate-ping" />
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-4 space-y-3 z-50 text-xs">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="font-bold text-slate-200">System Notifications</span>
-                <span className="text-[10px] text-emerald-400 font-mono font-bold">2 New</span>
+            <div className="absolute right-0 mt-2 w-80 rounded-3xl apple-glass-card p-4 space-y-3 z-50 text-xs shadow-xl">
+              <div className="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] pb-2">
+                <span className="font-bold text-[#1D1D1F] dark:text-white">System Notifications</span>
+                <span className="text-[10px] text-[#0071E3] dark:text-[#2997FF] font-semibold">2 New</span>
               </div>
               <div className="space-y-2">
-                <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-850">
-                  <p className="font-semibold text-slate-200 text-xs">Meeting Bot Dispatched</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Session `bot-live-101` connected to Google Meet.</p>
+                <div className="p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.06]">
+                  <p className="font-semibold text-[#1D1D1F] dark:text-white text-xs">Meeting Bot Dispatched</p>
+                  <p className="text-[11px] text-[#6E6E73] dark:text-[#A1A1A6] mt-0.5">Session `bot-live-101` connected to Google Meet.</p>
                 </div>
-                <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-850">
-                  <p className="font-semibold text-slate-200 text-xs">WhatsApp Message Logged</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Inbound message archived in compliance vault.</p>
+                <div className="p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.06]">
+                  <p className="font-semibold text-[#1D1D1F] dark:text-white text-xs">WhatsApp Message Logged</p>
+                  <p className="text-[11px] text-[#6E6E73] dark:text-[#A1A1A6] mt-0.5">Inbound message archived in compliance vault.</p>
                 </div>
               </div>
             </div>
@@ -109,11 +108,13 @@ export function PortalHeader({
         </div>
 
         {/* User Role Badge & Avatar */}
-        <div className="flex items-center gap-2 pl-2 border-l border-slate-850">
-          <IconBadge icon={User} variant={meta.badgeVariant} size="sm" />
+        <div className="flex items-center gap-2 pl-2 border-l border-black/[0.06] dark:border-white/[0.08]">
+          <div className="w-7 h-7 rounded-full bg-[#0071E3] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+            <User className="w-3.5 h-3.5" />
+          </div>
           <div className="hidden sm:flex flex-col text-left">
-            <span className="font-bold text-xs text-slate-200 truncate max-w-[120px]">{userName}</span>
-            <span className="text-[10px] text-slate-400 font-mono uppercase">{meta.badgeText}</span>
+            <span className="font-bold text-xs text-[#1D1D1F] dark:text-[#F5F5F7] truncate max-w-[120px]">{userName}</span>
+            <span className="text-[10px] text-[#86868B] uppercase">{meta.badgeText}</span>
           </div>
         </div>
       </div>

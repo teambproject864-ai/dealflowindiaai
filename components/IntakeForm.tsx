@@ -711,8 +711,8 @@ export function IntakeForm({
       case "date":
         return (
           <div className="space-y-1.5">
-            <Label htmlFor={field.id} className="text-xs font-semibold text-slate-300">
-              {field.label} {isRequired && <span className="text-[#d4a017]">{loc.requiredFieldSuffix}</span>}
+            <Label htmlFor={field.id} className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
+              {field.label} {isRequired && <span className="text-[#0071E3]">{loc.requiredFieldSuffix}</span>}
             </Label>
             <Input
               id={field.id}
@@ -720,14 +720,14 @@ export function IntakeForm({
               value={fieldValue ?? ""}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               placeholder={field.placeholder}
-              className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors h-10 text-xs"
+              className="bg-white dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.12] text-[#1D1D1F] dark:text-[#F5F5F7] placeholder-[#86868B] focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/20 rounded-2xl transition-all h-10 text-xs shadow-sm"
               aria-invalid={!!fieldError}
               aria-describedby={fieldError ? `${field.id}-error` : undefined}
               aria-required={isRequired}
             />
-            {field.helpText && <p className="text-[10px] text-slate-400 font-light">{field.helpText}</p>}
+            {field.helpText && <p className="text-[10px] text-[#86868B]">{field.helpText}</p>}
             {fieldError && (
-              <p id={`${field.id}-error`} role="alert" className="text-xs text-red-400 font-light">
+              <p id={`${field.id}-error`} role="alert" className="text-xs text-[#FF3B30] font-medium">
                 {fieldError}
               </p>
             )}
@@ -737,22 +737,22 @@ export function IntakeForm({
       case "textarea":
         return (
           <div className="space-y-1.5">
-            <Label htmlFor={field.id} className="text-xs font-semibold text-slate-300">
-              {field.label} {isRequired && <span className="text-[#d4a017]">{loc.requiredFieldSuffix}</span>}
+            <Label htmlFor={field.id} className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
+              {field.label} {isRequired && <span className="text-[#0071E3]">{loc.requiredFieldSuffix}</span>}
             </Label>
             <Textarea
               id={field.id}
               value={fieldValue ?? ""}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               placeholder={field.placeholder}
-              className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] placeholder-slate-500 focus:border-[#d4a017] focus:ring-0 rounded-md transition-colors min-h-[90px] text-xs"
+              className="bg-white dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.12] text-[#1D1D1F] dark:text-[#F5F5F7] placeholder-[#86868B] focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/20 rounded-2xl transition-all min-h-[90px] text-xs shadow-sm"
               aria-invalid={!!fieldError}
               aria-describedby={fieldError ? `${field.id}-error` : undefined}
               aria-required={isRequired}
             />
-            {field.helpText && <p className="text-[10px] text-slate-400 font-light">{field.helpText}</p>}
+            {field.helpText && <p className="text-[10px] text-[#86868B]">{field.helpText}</p>}
             {fieldError && (
-              <p id={`${field.id}-error`} role="alert" className="text-xs text-red-400 font-light">
+              <p id={`${field.id}-error`} role="alert" className="text-xs text-[#FF3B30] font-medium">
                 {fieldError}
               </p>
             )}
@@ -774,8 +774,8 @@ export function IntakeForm({
 
         return (
           <div className="space-y-1.5">
-            <Label htmlFor={field.id} className="text-xs font-semibold text-slate-300">
-              {field.label} {isRequired && <span className="text-[#d4a017]">{loc.requiredFieldSuffix}</span>}
+            <Label htmlFor={field.id} className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
+              {field.label} {isRequired && <span className="text-[#0071E3]">{loc.requiredFieldSuffix}</span>}
             </Label>
             <Select
               value={fieldValue ?? ""}
@@ -783,27 +783,27 @@ export function IntakeForm({
             >
               <SelectTrigger
                 id={field.id}
-                className="bg-[#16181f] border-[#24252a] text-[#f4f3f0] focus:border-[#d4a017] rounded-md h-10 text-xs w-full"
+                className="bg-white dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.12] text-[#1D1D1F] dark:text-[#F5F5F7] focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/20 rounded-2xl h-10 text-xs w-full shadow-sm"
                 aria-invalid={!!fieldError}
                 aria-required={isRequired}
               >
                 <SelectValue placeholder={field.placeholder || loc.selectPlaceholder} />
               </SelectTrigger>
-              <SelectContent className="bg-[#111219] border-[#24252a] text-[#f4f3f0]">
+              <SelectContent className="bg-white dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.12] text-[#1D1D1F] dark:text-[#F5F5F7]">
                 {activeOptions.map((opt) => (
                   <SelectItem
                     key={opt.value}
                     value={opt.value}
-                    className="hover:bg-[#16181f] focus:bg-[#16181f] focus:text-white text-xs"
+                    className="hover:bg-black/[0.04] dark:hover:bg-white/[0.06] text-xs font-medium"
                   >
                     {opt.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {field.helpText && <p className="text-[10px] text-slate-400 font-light">{field.helpText}</p>}
+            {field.helpText && <p className="text-[10px] text-[#86868B]">{field.helpText}</p>}
             {fieldError && (
-              <p id={`${field.id}-error`} role="alert" className="text-xs text-red-400 font-light">
+              <p id={`${field.id}-error`} role="alert" className="text-xs text-[#FF3B30] font-medium">
                 {fieldError}
               </p>
             )}
@@ -821,12 +821,12 @@ export function IntakeForm({
             />
             <label
               htmlFor={field.id}
-              className="text-xs text-slate-300 cursor-pointer select-none font-medium"
+              className="text-xs text-[#1D1D1F] dark:text-[#F5F5F7] cursor-pointer select-none font-medium"
             >
-              {field.label} {isRequired && <span className="text-[#d4a017]">{loc.requiredFieldSuffix}</span>}
+              {field.label} {isRequired && <span className="text-[#0071E3]">{loc.requiredFieldSuffix}</span>}
             </label>
             {fieldError && (
-              <p role="alert" className="text-xs text-red-400 font-light ml-2">
+              <p role="alert" className="text-xs text-[#FF3B30] font-medium ml-2">
                 {fieldError}
               </p>
             )}
@@ -836,8 +836,8 @@ export function IntakeForm({
       case "checkbox-group":
         return (
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-slate-300">
-              {field.label} {isRequired && <span className="text-[#d4a017]">{loc.requiredFieldSuffix}</span>}
+            <Label className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
+              {field.label} {isRequired && <span className="text-[#0071E3]">{loc.requiredFieldSuffix}</span>}
             </Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[160px] overflow-y-auto pr-1">
               {options.map((opt) => {
@@ -845,7 +845,7 @@ export function IntakeForm({
                 return (
                   <div
                     key={opt.value}
-                    className="flex items-center space-x-2 rounded-md border border-[#24252a] bg-[#111219]/40 px-3 py-2 hover:border-[#383a42] transition-colors"
+                    className="flex items-center space-x-2 rounded-2xl border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#161618] px-3 py-2 hover:border-[#0071E3] transition-colors"
                   >
                     <Checkbox
                       id={`${field.id}-${opt.value}`}
@@ -854,7 +854,7 @@ export function IntakeForm({
                     />
                     <label
                       htmlFor={`${field.id}-${opt.value}`}
-                      className="text-xs text-slate-300 cursor-pointer select-none truncate"
+                      className="text-xs text-[#1D1D1F] dark:text-[#F5F5F7] cursor-pointer select-none"
                     >
                       {opt.label}
                     </label>
@@ -862,9 +862,9 @@ export function IntakeForm({
                 );
               })}
             </div>
-            {field.helpText && <p className="text-[10px] text-slate-400 font-light">{field.helpText}</p>}
+            {field.helpText && <p className="text-[10px] text-[#86868B]">{field.helpText}</p>}
             {fieldError && (
-              <p role="alert" className="text-xs text-red-400 font-light">
+              <p role="alert" className="text-xs text-[#FF3B30] font-medium">
                 {fieldError}
               </p>
             )}
@@ -874,45 +874,43 @@ export function IntakeForm({
       case "radio":
         return (
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-slate-300">
-              {field.label} {isRequired && <span className="text-[#d4a017]">{loc.requiredFieldSuffix}</span>}
+            <Label className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
+              {field.label} {isRequired && <span className="text-[#0071E3]">{loc.requiredFieldSuffix}</span>}
             </Label>
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {options.map((opt) => (
                 <label
                   key={opt.value}
-                  htmlFor={`${field.id}-${opt.value}`}
-                  className={`flex items-center justify-between rounded-md border px-3.5 py-2.5 cursor-pointer transition-colors ${
+                  className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition-all ${
                     fieldValue === opt.value
-                      ? "border-[#d4a017] bg-[#16181f]"
-                      : "border-[#24252a] bg-[#111219]/40 hover:border-[#383a42]"
+                      ? "border-[#0071E3] bg-[#0071E3]/5 shadow-sm"
+                      : "border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#161618] hover:border-[#0071E3]/50"
                   }`}
                 >
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2.5">
                     <input
                       type="radio"
-                      id={`${field.id}-${opt.value}`}
                       name={field.id}
                       value={opt.value}
                       checked={fieldValue === opt.value}
                       onChange={() => handleFieldChange(field.id, opt.value)}
-                      className="accent-[#d4a017] h-4 w-4"
+                      className="text-[#0071E3] focus:ring-[#0071E3]"
                     />
                     <div>
-                      <p className="text-xs font-medium text-slate-200">{opt.label}</p>
+                      <p className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">{opt.label}</p>
                       {opt.description && (
-                        <p className="text-[10px] text-slate-400">{opt.description}</p>
+                        <p className="text-[10px] text-[#86868B]">{opt.description}</p>
                       )}
                     </div>
                   </div>
                   {fieldValue === opt.value && (
-                    <Check className="h-4 w-4 text-[#d4a017]" />
+                    <Check className="h-4 w-4 text-[#0071E3]" />
                   )}
                 </label>
               ))}
             </div>
             {fieldError && (
-              <p role="alert" className="text-xs text-red-400 font-light">
+              <p role="alert" className="text-xs text-[#FF3B30] font-medium">
                 {fieldError}
               </p>
             )}
@@ -923,8 +921,8 @@ export function IntakeForm({
         const fileList = (fieldValue as string[]) || [];
         return (
           <div className="space-y-2">
-            <Label htmlFor={`${field.id}-upload`} className="text-xs font-semibold text-slate-300">
-              {field.label} {isRequired && <span className="text-[#d4a017]">{loc.requiredFieldSuffix}</span>}
+            <Label htmlFor={`${field.id}-upload`} className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">
+              {field.label} {isRequired && <span className="text-[#0071E3]">{loc.requiredFieldSuffix}</span>}
             </Label>
             <div
               role="button"
@@ -937,11 +935,11 @@ export function IntakeForm({
                 }
               }}
               onClick={() => fileInputRef.current?.click()}
-              className="border border-dashed border-[#24252a] hover:border-[#8a704c] bg-[#16181f]/40 rounded-lg p-6 text-center cursor-pointer transition-colors"
+              className="border-2 border-dashed border-black/[0.08] dark:border-white/[0.12] hover:border-[#0071E3] bg-white dark:bg-[#161618] rounded-3xl p-6 text-center cursor-pointer transition-colors"
             >
-              <Upload className="mx-auto h-7 w-7 text-[#d4a017] mb-2" aria-hidden="true" />
-              <p className="text-xs font-semibold text-white">{loc.dragAndDropText}</p>
-              <p className="text-[10px] text-slate-400 mt-1">{field.helpText || loc.fileLimitText}</p>
+              <Upload className="mx-auto h-7 w-7 text-[#0071E3] mb-2" aria-hidden="true" />
+              <p className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7]">{loc.dragAndDropText}</p>
+              <p className="text-[10px] text-[#86868B] mt-1">{field.helpText || loc.fileLimitText}</p>
               <input
                 id={`${field.id}-upload`}
                 type="file"
@@ -957,10 +955,10 @@ export function IntakeForm({
                 {fileList.map((doc: string, idx: number) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between bg-[#16181f] border border-[#24252a] rounded px-3 py-1.5 text-xs text-slate-300"
+                    className="flex items-center justify-between bg-white dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.12] rounded-2xl px-3 py-1.5 text-xs text-[#1D1D1F] dark:text-[#F5F5F7]"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <File className="h-3.5 w-3.5 text-[#d4a017] flex-shrink-0" />
+                      <File className="h-3.5 w-3.5 text-[#0071E3] shrink-0" />
                       <span className="truncate">{doc}</span>
                     </div>
                     <button
@@ -969,7 +967,7 @@ export function IntakeForm({
                         e.stopPropagation();
                         removeUploadedFile(field.id, idx);
                       }}
-                      className="text-slate-500 hover:text-red-400 p-0.5 transition-colors"
+                      className="text-[#86868B] hover:text-[#FF3B30] p-0.5 transition-colors"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -978,7 +976,7 @@ export function IntakeForm({
               </div>
             )}
             {fieldError && (
-              <p role="alert" className="text-xs text-red-400 font-light">
+              <p role="alert" className="text-xs text-[#FF3B30] font-medium">
                 {fieldError}
               </p>
             )}
@@ -994,27 +992,27 @@ export function IntakeForm({
   return (
     <div
       suppressHydrationWarning
-      className={`w-full max-w-2xl rounded-lg border border-[#24252a] bg-[#111219]/60 p-6 md:p-8 relative overflow-hidden ${className}`}
+      className={`w-full max-w-3xl rounded-3xl apple-glass-card p-6 md:p-8 relative overflow-hidden shadow-sm ${className}`}
     >
       {/* Header & Multi-Step Progress Indicators */}
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#24252a]/60 pb-5">
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/[0.06] dark:border-white/[0.08] pb-5">
         <div>
-          <p suppressHydrationWarning className="text-[10px] font-bold uppercase tracking-widest text-[#8a704c]">
+          <p suppressHydrationWarning className="text-[10px] font-semibold uppercase tracking-wider text-[#0071E3] dark:text-[#2997FF]">
             {loc.stepIndicatorText!(stepIndex + 1, visibleSteps.length)}
           </p>
-          <h2 suppressHydrationWarning className="text-xl font-display font-light text-white tracking-tight mt-1">
+          <h2 suppressHydrationWarning className="text-xl font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight mt-1">
             {currentStep?.title}
           </h2>
           {currentStep?.description && (
-            <p className="text-xs text-slate-400 font-light mt-0.5">{currentStep.description}</p>
+            <p className="text-xs text-[#6E6E73] dark:text-[#A1A1A6] mt-0.5">{currentStep.description}</p>
           )}
         </div>
-        <div className="flex gap-1.5 w-full sm:w-32 items-center">
+        <div className="flex gap-1.5 w-full sm:w-36 items-center">
           {visibleSteps.map((_, i) => (
             <span
               key={i}
-              className={`h-0.5 flex-1 transition-all duration-300 ${
-                i <= stepIndex ? "bg-[#d4a017]" : "bg-[#24252a]"
+              className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                i <= stepIndex ? "bg-[#0071E3] dark:bg-[#2997FF]" : "bg-black/[0.08] dark:bg-white/[0.12]"
               }`}
             />
           ))}
@@ -1026,12 +1024,12 @@ export function IntakeForm({
         <div
           role="alert"
           aria-live="polite"
-          className="bg-rose-950/20 border border-rose-800/40 p-4 mb-6 rounded-md text-xs text-rose-300 relative z-10"
+          className="bg-[#FF3B30]/10 border border-[#FF3B30]/30 p-4 mb-6 rounded-2xl text-xs text-[#D70015] dark:text-[#FF453A] relative z-10"
         >
-          <p className="font-semibold mb-1 text-rose-400 flex items-center gap-1.5">
+          <p className="font-semibold mb-1 flex items-center gap-1.5">
             <AlertCircle className="h-4 w-4" /> {loc.validationErrorTitle}
           </p>
-          <ul className="list-disc pl-4 text-rose-300 space-y-0.5">
+          <ul className="list-disc pl-4 space-y-0.5">
             {schemaErrors.map((e, i) => (
               <li key={i}>{e}</li>
             ))}
@@ -1043,11 +1041,11 @@ export function IntakeForm({
       <AnimatePresence mode="wait">
         <motion.div
           key={stepIndex}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
+          exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.18 }}
-          className="space-y-6 relative z-10 min-h-[320px]"
+          className="space-y-6 relative z-10 min-h-[300px]"
         >
           <div className="grid grid-cols-12 gap-4">
             {currentStepVisibleFields.map((field) => (
@@ -1060,12 +1058,12 @@ export function IntakeForm({
       </AnimatePresence>
 
       {/* Step Navigation Bar */}
-      <div className="mt-8 flex justify-between gap-4 border-t border-[#24252a]/60 pt-5 relative z-10">
+      <div className="mt-8 flex justify-between gap-4 border-t border-black/[0.06] dark:border-white/[0.08] pt-5 relative z-10">
         {stepIndex > 0 ? (
           <Button
             variant="outline"
             onClick={handleBack}
-            className="border border-[#24252a] bg-[#16181f] hover:bg-[#20232d] text-white hover:text-white rounded-md font-semibold px-5 h-10 transition-colors text-xs"
+            className="btn-apple-secondary text-xs h-10 px-5"
           >
             <ChevronLeft className="h-4 w-4 mr-1.5" /> {loc.backButtonText}
           </Button>
@@ -1075,7 +1073,7 @@ export function IntakeForm({
         <Button
           onClick={handleNext}
           disabled={submitting}
-          className="bg-[#d4a017] hover:bg-[#c29014] text-[#090a0f] rounded-md font-semibold px-6 h-10 transition-colors text-xs"
+          className="btn-apple-primary text-xs h-10 px-6"
         >
           {submitting ? (
             <>

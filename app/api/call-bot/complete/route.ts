@@ -228,6 +228,28 @@ export async function POST(req: Request) {
       riskFlag: summaryObj.riskFlag
     });
 
+    // 7. Community Mining Automated Ingestion Hook
+    try {
+      const { ingestCallTranscript } = await import("@/lib/community-mining/ingestion");
+      const painPointsStr = Array.isArray(summaryObj?.painPointsIdentified) ? summaryObj.painPointsIdentified.join(", ") : "";
+      const objectionsStr = Array.isArray(summaryObj?.objectionsRaised) ? summaryObj.objectionsRaised.join(", ") : "";
+
+      const fullTranscriptOrSummary = transcriptText
+        ? `[Call Type: ${summaryObj.callType || "General"}] ${transcriptText}\n\nExecutive Summary: ${summaryObj.summary || ""}\nPain Points: ${painPointsStr}\nObjections: ${objectionsStr}`
+        : `[Call Type: ${summaryObj.callType || "General"}] Executive Summary: ${summaryObj.summary || ""}\nPain Points: ${painPointsStr}\nObjections: ${objectionsStr}`;
+
+      await ingestCallTranscript({
+        callId,
+        transcriptText: fullTranscriptOrSummary,
+        contactName: summaryObj.contactName,
+        companyName: summaryObj.companyName,
+        contactEmail: intakeData?.contactEmail || intakeData?.email || "",
+        planTier: summaryObj.riskFlag === "churn_risk" ? "enterprise" : "growth",
+      });
+    } catch (cmErr: any) {
+      console.warn("[CallBot:Complete] Non-blocking Community Mining ingestion warning:", cmErr?.message || cmErr);
+    }
+
     return NextResponse.json({
       success: true,
       callId,
