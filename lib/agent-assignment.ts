@@ -25,6 +25,14 @@ async function getFirestoreDb() {
 
 // Initialize from Firestore on first use
 async function initAssignmentCounts() {
+  if (process.env.DISABLE_FIRESTORE === "true") {
+    const agents = getRevenueAgentCatalog();
+    agents.forEach(agent => {
+      inMemoryAssignmentCounts[agent.key] = 0;
+    });
+    return;
+  }
+
   const db = await getFirestoreDb();
   if (!db) {
     // Fallback to in-memory only
@@ -56,6 +64,10 @@ async function initAssignmentCounts() {
     logger.info("[AgentAssignment] Initialized assignment counts from Firestore", inMemoryAssignmentCounts);
   } catch (err) {
     logger.warn("[AgentAssignment] Failed to load assignment counts from Firestore, using defaults", err);
+    const agents = getRevenueAgentCatalog();
+    agents.forEach(agent => {
+      inMemoryAssignmentCounts[agent.key] = 0;
+    });
   }
 }
 
