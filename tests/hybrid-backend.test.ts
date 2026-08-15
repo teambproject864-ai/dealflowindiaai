@@ -287,8 +287,8 @@ export async function runHybridBackendTests() {
   });
 
   assert.strictEqual(reqResult.success, true);
-  assert.strictEqual(reqResult.data?.profileStatus, "active");
-  assert.strictEqual(reqResult.data?.userEmail, decoded.email);
+  assert.strictEqual((reqResult.data as any)?.profileStatus, "active");
+  assert.strictEqual((reqResult.data as any)?.userEmail, decoded.email);
 
   // Cached request hit
   const cachedReqResult = await backendOrchestrator.handleRequest({
@@ -300,7 +300,7 @@ export async function runHybridBackendTests() {
   });
   assert.strictEqual(cachedReqResult.success, true);
   assert.strictEqual(cachedReqResult.cached, true);
-  assert.strictEqual(cachedReqResult.data?.profileStatus, "active");
+  assert.strictEqual((cachedReqResult.data as any)?.profileStatus, "active");
   console.log("  ✅ Unified Backend Orchestrator Request Routing & Response Caching verified");
 
   // ─── 7. ROLE-BASED ACCESS CONTROL (RBAC) ENFORCEMENT ───────────────────────

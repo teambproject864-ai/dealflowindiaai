@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import { Search, Bell, Sparkles, User, Shield, ChevronRight, Activity } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getCustomerDisplayName } from "@/lib/utils";
 
 export interface PortalHeaderProps {
   role: "customer" | "agent" | "admin";
@@ -35,11 +35,12 @@ export function PortalHeader({
   role,
   activeTabLabel,
   userEmail = "user@dealflow.ai",
-  userName = "Dealflow User",
+  userName = "Customer Name",
   onSearchOpen,
 }: PortalHeaderProps) {
   const meta = ROLE_HEADER_METADATA[role] || ROLE_HEADER_METADATA.customer;
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const displayName = getCustomerDisplayName({ name: userName, email: userEmail });
 
   return (
     <header className="sticky top-0 z-20 w-full border-b border-black/[0.06] dark:border-white/[0.08] bg-[#FBFBFD]/80 dark:bg-[#0A0A0C]/80 backdrop-blur-2xl px-6 py-3.5 flex items-center justify-between gap-4">
@@ -113,7 +114,9 @@ export function PortalHeader({
             <User className="w-3.5 h-3.5" />
           </div>
           <div className="hidden sm:flex flex-col text-left">
-            <span className="font-bold text-xs text-[#1D1D1F] dark:text-[#F5F5F7] truncate max-w-[120px]">{userName}</span>
+            <span className="font-bold text-xs text-[#1D1D1F] dark:text-[#F5F5F7] truncate max-w-[140px]" title={displayName}>
+              {displayName}
+            </span>
             <span className="text-[10px] text-[#86868B] uppercase">{meta.badgeText}</span>
           </div>
         </div>

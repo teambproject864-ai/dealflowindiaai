@@ -9,6 +9,7 @@ import { db } from "@/lib/firebase-admin";
 import { checkRateLimit } from "@/lib/rate-limiter";
 import { requireAuth, hashPassword, NEW_CUSTOMERS, DEMO_CUSTOMERS } from "@/lib/auth";
 import { encryptLead, decryptLead } from "@/lib/security";
+import { resolveLeadRecord } from "@/lib/lead-resolver";
 import { getAgentByKey } from "@/lib/agent-assignment";
 
 export const dynamic = "force-dynamic";
@@ -67,15 +68,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. Verify lead exists first
-    const leadsMap = getInMemoryLeads();
-    let lead: any = leadsMap.get(leadId);
-    if (!lead && db) {
-      const doc = await db.collection("leads").doc(leadId).get();
-      if (doc.exists) {
-        lead = decryptLead(doc.data() as ExtendedLeadRecord);
-      }
-    }
+    // 4. Verify lead exists first via multi-layer lead resolver
+    let lead: any = await resolveLeadRecord(leadId, sanitizedEmail);
 
     if (!lead) {
       return NextResponse.json(
@@ -217,7 +211,7 @@ export async function POST(req: Request) {
         customerId,
         customerCredentialsId: credentials.id,
       };
-      leadsMap.set(leadId, updatedLead);
+      getInMemoryLeads().set(leadId, updatedLead);
       if (db) {
         await db.collection("leads").doc(leadId).set(encryptLead(updatedLead));
       }

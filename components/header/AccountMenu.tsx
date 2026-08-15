@@ -6,6 +6,7 @@ import Link from "next/link";
 import { User, LogOut, Settings, Shield, UserCheck, Users, LogIn, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { getCustomerDisplayName } from "@/lib/utils";
 
 export function AccountMenu() {
   const router = useRouter();
@@ -125,7 +126,7 @@ export function AccountMenu() {
       >
         {user ? (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-teal-500/20 to-cyan-500/15 text-teal-300 font-bold text-xs">
-            {getInitials(user.name)}
+            {getInitials(getCustomerDisplayName(user))}
           </div>
         ) : (
           <User className="h-4.5 w-4.5" />
@@ -145,11 +146,11 @@ export function AccountMenu() {
               {/* User Info */}
               <div className="flex items-center gap-4 border-b border-slate-200 dark:border-white/10 pb-4 px-1">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500/20 to-cyan-500/15 text-teal-700 dark:text-teal-300 font-bold text-sm border border-teal-500/20">
-                  {getInitials(user.name)}
+                  {getInitials(getCustomerDisplayName(user))}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-sm text-slate-900 dark:text-white truncate leading-none mb-1.5">
-                    {user.name}
+                    {getCustomerDisplayName(user)}
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 truncate leading-none">
                     {user.email}
@@ -170,7 +171,7 @@ export function AccountMenu() {
               <div className="space-y-1.5 scrim-bg rounded-2xl p-1.5 border border-slate-200/50 dark:border-white/5">
                 <Link
                   ref={firstFocusableRef}
-                  href="/portal/settings"
+                  href="/portal/customer?tab=account-settings"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs text-slate-800 dark:text-slate-200 hover:text-violet-755 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-slate-200 dark:hover:border-white/10"
                   role="menuitem"

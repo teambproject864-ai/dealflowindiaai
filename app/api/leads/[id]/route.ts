@@ -5,9 +5,9 @@ import { requireAuth } from "@/lib/auth";
 import { ExtendedLeadRecord } from "@/lib/types";
 import { decryptLead } from "@/lib/security";
 
-export const dynamic = "force-dynamic";
+import { resolveLeadRecord } from "@/lib/lead-resolver";
 
-const inMemoryLeads = getInMemoryLeads();
+export const dynamic = "force-dynamic";
 
 export async function GET(
   req: Request,
@@ -20,18 +20,8 @@ export async function GET(
   try {
     const { id: leadId } = await params;
     
-    // Check in-memory cache first
-    let lead = inMemoryLeads.get(leadId);
-
-    // If not found in cache, fetch from Firestore
-    if (!lead && db) {
-      const doc = await db.collection("leads").doc(leadId).get();
-      if (doc.exists) {
-        lead = doc.data() as ExtendedLeadRecord;
-        // Cache it locally
-        inMemoryLeads.set(leadId, lead!);
-      }
-    }
+    // Multi-layer lead resolution across memory, Supabase, PocketBase, Firestore & fallbacks
+    let lead = await resolveLeadRecord(leadId);
 
     if (!lead) {
       return NextResponse.json(

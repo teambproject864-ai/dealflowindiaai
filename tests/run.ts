@@ -361,7 +361,8 @@ async function main() {
     runIntakeFormGenericTests,
     runPipelineSupportPromptTests,
     runGTMCustomerLoginTests,
-    runCustomerWorkflowTests
+    runCustomerWorkflowTests,
+    runHybridBackendTests
   ];
 
 

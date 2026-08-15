@@ -44,7 +44,7 @@ import {
   RefreshCw,
   Briefcase,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getCustomerDisplayName } from "@/lib/utils";
 import AuthProvider from "@/components/auth/AuthProvider";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ContentWorkflowWorkspace } from "@/components/portal/ContentWorkflowWorkspace";
@@ -53,7 +53,7 @@ import { AnimatedMetricCard } from "@/components/ui/AnimatedMetricCard";
 import { PortalSidebar } from "@/components/portal/PortalSidebar";
 import { PortalHeader } from "@/components/portal/PortalHeader";
 import { DealflowCRMWorkspace } from "@/components/portal/DealflowCRMWorkspace";
-import { UserCheck, Key } from "lucide-react";
+import { UserCheck, Key, Radio } from "lucide-react";
 import { InPortalVoiceCallWidget } from "@/components/portal/InPortalVoiceCallWidget";
 import { CalendarBookingModule } from "@/components/portal/CalendarBookingModule";
 import { AIChatAssistant } from "@/components/AIChatAssistant";
@@ -61,6 +61,8 @@ import { AgentAssignmentModule } from "@/components/portal/AgentAssignmentModule
 import { APIKeyManagementModule } from "@/components/portal/APIKeyManagementModule";
 import { DealflowConnectHub } from "@/components/portal/DealflowConnectHub";
 import AgentMessagingChannel from "@/components/portal/AgentMessagingChannel";
+import { CustomerProfileSettingsTab } from "@/components/portal/CustomerProfileSettingsTab";
+import { CommunityMiningWorkspace } from "@/components/portal/CommunityMiningWorkspace";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart2, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
@@ -84,6 +86,8 @@ const tabs = [
   { id: "genbi", label: "Chatbot (Wren AI)", icon: Bot, color: "text-fuchsia-400 border-fuchsia-500/30 hover:border-fuchsia-500/60 shadow-fuchsia-500/10" },
   { id: "kb-search", label: "Knowledge Base & Solutions", icon: Search, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
   { id: "dealflow-crm", label: "Dealflow CRM", icon: Briefcase, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
+  { id: "community-mining", label: "Community Mining", icon: Radio, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
+  { id: "account-settings", label: "Account Settings & Profile", icon: Settings, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
 ] as const;
 
 
@@ -755,19 +759,23 @@ function CustomerPortalContent() {
         <PortalHeader
           role="customer"
           activeTabLabel={activeTabObj?.label || "Dashboard"}
-          userName={user?.name || "Customer Account"}
+          userName={getCustomerDisplayName(user)}
           userEmail={user?.email || "customer@dealflow.ai"}
         />
 
         <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar relative">
-          {/* Top Header */}
+          {/* Top Header & Customer Greeting Banner */}
           <div className="flex items-center justify-between flex-wrap gap-4 border-b border-black/[0.06] dark:border-white/[0.08] pb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
-                Customer Self-Service Command Center
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7] flex items-center gap-2 flex-wrap">
+                <span>Welcome back,</span>
+                <span className="text-[#0071E3] dark:text-[#2997FF]">
+                  {getCustomerDisplayName(user)}
+                </span>
+                <span className="text-xl">👋</span>
               </h1>
               <p className="text-[#6E6E73] dark:text-[#A1A1A6] mt-1 text-xs">
-                Manage operating models, GTM campaigns, support tickets, and live automated dealflow
+                Customer Self-Service Command Center · Manage operating models, GTM campaigns, support tickets, and live automated dealflow
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -787,11 +795,11 @@ function CustomerPortalContent() {
 
       {/* Tabs List — responsive wrap layout */}
       <div className="w-full pb-1">
-        <div className="flex flex-wrap gap-1.5 bg-slate-900/50 p-2 rounded-2xl border border-slate-800/80 backdrop-blur-xl w-full">
+        <div className="flex flex-wrap gap-1.5 bg-black/[0.04] dark:bg-slate-900/60 p-2 rounded-2xl border border-black/[0.08] dark:border-slate-800/80 backdrop-blur-xl w-full">
           {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
-              const isNew = tab.id === "gtm-analysis";
+              const isNew = tab.id === "gtm-analysis" || tab.id === "community-mining";
             return (
               <ExtrudedButton
                 key={tab.id}
@@ -801,13 +809,13 @@ function CustomerPortalContent() {
                   "rounded-xl transition-all duration-300 gap-2 font-semibold text-xs py-2 px-3.5 whitespace-nowrap relative",
                   isActive
                     ? "bg-gradient-to-br from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20"
-                    : "border-transparent bg-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                    : "border-transparent bg-transparent text-[#4E4A67] dark:text-slate-300 hover:text-[#19162F] dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-slate-800/60"
                 )}
               >
                 <Icon className={cn("h-4 w-4 shrink-0", tab.color.split(" ")[0])} />
                 {tab.label}
                 {isNew && !isActive && (
-                  <span className="text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full px-1 leading-tight">
+                  <span className="text-[9px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 rounded-full px-1.5 leading-tight">
                     AI
                   </span>
                 )}
@@ -2349,16 +2357,16 @@ function CustomerPortalContent() {
         {/* 7. CHAT MESSENGER */}
         {activeTab === "chat" && (
           <div className="space-y-4 animate-in fade-in duration-300">
-            <h2 className="text-2xl font-bold text-slate-100">Dedicated Agent Messenger</h2>
+            <h2 className="text-2xl font-bold text-[#1D1D1F] dark:text-slate-100">Dedicated Agent Messenger</h2>
             <AgentMessagingChannel
               customerId={user?.id || "customer-demo"}
-              customerName={user?.name || "Valued Customer"}
+              customerName={getCustomerDisplayName(user)}
               agentKey={urlAgentKey || "praneeth"}
               agentName={urlAgentKey === "ashok" ? "Ashok Kumar" : "Praneeth"}
               agentTitle={urlAgentKey === "ashok" ? "Outbound SDR Manager" : "Lead SDR Specialist"}
               currentUserId={user?.id || "customer-demo"}
               currentUserRole={user?.role === "agent" ? "agent" : "customer"}
-              currentUserName={user?.name || "Valued Customer"}
+              currentUserName={getCustomerDisplayName(user)}
               agentGradient={urlAgentKey === "ashok" ? "from-emerald-500 to-teal-600" : "from-cyan-500 to-indigo-600"}
             />
           </div>
@@ -2367,7 +2375,7 @@ function CustomerPortalContent() {
         {/* 8. DOCUMENTS */}
         {activeTab === "documents" && (
           <div className="space-y-4 animate-in fade-in duration-300">
-            <h2 className="text-2xl font-bold text-slate-100">Document Vault</h2>
+            <h2 className="text-2xl font-bold text-[#1D1D1F] dark:text-slate-100">Document Vault</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {documents.length === 0 ? (
                 <p className="text-slate-500 text-sm text-center py-8 col-span-2">No documents stored in vault.</p>
@@ -2747,6 +2755,20 @@ function CustomerPortalContent() {
         {(activeTab === "dealflow-connect" || activeTab === "api-keys" || activeTab === "dealflow-bot") && (
           <div className="animate-in fade-in duration-300">
             <DealflowConnectHub />
+          </div>
+        )}
+
+        {/* 18. COMMUNITY MINING TAB */}
+        {activeTab === "community-mining" && (
+          <div className="animate-in fade-in duration-300">
+            <CommunityMiningWorkspace />
+          </div>
+        )}
+
+        {/* 19. ACCOUNT SETTINGS & PROFILE TAB */}
+        {activeTab === "account-settings" && (
+          <div className="animate-in fade-in duration-300">
+            <CustomerProfileSettingsTab />
           </div>
         )}
 

@@ -10,6 +10,7 @@ import { terminateLLMJobsForAnalysis } from "@/lib/llm-job-tracker";
 import { cached, invalidateCache } from "@/lib/cache";
 import { taskQueue } from "@/lib/task-queue";
 import { perf } from "@/lib/performance";
+import { resolveLeadRecord } from "@/lib/lead-resolver";
 import { initializeIntegratedSystem } from "@/lib/integrated-system";
 import { TaskStatus } from "@/lib/unified-orchestrator/types";
 
@@ -87,25 +88,7 @@ export async function POST(req: Request) {
 
     let companyData = providedData;
     if (!companyData && leadId) {
-      companyData = inMemoryLeads.get(leadId);
-      if (!companyData && db) {
-        // Use cache for lead data
-        companyData = await cached(
-          `lead:${leadId}`,
-          async () => {
-            if (!db) return null;
-            const doc = await db.collection("leads").doc(leadId).get();
-            if (doc.exists) {
-              return decryptLead(doc.data() as ExtendedLeadRecord);
-            }
-            return null;
-          },
-          { ttl: 1000 * 60 * 15 } // 15 minute TTL for lead data
-        );
-        if (companyData) {
-          inMemoryLeads.set(leadId, companyData as ExtendedLeadRecord);
-        }
-      }
+      companyData = (await resolveLeadRecord(leadId)) as any;
       if (!companyData) {
         return NextResponse.json({ success: false, error: "Lead not found" }, { status: 404 });
       }

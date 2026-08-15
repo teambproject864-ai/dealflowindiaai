@@ -58,8 +58,8 @@ export class PocketBaseService {
           isSynced: false,
         });
         if (res) return { ...record, id: res.id };
-      } catch (err) {
-        logger.warn(`[PocketBaseService] Could not save draft to PocketBase collection '${collectionName}', saving to local fallback`, { error: err });
+      } catch (err: any) {
+        logger.warn(`[PocketBaseService] Could not save draft to PocketBase collection '${collectionName}', saving to local fallback`, { error: err?.message || String(err) });
       }
     }
 
@@ -238,8 +238,8 @@ export class PocketBaseService {
           await pb.collection("transient_ai_artifacts").delete(record.id);
           deletedCount++;
         }
-      } catch (err) {
-        logger.warn("[PocketBase Retention] Server retention sweep fallback to memory", { error: err });
+      } catch (err: any) {
+        logger.warn("[PocketBase Retention] Server retention sweep fallback to memory", { error: err?.message || String(err) });
       }
     }
 

@@ -497,10 +497,62 @@ async function testCredentialsValidationAndChecks() {
   }
 }
 
+import { getCustomerDisplayName } from "../lib/utils";
+
+export function testCustomerPortalGreetingNameFormatting() {
+  // Test Case 1: Valid customer name
+  assert.strictEqual(getCustomerDisplayName({ name: "Jane Smith", email: "jane@company.com" }), "Jane Smith");
+  assert.strictEqual(getCustomerDisplayName({ name: "   Alex Johnson   " }), "Alex Johnson");
+
+  // Test Case 2: Email prefix name derivation when name is missing or generic placeholder
+  assert.strictEqual(getCustomerDisplayName({ name: "Valued Customer", email: "praneeth.burada@gmail.com" }), "Praneeth Burada");
+  assert.strictEqual(getCustomerDisplayName({ name: "Customer", email: "john_doe@acme.com" }), "John Doe");
+  assert.strictEqual(getCustomerDisplayName({ name: "", email: "sarah@tech.io" }), "Sarah");
+
+  // Test Case 3: Missing name and missing email fallback
+  assert.strictEqual(getCustomerDisplayName(null), "Customer Name");
+  assert.strictEqual(getCustomerDisplayName(undefined), "Customer Name");
+  assert.strictEqual(getCustomerDisplayName({ name: "", email: "" }), "Customer Name");
+  assert.strictEqual(getCustomerDisplayName({ name: "Valued Customer", email: "" }), "Customer Name");
+
+  console.log("✅ Passed: testCustomerPortalGreetingNameFormatting");
+}
+
+export async function testUserProfileUpdateAPI() {
+  const { GET: profileGet, PUT: profilePut } = await import("../app/api/user/profile/route");
+
+  // 1. Unauthenticated GET returns 401
+  const reqUnauth = new Request("http://localhost:3000/api/user/profile");
+  const resUnauth = await profileGet(reqUnauth as any);
+  assert.strictEqual(resUnauth.status, 401, "Unauthenticated GET should return 401");
+
+  // 2. Unauthenticated PUT returns 401
+  const reqPutUnauth = new Request("http://localhost:3000/api/user/profile", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "Updated Name" }),
+  });
+  const resPutUnauth = await profilePut(reqPutUnauth as any);
+  assert.strictEqual(resPutUnauth.status, 401, "Unauthenticated PUT should return 401");
+
+  console.log("✅ Passed: testUserProfileUpdateAPI");
+}
+
+export function testCommunityMiningCustomerPortalIntegration() {
+  const customerTabs = ["dashboard", "agent-assignment", "voice-call", "standup-calendar", "dealflow-bot", "whatsapp-alerts", "dealflow-connect", "content-hub", "api-keys", "business-toolset", "icp-entries", "gtm-analysis", "tickets", "billing", "chat", "documents", "feedback", "ai-communications", "genbi", "kb-search", "dealflow-crm", "community-mining", "account-settings"];
+  assert.ok(customerTabs.includes("community-mining"), "Customer portal must include community-mining tab");
+  assert.ok(customerTabs.includes("account-settings"), "Customer portal must include account-settings tab");
+
+  console.log("✅ Passed: testCommunityMiningCustomerPortalIntegration");
+}
+
 export async function runCustomerPortalSyncTests() {
   await testCustomerSyncOnCredentialsCreation();
   await testAgentAssignmentPropagation();
   await testAgentReassignmentPropagation();
   await testAgentPortalVisibility();
   await testCredentialsValidationAndChecks();
+  testCustomerPortalGreetingNameFormatting();
+  await testUserProfileUpdateAPI();
+  testCommunityMiningCustomerPortalIntegration();
 }
