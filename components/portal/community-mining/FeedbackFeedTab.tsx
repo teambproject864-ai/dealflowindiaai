@@ -1,7 +1,7 @@
 // components/portal/community-mining/FeedbackFeedTab.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Search,
   Filter,
@@ -26,7 +26,7 @@ export function FeedbackFeedTab() {
   const [sentimentFilter, setSentimentFilter] = useState("all");
   const [tierFilter, setTierFilter] = useState("all");
 
-  const fetchInsights = async () => {
+  const fetchInsights = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -45,11 +45,11 @@ export function FeedbackFeedTab() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sourceFilter, sentimentFilter, tierFilter, searchQuery]);
 
   useEffect(() => {
     fetchInsights();
-  }, [sourceFilter, sentimentFilter, tierFilter]);
+  }, [fetchInsights]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

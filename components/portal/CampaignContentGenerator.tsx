@@ -524,7 +524,7 @@ export function CampaignContentGenerator({
                   <div className="space-y-1.5">
                     {keywordSet?.geoKeywords?.map((geo, i) => (
                       <div key={i} className="p-1.5 bg-cyan-950/20 border border-cyan-850/40 rounded-lg text-cyan-200 text-[11px] font-mono flex justify-between items-center gap-2">
-                        <span className="truncate">"{geo.query}"</span>
+                        <span className="truncate">&quot;{geo.query}&quot;</span>
                         <span className="text-[9px] text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded shrink-0 border border-cyan-800/40">
                           {geo.engineTarget}
                         </span>
