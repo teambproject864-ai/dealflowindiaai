@@ -59,6 +59,7 @@ import { runHybridBackendTests } from "./hybrid-backend.test";
 import { runOwaspAuthzGateTests } from "./owasp-authz-gates.test";
 import { runKeywordStudioEnhancedTests } from "./keyword-studio-enhanced.test";
 import { runCommunityMiningTestSuite } from "./community-mining.test";
+import { runMiddlewareTests } from "./middleware-verification.test";
 
 
 
@@ -368,7 +369,8 @@ async function main() {
     runHybridBackendTests,
     runOwaspAuthzGateTests,
     runKeywordStudioEnhancedTests,
-    runCommunityMiningTestSuite
+    runCommunityMiningTestSuite,
+    runMiddlewareTests
   ];
 
 

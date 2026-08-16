@@ -16,16 +16,26 @@ const ALLOWED_INTERNAL_SERVICES = new Set([
   'api-gateway'
 ]);
 
-const INTERNAL_MTLS_SECRET = process.env.INTERNAL_MTLS_SECRET || process.env.JWT_SECRET || 'internal-mtls-secret-dealflow-default';
+function getInternalMtlsSecret(): string {
+  const secret = process.env.INTERNAL_MTLS_SECRET || process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CRITICAL SECURITY ERROR: INTERNAL_MTLS_SECRET or JWT_SECRET must be defined and at least 32 characters long in production.');
+    }
+    return 'internal-mtls-secret-dealflow-default-must-be-at-least-32-chars';
+  }
+  return secret;
+}
 
 /**
  * Generates secure internal service headers simulating mutual TLS authentication token
  * and client certificate fingerprint.
  */
 export function getInternalMTLSHeaders(serviceId: string): Record<string, string> {
+  const secret = getInternalMtlsSecret();
   const timestamp = Date.now().toString();
-  const certThumbprint = createHash('sha256').update(`cert-${serviceId}-${INTERNAL_MTLS_SECRET}`).digest('hex');
-  const signature = createHmac('sha256', INTERNAL_MTLS_SECRET)
+  const certThumbprint = createHash('sha256').update(`cert-${serviceId}-${secret}`).digest('hex');
+  const signature = createHmac('sha256', secret)
     .update(`${serviceId}:${certThumbprint}:${timestamp}`)
     .digest('hex');
 
@@ -78,13 +88,14 @@ export function verifyInternalMTLS(headers: Headers | Record<string, string>): M
   }
 
   // Verify signature
-  const expectedThumbprint = createHash('sha256').update(`cert-${serviceId}-${INTERNAL_MTLS_SECRET}`).digest('hex');
+  const secret = getInternalMtlsSecret();
+  const expectedThumbprint = createHash('sha256').update(`cert-${serviceId}-${secret}`).digest('hex');
   if (certThumbprint && certThumbprint !== expectedThumbprint) {
     return { authenticated: false, error: 'Invalid client certificate thumbprint' };
   }
 
   if (authSignature && timestampStr && certThumbprint) {
-    const expectedSig = createHmac('sha256', INTERNAL_MTLS_SECRET)
+    const expectedSig = createHmac('sha256', secret)
       .update(`${serviceId}:${certThumbprint}:${timestampStr}`)
       .digest('hex');
 

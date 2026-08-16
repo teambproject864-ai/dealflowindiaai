@@ -10,11 +10,11 @@ import {
 // Get JWT secret from environment or use fallback for dev
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
-  if (!secret) {
+  if (!secret || secret.length < 32) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error("JWT_SECRET is required in production");
+      throw new Error("CRITICAL SECURITY ERROR: JWT_SECRET environment variable must be defined and at least 32 characters long in production.");
     }
-    return "your-secret-key-in-production-env-var-only";
+    return "default-dev-jwt-secret-key-must-be-at-least-32-chars-long!";
   }
   return secret;
 }
