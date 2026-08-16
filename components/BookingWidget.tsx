@@ -36,7 +36,7 @@ import {
   ChevronRight,
   Cpu,
 } from "lucide-react";
-import { REVENUE_AGENTS } from "@/lib/revenue-agents";
+import { REVENUE_AGENTS } from "@/lib/revenue-agents-data";
 import { CustomerAccountSetup } from "@/components/CustomerAccountSetup";
 import { PasswordCreationModal } from "@/components/PasswordCreationModal";
 

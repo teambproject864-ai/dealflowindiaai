@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { mockCustomerDocs, CustomerDocument } from "@/lib/customer-documents";
+import { db } from "@/lib/firebase-admin";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,16 +15,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Missing document id" }, { status: 400 });
     }
 
-    // Find the document across all records to check ownership
-    let document: CustomerDocument | null = null;
+    let document: any = null;
     let ownerId: string | null = null;
 
-    for (const [customerId, docs] of Object.entries(mockCustomerDocs)) {
-      const found = docs.find((d: CustomerDocument) => d.id === documentId);
-      if (found) {
-        document = found;
-        ownerId = customerId;
-        break;
+    if (db) {
+      try {
+        const docRef = await db.collection("documents").doc(documentId).get();
+        if (docRef.exists) {
+          document = { id: docRef.id, ...docRef.data() };
+          ownerId = document.customerId;
+        }
+      } catch (err) {
+        console.error("Error finding document in Firestore:", err);
       }
     }
 
@@ -34,31 +36,29 @@ export async function GET(request: NextRequest) {
 
     // Role-based access control check
     if (user.role === "customer" && ownerId !== user.id) {
-      return NextResponse.json({ success: false, error: "Forbidden: You do not have access to this document" }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: "Forbidden: You do not have access to this document" },
+        { status: 403 }
+      );
     }
 
-    // Generate a mock file download content based on document type
-    const filename = document.name;
-    const fileContent = `DealFlow.AI Secure Document Download
+    const filename = document.name || document.title || "document.pdf";
+    const fileContent =
+      document.content ||
+      `DealFlow.AI Secure Document Download
 ------------------------------------
-Document Name: ${document.name}
-Version: ${document.version}
-Last Updated: ${document.updatedAt}
-Size: ${document.size}
+Document Name: ${filename}
+Version: ${document.version || "1.0"}
+Last Updated: ${document.updatedAt || new Date().toISOString()}
 Owner Customer ID: ${ownerId}
-
-This is a secure mock download of your pre-uploaded ${document.type.toUpperCase()} file.
-All GTM and ICP specifications inside this document are fully verified and SOC2 compliant.
 `;
 
-    const response = new NextResponse(fileContent, {
+    return new NextResponse(fileContent, {
       headers: {
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Type": "text/plain; charset=utf-8",
       },
     });
-
-    return response;
   } catch (error) {
     console.error("Error in download API:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });

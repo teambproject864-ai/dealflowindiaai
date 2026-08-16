@@ -56,6 +56,9 @@ import { runPipelineSupportPromptTests } from "./pipeline-support.test";
 import { runGTMCustomerLoginTests } from "./gtm-customer-login.test";
 import { runCustomerWorkflowTests } from "./customer-workflow.test";
 import { runHybridBackendTests } from "./hybrid-backend.test";
+import { runOwaspAuthzGateTests } from "./owasp-authz-gates.test";
+import { runKeywordStudioEnhancedTests } from "./keyword-studio-enhanced.test";
+import { runCommunityMiningTestSuite } from "./community-mining.test";
 
 
 
@@ -362,7 +365,10 @@ async function main() {
     runPipelineSupportPromptTests,
     runGTMCustomerLoginTests,
     runCustomerWorkflowTests,
-    runHybridBackendTests
+    runHybridBackendTests,
+    runOwaspAuthzGateTests,
+    runKeywordStudioEnhancedTests,
+    runCommunityMiningTestSuite
   ];
 
 

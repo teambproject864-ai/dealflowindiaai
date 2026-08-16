@@ -25,6 +25,7 @@ import { GlassPanel } from "@/components/immersive/GlassPanel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 // Mock data generator for offline mode
 function generateMockCompleteGTM(companyName: string, formData?: any): AnalysisResult {
@@ -1859,7 +1860,7 @@ function DocumentViewer({ analysis, context, zoom, setZoom, onClose, scrollRef }
         style={{ fontSize: `${zoom / 100}rem` }}
       >
         <div className="max-w-4xl mx-auto bg-white text-slate-900 rounded-xl shadow-2xl p-12">
-          <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(analysis, context) }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(renderMarkdownToHtml(analysis, context)) }} />
         </div>
       </div>
     </motion.div>

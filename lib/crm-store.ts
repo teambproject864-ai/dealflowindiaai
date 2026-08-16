@@ -475,3 +475,29 @@ export async function getCRMRecordStats() {
     closedWonValue,
   };
 }
+
+/**
+ * Deduplication & Data Integrity Sanitation Helper
+ * Removes duplicate customer or deal entries based on unique keys (email, companyName, dealName).
+ */
+export async function cleanDeduplicatedRecords() {
+  const seenEmails = new Set<string>();
+  const duplicatesRemoved: string[] = [];
+
+  for (const [id, cust] of Array.from(inMemoryCustomers.entries())) {
+    const key = (cust.email || cust.customerName).toLowerCase().trim();
+    if (seenEmails.has(key)) {
+      inMemoryCustomers.delete(id);
+      duplicatesRemoved.push(id);
+    } else {
+      seenEmails.add(key);
+    }
+  }
+
+  return {
+    cleanedCount: duplicatesRemoved.length,
+    duplicatesRemoved,
+    remainingCustomers: inMemoryCustomers.size
+  };
+}
+

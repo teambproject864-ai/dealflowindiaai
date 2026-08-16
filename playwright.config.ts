@@ -36,7 +36,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:3089',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3089',
     actionTimeout: 180 * 1000,
     navigationTimeout: 180 * 1000,
 
@@ -82,10 +82,12 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run start -- -p 3089',
-    url: 'http://localhost:3089',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER
+    ? undefined
+    : {
+        command: 'npm run start -- -p 3089',
+        url: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3089',
+        reuseExistingServer: !process.env.CI,
+        timeout: 120 * 1000,
+      },
 });

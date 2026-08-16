@@ -42,7 +42,7 @@ export function CustomerProfileSettingsTab({ onProfileUpdated }: CustomerProfile
       const data = await res.json();
       if (data.success && data.profile) {
         const p = data.profile;
-        setName(p.name || (user?.name ? getCustomerDisplayName(user) : ""));
+        setName(p.name || (user ? (typeof getCustomerDisplayName === "function" ? getCustomerDisplayName(user) : (user.name || "")) : ""));
         setEmail(p.email || user?.email || "");
         setPhone(p.phone || "");
         setCompanyName(p.companyName || "Acme Corp");

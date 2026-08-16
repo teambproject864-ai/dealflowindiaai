@@ -3,9 +3,7 @@ import type { ReactNode } from "react";
 import { Plus_Jakarta_Sans, Source_Serif_4 } from "next/font/google";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { AIChatAssistant } from "@/components/AIChatAssistant";
-import { VoiceCallWidget } from "@/components/VoiceCallWidget";
-import { LiveChatWidget } from "@/components/LiveChatWidget";
+import { FloatingActionHub } from "@/components/FloatingActionHub";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -117,9 +115,7 @@ export default function RootLayout({
           </div>
         </main>
         <Footer />
-        <AIChatAssistant />
-        <VoiceCallWidget />
-        <LiveChatWidget />
+        <FloatingActionHub />
         <CookieConsentBanner />
         {/* Sonner toast notifications — app-wide */}
         <Toaster

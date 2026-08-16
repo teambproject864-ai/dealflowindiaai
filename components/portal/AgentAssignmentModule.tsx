@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { GlassPanel } from "@/components/immersive/GlassPanel";
-import { REVENUE_AGENTS } from "@/lib/types";
+import { REVENUE_AGENTS } from "@/lib/revenue-agents-data";
 import { AgentRosterDisplay } from "./AgentRosterDisplay";
 
 export function AgentAssignmentModule() {

@@ -112,6 +112,22 @@ export function AccountMenu() {
     );
   }
 
+  const userDisplayName = (() => {
+    try {
+      if (typeof getCustomerDisplayName === "function") {
+        return getCustomerDisplayName(user);
+      }
+    } catch (_) {}
+    const raw = user?.name?.trim();
+    if (raw && !["valued customer", "customer", "customer account", "demo customer", "user", "dealflow user"].includes(raw.toLowerCase())) {
+      return raw;
+    }
+    if (user?.email && user.email.includes("@")) {
+      return user.email.split("@")[0].replace(/[._\-+]/g, " ").trim().replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+    return "Customer Name";
+  })();
+
   return (
     <div ref={dropdownRef} className="relative z-40">
       {/* Account Avatar Trigger */}
@@ -126,7 +142,7 @@ export function AccountMenu() {
       >
         {user ? (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-teal-500/20 to-cyan-500/15 text-teal-300 font-bold text-xs">
-            {getInitials(getCustomerDisplayName(user))}
+            {getInitials(userDisplayName)}
           </div>
         ) : (
           <User className="h-4.5 w-4.5" />
@@ -146,11 +162,11 @@ export function AccountMenu() {
               {/* User Info */}
               <div className="flex items-center gap-4 border-b border-slate-200 dark:border-white/10 pb-4 px-1">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500/20 to-cyan-500/15 text-teal-700 dark:text-teal-300 font-bold text-sm border border-teal-500/20">
-                  {getInitials(getCustomerDisplayName(user))}
+                  {getInitials(userDisplayName)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-sm text-slate-900 dark:text-white truncate leading-none mb-1.5">
-                    {getCustomerDisplayName(user)}
+                    {userDisplayName}
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 truncate leading-none">
                     {user.email}

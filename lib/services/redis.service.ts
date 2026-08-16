@@ -34,9 +34,11 @@ export class RedisService {
     if (url) {
       try {
         redisClient = new Redis(url, {
-          maxRetriesPerRequest: 1,
-          connectTimeout: 2000,
+          maxRetriesPerRequest: 0,
+          connectTimeout: 500,
           enableOfflineQueue: false,
+          retryStrategy: () => null,
+          lazyConnect: true,
         });
 
         redisClient.on("error", (err) => {

@@ -1,13 +1,12 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../logger";
 
-// --- Schema Definitions for Supabase (Primary Source of Truth) ---
 export interface SupabaseUser {
   id: string;
   firebaseUid: string;
   email: string;
   name: string;
-  role: "admin" | "agent" | "customer";
+  role: string;
   organizationId?: string;
   createdAt: string;
   updatedAt: string;
@@ -16,18 +15,31 @@ export interface SupabaseUser {
 export interface SupabaseOrganization {
   id: string;
   name: string;
-  plan: "free" | "pro" | "enterprise";
-  settings: Record<string, any>;
+  tier: "free" | "starter" | "growth" | "enterprise";
+  creditsBalance: number;
+  apiKeys: Record<string, string>;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface SupabaseWorkflow {
   id: string;
-  organizationId: string;
+  customerId: string;
+  agentKey: string;
   title: string;
-  definition: Record<string, any>;
   status: "draft" | "active" | "completed" | "failed";
-  state: Record<string, any>;
+  config: Record<string, any>;
+  result?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SupabaseAgentState {
+  agentKey: string;
+  currentTask?: string;
+  status: "idle" | "running" | "waiting" | "error";
+  contextMemory: Record<string, any>;
+  lastHeartbeat: string;
   updatedAt: string;
 }
 
@@ -35,48 +47,38 @@ export interface SupabaseChatMessage {
   id: string;
   threadId: string;
   senderId: string;
-  role: "user" | "assistant" | "system";
+  senderRole: string;
   content: string;
-  agentKey?: string;
+  metadata?: Record<string, any>;
   createdAt: string;
 }
 
 export interface SupabaseVectorDoc {
   id: string;
-  title: string;
+  documentId: string;
+  chunkIndex: number;
   content: string;
   embedding: number[];
   metadata: Record<string, any>;
-  similarityScore?: number;
-}
-
-export interface SupabaseAgentState {
-  id: string;
-  agentKey: string;
-  userId: string;
-  contextMemory: Record<string, any>;
-  stepLogs: Array<{ step: string; timestamp: string; status: string }>;
-  updatedAt: string;
 }
 
 export interface DeadLetterRecord {
   id: string;
-  collectionName: string;
-  draftId: string;
-  targetType: string;
-  payload: Record<string, any>;
+  originalPayload: Record<string, any>;
+  targetSystem: string;
   errorMessage: string;
   retryCount: number;
   createdAt: string;
+  resolvedAt?: string;
 }
 
-// In-Memory Storage for Fallback / Offline Testing Mode
+// In-Memory Fallbacks for Local Testing / Offline Dev
 const mockUsers = new Map<string, SupabaseUser>();
 const mockOrgs = new Map<string, SupabaseOrganization>();
 const mockWorkflows = new Map<string, SupabaseWorkflow>();
+const mockAgentStates = new Map<string, SupabaseAgentState>();
 const mockChatMessages: SupabaseChatMessage[] = [];
 const mockVectorDocs: SupabaseVectorDoc[] = [];
-const mockAgentStates = new Map<string, SupabaseAgentState>();
 const mockDeadLetterQueue = new Map<string, DeadLetterRecord>();
 
 let supabaseClient: SupabaseClient | null = null;
@@ -106,9 +108,20 @@ export class SupabaseService {
   }
 
   /**
+   * Fast timeout wrapper to prevent long network stalls on unreachable endpoints
+   */
+  async withTimeout<T = any>(promise: Promise<T> | any, timeoutMs = 250): Promise<T> {
+    let timer: NodeJS.Timeout;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error("Supabase request timeout")), timeoutMs);
+    });
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
+  }
+
+  /**
    * Exponential backoff retry wrapper for transient database failures
    */
-  async withRetry<T>(operationName: string, fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+  async withRetry<T>(operationName: string, fn: () => Promise<T>, maxRetries = 1): Promise<T> {
     let attempt = 0;
     while (attempt < maxRetries) {
       const startTime = Date.now();
@@ -122,7 +135,7 @@ export class SupabaseService {
         const latency = Date.now() - startTime;
         this.logQueryPerformance(operationName, latency, false, err.message);
         if (attempt >= maxRetries) throw err;
-        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 100));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
     }
     throw new Error(`[SupabaseService] Operation '${operationName}' failed after max retries.`);
@@ -144,21 +157,27 @@ export class SupabaseService {
       const fullUser: SupabaseUser = { ...user, createdAt: now, updatedAt: now };
 
       if (client) {
-        const { data, error } = await client
-          .from("users")
-          .upsert({
-            id: user.id,
-            firebase_uid: user.firebaseUid,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            organization_id: user.organizationId,
-            updated_at: now,
-          })
-          .select()
-          .single();
-
-        if (!error && data) return data;
+        try {
+          const { data, error } = await this.withTimeout(
+            client
+              .from("users")
+              .upsert({
+                id: user.id,
+                firebase_uid: user.firebaseUid,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                organization_id: user.organizationId,
+                updated_at: now,
+              })
+              .select()
+              .single() as any,
+            250
+          );
+          if (!error && data) return data;
+        } catch {
+          // fallback to memory
+        }
       }
 
       mockUsers.set(user.id, fullUser);
@@ -170,12 +189,19 @@ export class SupabaseService {
     return this.withRetry("getUserByFirebaseUid", async () => {
       const client = this.getClient();
       if (client) {
-        const { data, error } = await client
-          .from("users")
-          .select("*")
-          .eq("firebase_uid", firebaseUid)
-          .single();
-        if (!error && data) return data;
+        try {
+          const { data, error } = await this.withTimeout(
+            client
+              .from("users")
+              .select("*")
+              .eq("firebase_uid", firebaseUid)
+              .single() as any,
+            250
+          );
+          if (!error && data) return data;
+        } catch {
+          // fallback to memory
+        }
       }
 
       for (const user of mockUsers.values()) {
@@ -193,8 +219,15 @@ export class SupabaseService {
       const record: SupabaseWorkflow = { ...workflow, updatedAt: now };
 
       if (client) {
-        const { data, error } = await client.from("workflows").upsert(record).select().single();
-        if (!error && data) return data;
+        try {
+          const { data, error } = await this.withTimeout(
+            client.from("workflows").upsert(record).select().single() as any,
+            250
+          );
+          if (!error && data) return data;
+        } catch {
+          // fallback
+        }
       }
 
       mockWorkflows.set(workflow.id, record);
@@ -206,8 +239,15 @@ export class SupabaseService {
     return this.withRetry("getWorkflow", async () => {
       const client = this.getClient();
       if (client) {
-        const { data, error } = await client.from("workflows").select("*").eq("id", id).single();
-        if (!error && data) return data;
+        try {
+          const { data, error } = await this.withTimeout(
+            client.from("workflows").select("*").eq("id", id).single() as any,
+            250
+          );
+          if (!error && data) return data;
+        } catch {
+          // fallback
+        }
       }
       return mockWorkflows.get(id) || null;
     });
@@ -224,8 +264,15 @@ export class SupabaseService {
       };
 
       if (client) {
-        const { data, error } = await client.from("chat_messages").insert(record).select().single();
-        if (!error && data) return data;
+        try {
+          const { data, error } = await this.withTimeout(
+            client.from("chat_messages").insert(record).select().single() as any,
+            250
+          );
+          if (!error && data) return data;
+        } catch {
+          // fallback
+        }
       }
 
       mockChatMessages.push(record);
@@ -237,12 +284,19 @@ export class SupabaseService {
     return this.withRetry("getThreadMessages", async () => {
       const client = this.getClient();
       if (client) {
-        const { data, error } = await client
-          .from("chat_messages")
-          .select("*")
-          .eq("threadId", threadId)
-          .order("createdAt", { ascending: true });
-        if (!error && data) return data;
+        try {
+          const { data, error } = await this.withTimeout(
+            client
+              .from("chat_messages")
+              .select("*")
+              .eq("threadId", threadId)
+              .order("createdAt", { ascending: true }) as any,
+            250
+          );
+          if (!error && data) return data;
+        } catch {
+          // fallback
+        }
       }
 
       return mockChatMessages.filter((m) => m.threadId === threadId);
@@ -259,8 +313,15 @@ export class SupabaseService {
       };
 
       if (client) {
-        const { data, error } = await client.from("knowledge_base").insert(record).select().single();
-        if (!error && data) return data;
+        try {
+          const { data, error } = await this.withTimeout(
+            client.from("knowledge_base").insert(record).select().single() as any,
+            250
+          );
+          if (!error && data) return data;
+        } catch {
+          // fallback
+        }
       }
 
       mockVectorDocs.push(record);
@@ -272,11 +333,18 @@ export class SupabaseService {
     return this.withRetry("searchSimilarVectors", async () => {
       const client = this.getClient();
       if (client) {
-        const { data, error } = await client.rpc("match_documents", {
-          query_embedding: queryEmbedding,
-          match_count: topK,
-        });
-        if (!error && data) return data;
+        try {
+          const { data, error } = await this.withTimeout(
+            client.rpc("match_documents", {
+              query_embedding: queryEmbedding,
+              match_count: topK,
+            }) as any,
+            250
+          );
+          if (!error && data) return data;
+        } catch {
+          // fallback
+        }
       }
 
       // Cosine similarity fallback
@@ -288,20 +356,18 @@ export class SupabaseService {
           normA += a[i] * a[i];
           normB += b[i] * b[i];
         }
-        return normA && normB ? dot / (Math.sqrt(normA) * Math.sqrt(normB)) : 0;
+        if (normA === 0 || normB === 0) return 0;
+        return dot / (Math.sqrt(normA) * Math.sqrt(normB));
       }
 
-      const scored = mockVectorDocs.map((doc) => ({
-        ...doc,
-        similarityScore: cosineSimilarity(queryEmbedding, doc.embedding),
-      }));
-
-      scored.sort((a, b) => (b.similarityScore || 0) - (a.similarityScore || 0));
-      return scored.slice(0, topK);
+      return [...mockVectorDocs]
+        .map((doc) => ({ ...doc, similarityScore: cosineSimilarity(queryEmbedding, doc.embedding) }))
+        .sort((a, b) => (b.similarityScore ?? 0) - (a.similarityScore ?? 0))
+        .slice(0, topK);
     });
   }
 
-  // --- Agent State Repository ---
+  // --- Multi-Agent Context Memory State Store ---
   async saveAgentState(state: Omit<SupabaseAgentState, "updatedAt">): Promise<SupabaseAgentState> {
     return this.withRetry("saveAgentState", async () => {
       const client = this.getClient();
@@ -309,38 +375,47 @@ export class SupabaseService {
       const record: SupabaseAgentState = { ...state, updatedAt: now };
 
       if (client) {
-        const { data, error } = await client.from("agent_states").upsert(record).select().single();
-        if (!error && data) return data;
+        try {
+          const { data, error } = await this.withTimeout(
+            client.from("agent_states").upsert(record).select().single() as any,
+            250
+          );
+          if (!error && data) return data;
+        } catch {
+          // fallback
+        }
       }
 
-      mockAgentStates.set(`${state.agentKey}_${state.userId}`, record);
+      mockAgentStates.set(state.agentKey, record);
       return record;
     });
   }
 
-  async getAgentState(agentKey: string, userId: string): Promise<SupabaseAgentState | null> {
+  async getAgentState(agentKey: string): Promise<SupabaseAgentState | null> {
     return this.withRetry("getAgentState", async () => {
       const client = this.getClient();
       if (client) {
-        const { data, error } = await client
-          .from("agent_states")
-          .select("*")
-          .eq("agentKey", agentKey)
-          .eq("userId", userId)
-          .single();
-        if (!error && data) return data;
+        try {
+          const { data, error } = await this.withTimeout(
+            client.from("agent_states").select("*").eq("agentKey", agentKey).single() as any,
+            250
+          );
+          if (!error && data) return data;
+        } catch {
+          // fallback
+        }
       }
-
-      return mockAgentStates.get(`${agentKey}_${userId}`) || null;
+      return mockAgentStates.get(agentKey) || null;
     });
   }
 
-  // --- Dead-Letter Queue (DLQ) for Failed PocketBase Sync Jobs ---
-  async enqueueDeadLetter(record: Omit<DeadLetterRecord, "id" | "createdAt" | "retryCount">): Promise<DeadLetterRecord> {
-    const id = `dlq_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const dlqRecord: DeadLetterRecord = {
-      ...record,
-      id,
+  // --- Dead Letter Queue (DLQ) for Failed Ingestions & Syncs ---
+  async recordDLQ(targetSystem: string, payload: Record<string, any>, errorMessage: string): Promise<DeadLetterRecord> {
+    const record: DeadLetterRecord = {
+      id: `dlq_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      originalPayload: payload,
+      targetSystem,
+      errorMessage,
       retryCount: 0,
       createdAt: new Date().toISOString(),
     };
@@ -348,63 +423,67 @@ export class SupabaseService {
     const client = this.getClient();
     if (client) {
       try {
-        await client.from("sync_dead_letter_queue").insert({
-          id: dlqRecord.id,
-          collection_name: dlqRecord.collectionName,
-          draft_id: dlqRecord.draftId,
-          target_type: dlqRecord.targetType,
-          payload: dlqRecord.payload,
-          error_message: dlqRecord.errorMessage,
-          retry_count: dlqRecord.retryCount,
-        });
-      } catch (err) {
-        logger.warn("[SupabaseService] Failed to insert DLQ to database", { error: err });
+        await this.withTimeout(client.from("dead_letter_queue").insert(record) as any, 250);
+      } catch {
+        // Safe fallback
       }
     }
 
-    mockDeadLetterQueue.set(id, dlqRecord);
-    logger.error(`[Supabase DLQ] Enqueued failed sync job '${id}'`, { draftId: record.draftId });
-    return dlqRecord;
+    mockDeadLetterQueue.set(record.id, record);
+    logger.warn(`[Supabase DLQ] Ingestion failure captured for '${targetSystem}'`, { dlqId: record.id, errorMessage });
+    return record;
   }
 
-  async getDeadLetterQueue(): Promise<DeadLetterRecord[]> {
+  async getDLQRecords(limit = 50): Promise<DeadLetterRecord[]> {
     const client = this.getClient();
     if (client) {
       try {
-        const { data } = await client.from("sync_dead_letter_queue").select("*");
-        if (data) return data;
+        const { data, error } = await this.withTimeout(
+          client.from("dead_letter_queue").select("*").order("createdAt", { ascending: false }).limit(limit) as any,
+          250
+        );
+        if (!error && data) return data;
       } catch {
-        // Fallback
+        // fallback
       }
     }
-    return Array.from(mockDeadLetterQueue.values());
+    return Array.from(mockDeadLetterQueue.values()).slice(0, limit);
+  }
+
+  async getDeadLetterQueue(limit = 50): Promise<DeadLetterRecord[]> {
+    return this.getDLQRecords(limit);
   }
 }
 
 export const supabaseService = new SupabaseService();
 
-// Export convenience repository references matching previous interface contracts
+// Standalone Helper Functions
 export const SupabaseUserRepo = {
-  upsertUser: (u: Omit<SupabaseUser, "createdAt" | "updatedAt">) => supabaseService.upsertUser(u),
+  upsertUser: (user: Omit<SupabaseUser, "createdAt" | "updatedAt">) => supabaseService.upsertUser(user),
   getUserByFirebaseUid: (uid: string) => supabaseService.getUserByFirebaseUid(uid),
 };
 
 export const SupabaseWorkflowRepo = {
-  saveWorkflow: (w: Omit<SupabaseWorkflow, "updatedAt">) => supabaseService.saveWorkflow(w),
+  saveWorkflow: (wf: Omit<SupabaseWorkflow, "updatedAt">) => supabaseService.saveWorkflow(wf),
   getWorkflow: (id: string) => supabaseService.getWorkflow(id),
 };
 
+export const SupabaseAgentStateRepo = {
+  saveAgentState: (st: Omit<SupabaseAgentState, "updatedAt">) => supabaseService.saveAgentState(st),
+  getAgentState: (agentKey: string) => supabaseService.getAgentState(agentKey),
+};
+
 export const SupabaseChatRepo = {
-  addChatMessage: (m: Omit<SupabaseChatMessage, "id" | "createdAt">) => supabaseService.addChatMessage(m),
+  addChatMessage: (msg: any) => supabaseService.addChatMessage(msg),
   getThreadMessages: (threadId: string) => supabaseService.getThreadMessages(threadId),
 };
 
 export const SupabaseVectorRepo = {
-  insertVectorDoc: (d: Omit<SupabaseVectorDoc, "id">) => supabaseService.insertVectorDoc(d),
-  searchSimilarVectors: (q: number[], topK?: number) => supabaseService.searchSimilarVectors(q, topK),
+  insertVectorDoc: (doc: any) => supabaseService.insertVectorDoc(doc),
+  searchSimilarVectors: (queryEmbedding: number[], topK?: number) => supabaseService.searchSimilarVectors(queryEmbedding, topK),
 };
 
-export const SupabaseAgentStateRepo = {
-  saveAgentState: (s: Omit<SupabaseAgentState, "updatedAt">) => supabaseService.saveAgentState(s),
-  getAgentState: (agentKey: string, userId: string) => supabaseService.getAgentState(agentKey, userId),
+export const SupabaseOrgRepo = {
+  getOrganization: async (id: string) => mockOrgs.get(id) || null,
 };
+

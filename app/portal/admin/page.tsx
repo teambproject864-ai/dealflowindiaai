@@ -41,6 +41,9 @@ import {
   Sparkles,
   Briefcase,
   RefreshCw,
+  CreditCard,
+  Trash2,
+  Lock,
 } from "lucide-react";
 import { DealflowCRMWorkspace } from "@/components/portal/DealflowCRMWorkspace";
 import { cn } from "@/lib/utils";
@@ -54,24 +57,42 @@ import { getDb } from "@/lib/firebase-client";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import type { AgentSession, AgentAssignmentNotification } from "@/lib/types";
 
+import { UsersOrgsModule } from "@/components/portal/admin/UsersOrgsModule";
+import { RolesPermissionsModule } from "@/components/portal/admin/RolesPermissionsModule";
+import { SubscriptionsBillingModule } from "@/components/portal/admin/SubscriptionsBillingModule";
+import { UsageAnalyticsModule } from "@/components/portal/admin/UsageAnalyticsModule";
+import { SecurityManagementModule } from "@/components/portal/admin/SecurityManagementModule";
+import { AuditLogsModule } from "@/components/portal/admin/AuditLogsModule";
+import { SystemHealthModule } from "@/components/portal/admin/SystemHealthModule";
+import { PlatformSettingsModule } from "@/components/portal/admin/PlatformSettingsModule";
+import { AgentsModule } from "@/components/portal/admin/AgentsModule";
+import { CustomersModule } from "@/components/portal/admin/CustomersModule";
+
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: Activity, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "users-orgs", label: "Users & Organizations", icon: Users, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
+  { id: "roles-permissions", label: "Roles & Permissions", icon: KeyRound, color: "text-amber-400 border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/10" },
+  { id: "subscriptions-billing", label: "Subscriptions & Billing", icon: CreditCard, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "usage-analytics", label: "Usage & Analytics", icon: BarChart3, color: "text-blue-400 border-blue-500/30 hover:border-blue-500/60 shadow-blue-500/10" },
+  { id: "security-management", label: "Security Management", icon: ShieldAlert, color: "text-rose-400 border-rose-500/30 hover:border-rose-500/60 shadow-rose-500/10" },
+  { id: "audit-logs-module", label: "Audit Logs", icon: FileText, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
+  { id: "system-health-module", label: "System Health", icon: Activity, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "platform-settings-module", label: "Platform Settings", icon: Settings, color: "text-purple-400 border-purple-500/30 hover:border-purple-500/60 shadow-purple-500/10" },
+  { id: "agents", label: "Agents", icon: UserPlus, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
+  { id: "customers", label: "Customers", icon: Users, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
+  { id: "tasks", label: "Tasks", icon: ClipboardList, color: "text-purple-400 border-purple-500/30 hover:border-purple-500/60 shadow-purple-500/10" },
+  { id: "dealflow-crm", label: "Dealflow CRM", icon: Briefcase, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
   { id: "llm-manager", label: "LLM Manager", icon: BarChart3, color: "text-blue-400 border-blue-500/30 hover:border-blue-500/60 shadow-blue-500/10" },
   { id: "bot-monitor", label: "Bot Monitor", icon: Phone, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
   { id: "orchestrator", label: "Orchestrator", icon: Cpu, color: "text-amber-400 border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/10" },
-  { id: "tasks", label: "Tasks", icon: ClipboardList, color: "text-purple-400 border-purple-500/30 hover:border-purple-500/60 shadow-purple-500/10" },
-  { id: "customers", label: "Customers", icon: Users, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
-  { id: "resignations", label: "Resignations", icon: UserX, color: "text-pink-400 border-pink-500/30 hover:border-pink-500/60 shadow-pink-500/10" },
+  { id: "password-requests", label: "Password Requests", icon: KeyRound, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
+  { id: "gtm-reports", label: "GTM Reports", icon: BarChart3, color: "text-amber-400 border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/10" },
   { id: "documents", label: "Documents", icon: FolderOpen, color: "text-orange-400 border-orange-500/30 hover:border-orange-500/60 shadow-orange-500/10" },
   { id: "requirements", label: "Requirements", icon: FileText, color: "text-rose-400 border-rose-500/30 hover:border-rose-500/60 shadow-rose-500/10" },
-  { id: "gtm-reports", label: "GTM Reports", icon: BarChart3, color: "text-amber-400 border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/10" },
-  { id: "agents", label: "Agents", icon: UserPlus, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
+  { id: "resignations", label: "Resignations", icon: UserX, color: "text-pink-400 border-pink-500/30 hover:border-pink-500/60 shadow-pink-500/10" },
   { id: "interactions", label: "Interactions", icon: MessageSquare, color: "text-sky-400 border-sky-500/30 hover:border-sky-500/60 shadow-sky-500/10" },
-  { id: "password-requests", label: "Password Requests", icon: KeyRound, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
   { id: "whatsapp-archive", label: "WhatsApp Vault", icon: MessageSquare, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
   { id: "crm-sync-center", label: "CRM Sync Queue", icon: RefreshCw, color: "text-amber-400 border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/10" },
-  { id: "rbac-governance", label: "RBAC Governance", icon: Settings, color: "text-amber-400 border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/10" },
-  { id: "dealflow-crm", label: "Dealflow CRM", icon: Briefcase, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
 ] as const;
 
 function AdminPortalContent() {
@@ -144,6 +165,21 @@ function AdminPortalContent() {
   const [directResetPassword, setDirectResetPassword] = useState("");
   const [directResetting, setDirectResetting] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [agentSearchQuery, setAgentSearchQuery] = useState("");
+  const [filterTaskAgent, setFilterTaskAgent] = useState("all");
+  const [filterTaskCustomer, setFilterTaskCustomer] = useState("all");
+  const [filterTaskDateRange, setFilterTaskDateRange] = useState("all");
+
+  const handleDeleteAgent = async (agentId: string, agentName: string) => {
+    if (!confirm(`Are you sure you want to remove agent "${agentName}"? Any assigned tasks will remain in records.`)) {
+      return;
+    }
+    setAgents(prev => prev.filter(a => a.id !== agentId));
+    toast.success(`Agent "${agentName}" removed successfully.`);
+    try {
+      await fetch(`/api/admin/agents?id=${agentId}`, { method: "DELETE" }).catch(() => null);
+    } catch {}
+  };
 
   // New Admin Dashboard State
   const [waArchiveMsgs, setWaArchiveMsgs] = useState<any[]>([]);
@@ -273,35 +309,22 @@ function AdminPortalContent() {
     password: "",
   });
 
+  // Helper function to safely fetch and parse JSON without crashing on empty/non-JSON responses
+  const safeFetchJson = async (url: string) => {
+    try {
+      const res = await fetch(url).catch(() => null);
+      if (!res || !res.ok) {
+        return { success: false };
+      }
+      return await res.json().catch(() => ({ success: false }));
+    } catch {
+      return { success: false };
+    }
+  };
+
   // 1. Fetching logic (polling fallback for real-time cross-role sync)
   const fetchPortalData = async () => {
     try {
-      const [
-        agentsRes,
-        customersRes,
-        tasksRes,
-        reqsRes,
-        resignRes,
-        docsRes,
-        auditRes,
-        gtmRes,
-        feedbackRes,
-        callsRes,
-        chatRes,
-      ] = await Promise.all([
-        fetch("/api/admin/agents"),
-        fetch("/api/admin/customers"),
-        fetch("/api/portal/tasks"),
-        fetch("/api/portal/requirements"),
-        fetch("/api/portal/resignations"),
-        fetch("/api/portal/documents"),
-        fetch("/api/admin/audit-logs"),
-        fetch("/api/portal/gtm-reports"),
-        fetch("/api/portal/feedback"),
-        fetch("/api/portal/calls"),
-        fetch("/api/portal/chat?sessionId=session-1"),
-      ]);
-
       const [
         agentsData,
         customersData,
@@ -315,30 +338,30 @@ function AdminPortalContent() {
         callsData,
         chatData,
       ] = await Promise.all([
-        agentsRes.json(),
-        customersRes.json(),
-        tasksRes.json(),
-        reqsRes.json(),
-        resignRes.json(),
-        docsRes.json(),
-        auditRes.json(),
-        gtmRes.json(),
-        feedbackRes.json(),
-        callsRes.json(),
-        chatRes.json(),
+        safeFetchJson("/api/admin/agents"),
+        safeFetchJson("/api/admin/customers"),
+        safeFetchJson("/api/portal/tasks"),
+        safeFetchJson("/api/portal/requirements"),
+        safeFetchJson("/api/portal/resignations"),
+        safeFetchJson("/api/portal/documents"),
+        safeFetchJson("/api/admin/audit-logs"),
+        safeFetchJson("/api/portal/gtm-reports"),
+        safeFetchJson("/api/portal/feedback"),
+        safeFetchJson("/api/portal/calls"),
+        safeFetchJson("/api/portal/chat?sessionId=session-1"),
       ]);
 
-      if (agentsData.success) setAgents(agentsData.agents);
-      if (customersData.success) setCustomers(customersData.customers);
-      if (tasksData.success) setTasks(tasksData.tasks);
-      if (reqsData.success) setRequirements(reqsData.requirements);
-      if (resignData.success) setResignations(resignData.resignations);
-      if (docsData.success) setDocuments(docsData.documents);
-      if (auditData.success) setLocalAuditLogs(auditData.logs);
-      if (gtmData.success) setGtmReports(gtmData.reports);
-      if (feedbackData.success) setFeedbackList(feedbackData.feedback);
-      if (callsData.success) setCalls(callsData.calls);
-      if (chatData.success) setChatMessages(chatData.messages);
+      if (agentsData.success && agentsData.agents) setAgents(agentsData.agents);
+      if (customersData.success && customersData.customers) setCustomers(customersData.customers);
+      if (tasksData.success && tasksData.tasks) setTasks(tasksData.tasks);
+      if (reqsData.success && reqsData.requirements) setRequirements(reqsData.requirements);
+      if (resignData.success && resignData.resignations) setResignations(resignData.resignations);
+      if (docsData.success && docsData.documents) setDocuments(docsData.documents);
+      if (auditData.success && auditData.logs) setLocalAuditLogs(auditData.logs);
+      if (gtmData.success && gtmData.reports) setGtmReports(gtmData.reports);
+      if (feedbackData.success && feedbackData.feedback) setFeedbackList(feedbackData.feedback);
+      if (callsData.success && callsData.calls) setCalls(callsData.calls);
+      if (chatData.success && chatData.messages) setChatMessages(chatData.messages);
 
     } catch (error) {
       console.error("[Admin Portal] Polling error:", error);
@@ -348,11 +371,10 @@ function AdminPortalContent() {
   const fetchLlmMetrics = async () => {
     setIsLoadingMetrics(true);
     try {
-      const res = await fetch("/api/llm-manager/metrics");
-      const data = await res.json();
+      const data = await safeFetchJson("/api/llm-manager/metrics");
       if (data.success) {
-        setLlmMetrics(data.metrics);
-        setRecentInteractions(data.recentInteractions);
+        if (data.metrics) setLlmMetrics(data.metrics);
+        if (data.recentInteractions) setRecentInteractions(data.recentInteractions);
       }
     } catch (error) {
       console.error("Failed to load LLM metrics:", error);
@@ -364,9 +386,8 @@ function AdminPortalContent() {
   const fetchPasswordRequests = async () => {
     setLoadingRequests(true);
     try {
-      const res = await fetch("/api/admin/password-requests");
-      const data = await res.json();
-      if (data.success) {
+      const data = await safeFetchJson("/api/admin/password-requests");
+      if (data.success && data.requests) {
         setPasswordRequests(data.requests);
       }
     } catch (err) {
@@ -384,18 +405,14 @@ function AdminPortalContent() {
   const fetchOrchestratorData = async () => {
     setIsLoadingOrchestrator(true);
     try {
-      const [statsRes, eventsRes] = await Promise.all([
-        fetch("/api/integrated/observability/stats"),
-        fetch("/api/integrated/observability/events?limit=50"),
-      ]);
       const [statsData, eventsData] = await Promise.all([
-        statsRes.json(),
-        eventsRes.json(),
+        safeFetchJson("/api/integrated/observability/stats"),
+        safeFetchJson("/api/integrated/observability/events?limit=50"),
       ]);
-      if (statsData.success) {
+      if (statsData.success && statsData.stats) {
         setOrchestratorStats(statsData.stats);
       }
-      if (eventsData.success) {
+      if (eventsData.success && eventsData.events) {
         setOrchestratorEvents(eventsData.events);
       }
     } catch (error) {
@@ -908,6 +925,28 @@ function AdminPortalContent() {
               </p>
             </div>
             <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  if (!confirm("Are you sure you want to permanently purge all lingering dummy/sample records from the database?")) return;
+                  try {
+                    const res = await fetch("/api/admin/cleanup-default-data", { method: "POST" });
+                    const data = await res.json();
+                    if (data.success) {
+                      toast.success(data.message || "Database clean-up successful!");
+                      fetchPortalData();
+                    } else {
+                      toast.error(data.error || "Cleanup failed");
+                    }
+                  } catch {
+                    toast.error("Cleanup request failed");
+                  }
+                }}
+                className="btn-apple-secondary text-xs h-9 px-3.5 text-rose-400 hover:text-rose-300 border-rose-500/20 hover:border-rose-500/40"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1.5 text-rose-400" />
+                Purge Sample Data
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowChangeOwnPassword(true)}
@@ -1679,6 +1718,16 @@ function AdminPortalContent() {
           </div>
         )}
 
+        {/* COMPREHENSIVE ADMIN MODULES */}
+        {activeTab === "users-orgs" && <UsersOrgsModule />}
+        {activeTab === "roles-permissions" && <RolesPermissionsModule />}
+        {activeTab === "subscriptions-billing" && <SubscriptionsBillingModule />}
+        {activeTab === "usage-analytics" && <UsageAnalyticsModule />}
+        {activeTab === "security-management" && <SecurityManagementModule />}
+        {activeTab === "audit-logs-module" && <AuditLogsModule />}
+        {activeTab === "system-health-module" && <SystemHealthModule />}
+        {activeTab === "platform-settings-module" && <PlatformSettingsModule />}
+
         {/* 2. LLM MANAGER TAB */}
         {activeTab === "llm-manager" && (
           <div className="space-y-6 animate-in fade-in duration-300">
@@ -1788,29 +1837,55 @@ function AdminPortalContent() {
         {activeTab === "tasks" && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex items-center justify-between flex-wrap gap-4">
-              <h2 className="text-2xl font-bold text-slate-100">Tasks Pipeline</h2>
+              <h2 className="text-2xl font-bold text-slate-100">Tasks Pipeline Overview</h2>
               
-              <div className="flex gap-3 flex-wrap items-center w-full md:w-auto">
+              <div className="flex gap-2 flex-wrap items-center w-full md:w-auto">
                 <Input
                   value={taskSearch}
                   onChange={(e) => setTaskSearch(e.target.value)}
                   placeholder="Search tasks..."
-                  className="bg-slate-950 border-slate-800 text-xs w-full md:w-48"
+                  className="bg-slate-950 border-slate-800 text-xs w-full md:w-40"
                 />
+                
+                {/* Filter by Agent */}
+                <select
+                  value={filterTaskAgent}
+                  onChange={(e) => setFilterTaskAgent(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300"
+                >
+                  <option value="all">All Agents</option>
+                  {agents.map(a => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
+
+                {/* Filter by Customer */}
+                <select
+                  value={filterTaskCustomer}
+                  onChange={(e) => setFilterTaskCustomer(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300"
+                >
+                  <option value="all">All Customers</option>
+                  {customers.map(c => (
+                    <option key={c.id} value={c.id}>{c.name || c.companyName}</option>
+                  ))}
+                </select>
+
                 <select
                   value={filterTaskStatus}
                   onChange={(e) => setFilterTaskStatus(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300"
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300"
                 >
                   <option value="all">All Statuses</option>
                   <option value="todo">To Do</option>
                   <option value="in-progress">In Progress</option>
                   <option value="completed">Completed</option>
                 </select>
+
                 <select
                   value={filterTaskPriority}
                   onChange={(e) => setFilterTaskPriority(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300"
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300"
                 >
                   <option value="all">All Priorities</option>
                   <option value="urgent">Urgent</option>
@@ -1824,10 +1899,12 @@ function AdminPortalContent() {
             <div className="grid grid-cols-1 gap-4">
               {tasks
                 .filter(t => {
-                  const matchesSearch = t.title.toLowerCase().includes(taskSearch.toLowerCase()) || t.description.toLowerCase().includes(taskSearch.toLowerCase());
+                  const matchesSearch = (t.title || "").toLowerCase().includes(taskSearch.toLowerCase()) || (t.description || "").toLowerCase().includes(taskSearch.toLowerCase());
                   const matchesStatus = filterTaskStatus === "all" || t.status === filterTaskStatus;
                   const matchesPriority = filterTaskPriority === "all" || t.priority === filterTaskPriority;
-                  return matchesSearch && matchesStatus && matchesPriority;
+                  const matchesAgent = filterTaskAgent === "all" || t.assignedAgentId === filterTaskAgent;
+                  const matchesCustomer = filterTaskCustomer === "all" || t.customerId === filterTaskCustomer;
+                  return matchesSearch && matchesStatus && matchesPriority && matchesAgent && matchesCustomer;
                 })
                 .map(task => (
                   <GlassPanel key={task.id} tilt={false} className="border-slate-800/80 bg-slate-900/20">
@@ -1870,60 +1947,7 @@ function AdminPortalContent() {
         )}
 
         {/* 5. CUSTOMERS TAB */}
-        {activeTab === "customers" && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <h2 className="text-2xl font-bold text-slate-100">Customer Management</h2>
-              <ExtrudedButton className="bg-gradient-to-r from-teal-500 to-indigo-500 text-xs font-bold py-2" onClick={() => setShowOnboardCustomer(true)}>
-                Onboard New Customer
-              </ExtrudedButton>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {customers.map(c => (
-                <GlassPanel key={c.id} tilt={false} className="border-slate-800/80 bg-slate-900/20 p-5">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="text-base font-bold text-slate-100">{c.name}</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">{c.companyName} • {c.industry}</p>
-                      <div className="flex gap-2 mt-2">
-                        <span className={cn(
-                          "px-2.5 py-0.5 rounded text-[10px] uppercase font-bold border",
-                          c.status === "active" ? "bg-emerald-950/80 border-emerald-800 text-emerald-400" :
-                          c.status === "onboarding" ? "bg-yellow-950/80 border-yellow-800 text-yellow-400" :
-                          "bg-rose-950/80 border-rose-800 text-rose-400"
-                        )}>{c.status}</span>
-                        <span className="px-2.5 py-0.5 rounded text-[10px] uppercase font-bold bg-slate-800 border border-slate-700 text-slate-300">{c.businessModel}</span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-3">Email: {c.email} • Phone: {c.phone || "N/A"}</p>
-                    </div>
-
-                    <div className="flex flex-col gap-2 items-end">
-                      <div className="space-y-1">
-                        <Label className="text-[9px] text-slate-500 uppercase tracking-widest font-bold block">Change Model</Label>
-                        <select
-                          value={c.businessModel}
-                          onChange={(e) => handleUpdateBusinessModel(c.id, e.target.value)}
-                          className="bg-slate-950 border border-slate-850 rounded-lg px-2.5 py-1 text-xs text-slate-200"
-                        >
-                          <option value="b2b">B2B Enterprise</option>
-                          <option value="b2c">B2C Retail</option>
-                          <option value="d2c">D2C Brand</option>
-                          <option value="custom">Custom Creator</option>
-                        </select>
-                      </div>
-                      {c.status !== "resigned" && (
-                        <ExtrudedButton size="sm" className="bg-rose-600 hover:bg-rose-700 text-[10px]" onClick={() => handleInitiateResignation(c)}>
-                          Process Resignation
-                        </ExtrudedButton>
-                      )}
-                    </div>
-                  </div>
-                </GlassPanel>
-              ))}
-            </div>
-          </div>
-        )}
+        {activeTab === "customers" && <CustomersModule />}
 
         {/* 6. RESIGNATIONS TAB */}
         {activeTab === "resignations" && (
@@ -2111,32 +2135,7 @@ function AdminPortalContent() {
         )}
 
         {/* 10. AGENTS TAB */}
-        {activeTab === "agents" && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <h2 className="text-2xl font-bold text-slate-100">Agents Pool</h2>
-              <ExtrudedButton className="bg-gradient-to-r from-teal-500 to-indigo-500 text-xs font-bold py-2" onClick={() => setShowCreateAgent(true)}>
-                Add New Agent
-              </ExtrudedButton>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {agents.map(agent => (
-                <GlassPanel key={agent.id} tilt={true} className="border-slate-800 bg-slate-900/20 p-5 space-y-4">
-                  <div>
-                    <h4 className="text-base font-bold text-slate-200">{agent.name}</h4>
-                    <p className="text-xs text-slate-400">{agent.email}</p>
-                    <p className="text-[10px] text-slate-500 mt-2 font-mono">Phone: {agent.phoneNumber || "N/A"} ({agent.countryCode || "US"})</p>
-                  </div>
-                  <div className="border-t border-slate-850 pt-3 space-y-1.5 text-xs text-slate-400">
-                    <p><strong>Framework:</strong> {agent.callConversationFramework?.substring(0, 45) || "Default Objective Framework"}...</p>
-                    <p><strong>WhatsApp:</strong> {agent.whatsAppMessageParameters?.substring(0, 45) || "Default Parameters"}...</p>
-                  </div>
-                </GlassPanel>
-              ))}
-            </div>
-          </div>
-        )}
+        {activeTab === "agents" && <AgentsModule />}
 
         {/* 11. INTERACTIONS TAB */}
         {activeTab === "interactions" && (
@@ -2599,70 +2598,6 @@ function AdminPortalContent() {
                   </table>
                 </div>
               )}
-            </GlassPanel>
-          </div>
-        )}
-
-        {/* 15. ROLE-BASED ACCESS CONTROL (RBAC) GOVERNANCE TAB */}
-        {activeTab === "rbac-governance" && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-                  <Settings className="h-6 w-6 text-amber-400" /> Role-Based Access Control (RBAC) Governance Matrix
-                </h2>
-                <p className="text-xs text-slate-400 mt-1">Configure role permissions, scope access parameters, and feature enablement rules across Customer, Agent, and Admin roles.</p>
-              </div>
-              <ExtrudedButton size="sm" className="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs">
-                Save Permission Matrix
-              </ExtrudedButton>
-            </div>
-
-            <GlassPanel className="border-slate-800 p-5 space-y-4">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-800 text-slate-400 font-bold uppercase">
-                      <th className="py-3">Permission Resource Scope</th>
-                      <th className="py-3 text-center">Customer Role</th>
-                      <th className="py-3 text-center">Agent Role</th>
-                      <th className="py-3 text-center">Admin Role</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b border-slate-850 hover:bg-slate-900/40">
-                      <td className="py-3 font-bold text-slate-200">Schedule &amp; Dispatch Meeting Bot</td>
-                      <td className="py-3 text-center"><input type="checkbox" defaultChecked className="accent-emerald-500" /></td>
-                      <td className="py-3 text-center"><input type="checkbox" defaultChecked className="accent-cyan-500" /></td>
-                      <td className="py-3 text-center"><input type="checkbox" defaultChecked disabled className="accent-amber-500 opacity-60" /></td>
-                    </tr>
-                    <tr className="border-b border-slate-850 hover:bg-slate-900/40">
-                      <td className="py-3 font-bold text-slate-200">Live In-Portal Bot Controls (Start / Record / Stop)</td>
-                      <td className="py-3 text-center"><input type="checkbox" className="accent-emerald-500" /></td>
-                      <td className="py-3 text-center"><input type="checkbox" defaultChecked className="accent-cyan-500" /></td>
-                      <td className="py-3 text-center"><input type="checkbox" defaultChecked disabled className="accent-amber-500 opacity-60" /></td>
-                    </tr>
-                    <tr className="border-b border-slate-850 hover:bg-slate-900/40">
-                      <td className="py-3 font-bold text-slate-200">Evolution API WhatsApp Direct Send</td>
-                      <td className="py-3 text-center"><input type="checkbox" defaultChecked className="accent-emerald-500" /></td>
-                      <td className="py-3 text-center"><input type="checkbox" defaultChecked className="accent-cyan-500" /></td>
-                      <td className="py-3 text-center"><input type="checkbox" defaultChecked disabled className="accent-amber-500 opacity-60" /></td>
-                    </tr>
-                    <tr className="border-b border-slate-850 hover:bg-slate-900/40">
-                      <td className="py-3 font-bold text-slate-200">WhatsApp Compliance Vault &amp; Audit Logs</td>
-                      <td className="py-3 text-center"><input type="checkbox" disabled className="accent-emerald-500 opacity-30" /></td>
-                      <td className="py-3 text-center"><input type="checkbox" disabled className="accent-cyan-500 opacity-30" /></td>
-                      <td className="py-3 text-center"><input type="checkbox" defaultChecked disabled className="accent-amber-500 opacity-60" /></td>
-                    </tr>
-                    <tr className="border-b border-slate-850 hover:bg-slate-900/40">
-                      <td className="py-3 font-bold text-slate-200">CRM Bi-Directional Sync Queue Center</td>
-                      <td className="py-3 text-center"><input type="checkbox" disabled className="accent-emerald-500 opacity-30" /></td>
-                      <td className="py-3 text-center"><input type="checkbox" className="accent-cyan-500" /></td>
-                      <td className="py-3 text-center"><input type="checkbox" defaultChecked disabled className="accent-amber-500 opacity-60" /></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
             </GlassPanel>
           </div>
         )}

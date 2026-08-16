@@ -102,11 +102,17 @@ export async function POST(req: NextRequest) {
             isVerified: true,
             verificationCode: null,
             verificationExpiresAt: null,
+            updatedAt: new Date().toISOString(),
           });
-          console.log("[Verify] User updated in Firestore:", matchedUser.id);
+          await db.collection("customers").doc(matchedUser.id).set({
+            isVerified: true,
+            status: "active",
+            updatedAt: new Date().toISOString(),
+          }, { merge: true });
+          console.log("[Verify] User & customer status set to active in Firestore:", matchedUser.id);
         }
       } catch (err) {
-        console.error("[Verify] Failed to update user in Firestore", err);
+        console.error("[Verify] Failed to update user/customer in Firestore", err);
       }
     }
 

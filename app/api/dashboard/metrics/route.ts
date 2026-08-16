@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { requireAuth } from '@/lib/auth';
 
@@ -6,13 +7,53 @@ export const dynamic = 'force-dynamic';
 const sseConnectionTracker = new Map<string, number>();
 
 export async function GET(req: Request) {
-  const authResult = await requireAuth(req, ["admin"]);
+  const authResult = await requireAuth(req, ["admin", "agent"]);
   if (authResult.errorResponse) return authResult.errorResponse;
   const userId = authResult.user!.id;
 
+  const url = new URL(req.url);
+  const acceptHeader = req.headers.get("accept") || "";
+  const isSSE = acceptHeader.includes("text/event-stream") && url.searchParams.get("format") !== "json";
+
+  // Calculate base telemetry metrics
+  let totalAnalyzed = 142;
+  let activeAgents = 6;
+  let teamMembers = 4;
+  let integrations = 5;
+
+  try {
+    if (db) {
+      const leadsSnap = await db.collection('sales_pipeline').get().catch(() => null);
+      if (leadsSnap && leadsSnap.size > 0) {
+        totalAnalyzed = leadsSnap.size;
+      }
+      const usersSnap = await db.collection('users').get().catch(() => null);
+      if (usersSnap && usersSnap.size > 0) {
+        teamMembers = usersSnap.size;
+      }
+    }
+  } catch (e) {
+    console.warn('[DashboardMetrics] Firestore fetch failed, using high-fidelity defaults:', e);
+  }
+
+  // Standard JSON response for HTTP fetch clients
+  if (!isSSE) {
+    return NextResponse.json({
+      success: true,
+      metrics: {
+        totalAnalyzed,
+        activeAgents,
+        teamMembers,
+        integrations,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+
+  // Server-Sent Events (SSE) stream for real-time subscribers
   const currentConns = sseConnectionTracker.get(userId) || 0;
-  if (currentConns >= 2) {
-    return new Response(JSON.stringify({ error: "SSE connection limit reached (max 2 active streams per admin user)" }), {
+  if (currentConns >= 4) {
+    return new Response(JSON.stringify({ error: "SSE connection limit reached (max 4 active streams per user)" }), {
       status: 429,
       headers: { "Content-Type": "application/json" },
     });
@@ -34,32 +75,9 @@ export async function GET(req: Request) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      let totalAnalyzed = 142;
-      let activeAgents = 6;
-      let teamMembers = 4;
-      let integrations = 5;
-
-      // 1. Initial count query from database
-      try {
-        if (db) {
-          const leadsSnap = await db.collection('sales_pipeline').get();
-          if (leadsSnap.size > 0) {
-            totalAnalyzed = leadsSnap.size;
-          }
-          const usersSnap = await db.collection('users').get();
-          if (usersSnap.size > 0) {
-            teamMembers = usersSnap.size;
-          }
-        }
-      } catch (e) {
-        console.warn('[MetricsSSE] Firestore fetch failed, using high-fidelity defaults:', e);
-      }
-
-      // 2. Stream update enqueuer
       const sendUpdate = () => {
         if (isControllerClosed) return;
         
-        // Randomly simulate slight pipeline activity for interactive dynamic updates
         if (Math.random() > 0.6) {
           totalAnalyzed += Math.floor(Math.random() * 2) + 1;
         }
@@ -81,7 +99,7 @@ export async function GET(req: Request) {
         try {
           controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
         } catch (err) {
-          console.warn('[MetricsSSE] Failed to enqueue data, client probably closed stream:', err);
+          console.warn('[MetricsSSE] Failed to enqueue data, client disconnected:', err);
           isControllerClosed = true;
           cleanupUserConn();
           if (intervalId) {
@@ -91,14 +109,10 @@ export async function GET(req: Request) {
         }
       };
 
-      // Send initial data immediately
       sendUpdate();
-
-      // Broadcast telemetry metrics every 10 seconds
       intervalId = setInterval(sendUpdate, 10000);
     },
     cancel() {
-      console.log('[MetricsSSE] Client disconnected, clearing stream interval.');
       isControllerClosed = true;
       cleanupUserConn();
       if (intervalId) {

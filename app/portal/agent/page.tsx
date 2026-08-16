@@ -73,9 +73,11 @@ import { CustomerContactProfiles } from "@/components/portal/CustomerContactProf
 import { AgentDealflowBotHub } from "@/components/portal/AgentDealflowBotHub";
 import { AIWebinarModule } from "@/components/webinar/AIWebinarModule";
 import CommunityMiningPage from "@/app/agent-portal/community-mining/page";
+import { AssignedCustomersWorkspace } from "@/components/portal/AssignedCustomersWorkspace";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "assigned-customers", label: "Assigned Customers", icon: Users, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
   { id: "community-mining", label: "Community Mining", icon: Sparkles, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
   { id: "ai-webinar", label: "AI Webinar Module", icon: Video, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
   { id: "icp-details", label: "Customer ICP Breakdown", icon: Target, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
@@ -157,6 +159,16 @@ function AgentPortalContent() {
   const [callsList, setCallsList] = useState<any[]>([]);
   const [feedback, setFeedback] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [activeWorkspaceCustomerId, setActiveWorkspaceCustomerId] = useState<string>("");
+
+  // Customer Switcher Handler for top panel
+  const handleCustomerSwitch = (selectedCust: any) => {
+    setActiveWorkspaceCustomerId(selectedCust.id);
+    setActiveStrategyCustomerId(selectedCust.id);
+    setSelectedWorkflowCustomer(selectedCust.id);
+    setSelectedPlaybookCustomerId(selectedCust.id);
+    showToast("success", "Active Customer Switched", `Workspace context switched to ${selectedCust.companyName || selectedCust.name}`);
+  };
 
   // Content Hub States
   const [contentSubTab, setContentSubTab] = useState<"workspace" | "assets">("workspace");
@@ -971,6 +983,21 @@ function AgentPortalContent() {
           activeTabLabel={activeTabObj?.label || "Dashboard"}
           userName={user?.name || "Revenue Specialist"}
           userEmail={user?.email || "agent@dealflow.ai"}
+          customers={customers.map(c => ({
+            id: c.id,
+            name: c.name || c.customerName || "Customer",
+            companyName: c.companyName || c.companyInformation?.name || "Enterprise Account",
+            email: c.email,
+            industry: c.industry || c.companyInformation?.industry,
+            status: c.status || "active"
+          }))}
+          selectedCustomerId={activeWorkspaceCustomerId}
+          onSelectCustomer={handleCustomerSwitch}
+          onAddCustomer={(newCust) => {
+            setCustomers(prev => [newCust, ...prev]);
+            handleCustomerSwitch(newCust);
+            return true;
+          }}
         />
 
         <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar relative">
@@ -1177,6 +1204,24 @@ function AgentPortalContent() {
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
             <CustomerContactProfiles />
+          </motion.div>
+        )}
+
+        {/* ASSIGNED CUSTOMERS TAB */}
+        {activeTab === "assigned-customers" && (
+          <motion.div
+            key="assigned-customers"
+            initial={{ opacity: 0, x: 15 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -15 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <AssignedCustomersWorkspace
+              customers={customers}
+              currentAgent={user}
+              onSelectCustomerContext={handleCustomerSwitch}
+              onNavigateTab={(t) => setActiveTab(t as any)}
+            />
           </motion.div>
         )}
 

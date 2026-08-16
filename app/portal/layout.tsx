@@ -152,19 +152,24 @@ export default function PortalLayout({
           </nav>
 
           <div className="flex items-center gap-3">
-            {currentUser && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/8">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/20 border border-violet-400/30 text-violet-300 font-bold text-xs">
-                  {getCustomerDisplayName(currentUser).charAt(0).toUpperCase()}
+            {currentUser && (() => {
+              const uName = typeof getCustomerDisplayName === "function"
+                ? getCustomerDisplayName(currentUser)
+                : (currentUser.name || currentUser.email?.split("@")[0] || "User");
+              return (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/8">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/20 border border-violet-400/30 text-violet-300 font-bold text-xs">
+                    {uName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-xs font-bold text-slate-200 leading-none">{uName}</span>
+                    <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-teal-400">
+                      {currentUser.role}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-xs font-bold text-slate-200 leading-none">{getCustomerDisplayName(currentUser)}</span>
-                  <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-teal-400">
-                    {currentUser.role}
-                  </span>
-                </div>
-              </div>
-            )}
+              );
+            })()}
             <LogoutButton />
           </div>
         </div>

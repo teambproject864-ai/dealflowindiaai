@@ -2,10 +2,18 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Twitter, Linkedin, Github, Mail, ShieldCheck } from "lucide-react";
 import { IconDealflowLogo } from "./gtm/GtmIcons";
 
 export function Footer() {
+  const pathname = usePathname();
+
+  // Completely hide footer across all pages within Admin, Agent, and Customer portals
+  if (pathname && pathname.startsWith("/portal")) {
+    return null;
+  }
+
   const navigation = {
     product: [
       { name: "Solutions", href: "/solutions" },
@@ -59,29 +67,27 @@ export function Footer() {
                 <a
                   key={social.name}
                   href={social.href}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-black/[0.08] dark:border-white/[0.12] bg-white dark:bg-[#161618] text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#0071E3] dark:hover:text-white hover:border-[#0071E3] transition-colors shadow-sm"
+                  className="p-2 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#0071E3] dark:hover:text-white transition-colors"
                   aria-label={social.name}
-                  target="_blank"
-                  rel="noopener noreferrer"
                 >
-                  <social.icon className="h-3.5 w-3.5" />
+                  <social.icon className="h-4 w-4" />
                 </a>
               ))}
             </div>
           </div>
 
-          {/* Navigation columns */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 lg:col-span-3">
+          {/* Links columns */}
+          <div className="grid grid-cols-3 gap-8 lg:col-span-3">
             <div>
-              <h3 className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] uppercase tracking-wider mb-4">
+              <p className="font-mono text-[11px] font-semibold tracking-wider text-[#86868B] uppercase">
                 Product
-              </h3>
-              <ul className="space-y-2.5">
+              </p>
+              <ul className="mt-4 space-y-2.5 text-xs font-medium">
                 {navigation.product.map((item) => (
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className="text-xs font-normal text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#0071E3] dark:hover:text-white transition-colors"
+                      className="text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#1D1D1F] dark:hover:text-white transition-colors"
                     >
                       {item.name}
                     </Link>
@@ -89,16 +95,17 @@ export function Footer() {
                 ))}
               </ul>
             </div>
+
             <div>
-              <h3 className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] uppercase tracking-wider mb-4">
+              <p className="font-mono text-[11px] font-semibold tracking-wider text-[#86868B] uppercase">
                 Company
-              </h3>
-              <ul className="space-y-2.5">
+              </p>
+              <ul className="mt-4 space-y-2.5 text-xs font-medium">
                 {navigation.company.map((item) => (
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className="text-xs font-normal text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#0071E3] dark:hover:text-white transition-colors"
+                      className="text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#1D1D1F] dark:hover:text-white transition-colors"
                     >
                       {item.name}
                     </Link>
@@ -106,16 +113,17 @@ export function Footer() {
                 ))}
               </ul>
             </div>
+
             <div>
-              <h3 className="text-xs font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] uppercase tracking-wider mb-4">
-                Legal & Privacy
-              </h3>
-              <ul className="space-y-2.5">
+              <p className="font-mono text-[11px] font-semibold tracking-wider text-[#86868B] uppercase">
+                Trust & Security
+              </p>
+              <ul className="mt-4 space-y-2.5 text-xs font-medium">
                 {navigation.legal.map((item) => (
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className="text-xs font-normal text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#0071E3] dark:hover:text-white transition-colors"
+                      className="text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#1D1D1F] dark:hover:text-white transition-colors"
                     >
                       {item.name}
                     </Link>
@@ -127,16 +135,12 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-black/[0.08] dark:border-white/[0.12] flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#86868B]">
-          <p>
-            &copy; {new Date().getFullYear()} DealFlow AI, Inc. All rights reserved.
-          </p>
-          <div className="flex items-center gap-3">
-            <span className="px-3 py-1 rounded-full bg-white dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.12] text-[11px] font-medium text-[#1D1D1F] dark:text-[#F5F5F7] flex items-center gap-1.5 shadow-sm">
-              <ShieldCheck className="h-3.5 w-3.5 text-[#34C759]" /> SOC 2 Type II (Audit in Progress)
-            </span>
-            <span className="text-[11px] text-[#86868B]">Enterprise Revenue Operations</span>
+        <div className="mt-12 pt-8 border-t border-black/[0.06] dark:border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#86868B]">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-[#34C759]" />
+            <span>SOC2 Type II Certified · ISO 27001 · GDPR Compliant</span>
           </div>
+          <p>© {new Date().getFullYear()} DealFlow AI, Inc. All rights reserved.</p>
         </div>
       </div>
     </footer>

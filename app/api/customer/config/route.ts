@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/firebase-admin";
-import { demoCustomers } from "@/lib/portal-demo-data";
 
 export const dynamic = "force-dynamic";
 
@@ -18,21 +17,30 @@ export async function GET(req: Request) {
       const doc = await db.collection("customers").doc(customerId).get().catch(() => null);
       if (doc && doc.exists) {
         customer = { id: doc.id, ...doc.data() };
+      } else {
+        // Check users collection as secondary fallback
+        const userDoc = await db.collection("users").doc(customerId).get().catch(() => null);
+        if (userDoc && userDoc.exists) {
+          const uData = userDoc.data();
+          customer = {
+            id: userDoc.id,
+            name: uData?.name || user!.name,
+            email: uData?.email || user!.email,
+            companyName: uData?.companyName || "Organization",
+            status: uData?.status || "active",
+            businessModel: uData?.businessModel || "b2b",
+            serviceConfigurations: uData?.serviceConfigurations || { gtmReports: true },
+          };
+        }
       }
     }
 
     if (!customer) {
-      // Fallback to demo data
-      customer = demoCustomers.find((c) => c.id === customerId);
-    }
-
-    if (!customer) {
-      // Return a basic mock customer matching credentials if not found
       customer = {
         id: customerId,
         name: user!.name,
         email: user!.email,
-        companyName: "New Brand",
+        companyName: "Organization",
         status: "active",
         businessModel: "b2b",
         serviceConfigurations: { gtmReports: true },
@@ -70,7 +78,6 @@ export async function POST(req: Request) {
     }
 
     const {
-
       businessModel,
       serviceConfigurations,
       companyName,
@@ -88,7 +95,7 @@ export async function POST(req: Request) {
       keywords,
       geographicMarkets,
       customerJourneyStage,
-      campaignStrategy
+      campaignStrategy,
     } = body;
 
     let updatedData: any = {};
@@ -99,7 +106,7 @@ export async function POST(req: Request) {
     if (name) updatedData.name = name;
     if (email) updatedData.email = email;
     if (phone) updatedData.phone = phone;
-    
+
     if (targetAudience !== undefined) updatedData.targetAudience = targetAudience;
     if (businessGoals !== undefined) updatedData.businessGoals = businessGoals;
     if (marketingObjectives !== undefined) updatedData.marketingObjectives = marketingObjectives;
@@ -117,33 +124,9 @@ export async function POST(req: Request) {
     // 1. Update Firestore
     if (db) {
       await db.collection("customers").doc(customerId).set(updatedData, { merge: true });
-    }
+      await db.collection("users").doc(customerId).set(updatedData, { merge: true });
 
-    // 2. Update demoCustomers in-memory
-    const idx = demoCustomers.findIndex((c) => c.id === customerId);
-    if (idx !== -1) {
-      demoCustomers[idx] = {
-        ...demoCustomers[idx],
-        ...updatedData,
-      };
-    } else {
-      // Add if missing
-      demoCustomers.push({
-        id: customerId,
-        name: name || user!.name,
-        email: email || user!.email,
-        companyName: companyName || "New Brand",
-        status: "active",
-        serviceConfigurations: serviceConfigurations || { gtmReports: true },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        businessModel: businessModel || "b2b",
-        ...updatedData,
-      });
-    }
-
-    // Log the configuration change in audit logs if db is available
-    if (db) {
+      // Log the configuration change in audit logs
       await db.collection("audit_logs").add({
         id: `audit-${Date.now()}`,
         actionType: "document_update",
@@ -159,7 +142,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       message: "Customer configuration updated successfully",
-      customer: demoCustomers.find((c) => c.id === customerId) || updatedData,
+      customer: { id: customerId, ...updatedData },
     });
   } catch (error) {
     console.error("[customer-config-post] Error updating:", error);

@@ -53,82 +53,9 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { LeadAnalysisDashboard } from '@/components/LeadAnalysisDashboard';
 import { MarketingStrategyModule } from '@/components/MarketingStrategyModule';
 
-// ─── INITIAL MOCK DATA ────────────────────────────────────────────────────────
+// ─── INITIAL STATE DATA ────────────────────────────────────────────────────────
 
-const initialCustomers = [
-  {
-    id: "cust-1",
-    name: "Acme Corp",
-    industry: "Enterprise SaaS",
-    contactName: "John Smith",
-    phone: "+1 (555) 123-4567",
-    email: "john.smith@acme.com",
-    serviceConfigurations: {
-      gtmReports: true,
-      leadScoring: true,
-      aiCalls: true,
-      wrenChatbot: true,
-      automatedGtmAnalysis: true,
-      playbookGeneration: true,
-    },
-    history: [
-      { id: "h-1", type: "Call", summary: "Initial discovery call", detail: "Spoke with John about their current sales pipeline bottlenecks. They are interested in AI automations.", date: "2026-07-15 10:30 AM" },
-      { id: "h-2", type: "Email", summary: "Sent product deck", detail: "Emailed the latest enterprise overview slide deck and pricing summary.", date: "2026-07-15 11:15 AM" }
-    ],
-    cases: [
-      { id: "case-1", title: "API Integration Inquiry", description: "Customer wants to know if they can sync with a custom Postgres instance.", priority: "Medium", status: "Open", date: "2026-07-16" }
-    ],
-    documents: [
-      { id: "doc-1", title: "Acme-GTM-Scope-v2.pdf", size: "2.4 MB", date: "2026-07-16" }
-    ]
-  },
-  {
-    id: "cust-2",
-    name: "TechSolutions",
-    industry: "Managed IT Services",
-    contactName: "Sarah Connor",
-    phone: "+1 (555) 987-6543",
-    email: "sconnor@techsolutions.io",
-    serviceConfigurations: {
-      gtmReports: true,
-      leadScoring: false,
-      aiCalls: true,
-      wrenChatbot: true,
-      automatedGtmAnalysis: true,
-      playbookGeneration: true,
-    },
-    history: [
-      { id: "h-3", type: "Call", summary: "Billing discussion", detail: "Resolved invoicing discrepancy for the pilot phase. Everything synced.", date: "2026-07-14 02:00 PM" }
-    ],
-    cases: [
-      { id: "case-2", title: "CRM Sync Latency", description: "Noticed a 5-minute lag on Salesforce contacts updates.", priority: "High", status: "In Progress", date: "2026-07-17" }
-    ],
-    documents: [
-      { id: "doc-2", title: "Service-Agreement-Signed.pdf", size: "1.1 MB", date: "2026-07-14" }
-    ]
-  },
-  {
-    id: "cust-3",
-    name: "Innovate LLC",
-    industry: "E-Commerce",
-    contactName: "David Miller",
-    phone: "+1 (555) 333-2222",
-    email: "david@innovate.co",
-    serviceConfigurations: {
-      gtmReports: false,
-      leadScoring: false,
-      aiCalls: false,
-      wrenChatbot: false,
-      automatedGtmAnalysis: false,
-      playbookGeneration: false,
-    },
-    history: [
-      { id: "h-4", type: "Email", summary: "Meeting scheduling", detail: "Scheduled a walkthrough of the voice call agent workflow for next Tuesday.", date: "2026-07-16 04:45 PM" }
-    ],
-    cases: [],
-    documents: []
-  }
-];
+const initialCustomers: any[] = [];
 
 const kbArticles = [
   {
@@ -154,26 +81,13 @@ const kbArticles = [
   }
 ];
 
-const initialChannels = {
-  general: [
-    { id: "msg-1", sender: "System", text: "Welcome to the internal team chat channel.", time: "09:00 AM" },
-    { id: "msg-2", sender: "David (Lead Agent)", text: "Hey team, recall to check lead queues before outbound campaigns today.", time: "10:14 AM" }
-  ],
-  escalations: [
-    { id: "msg-3", sender: "System", text: "Escalations alerts channel created.", time: "09:00 AM" },
-    { id: "msg-4", sender: "Sarah Jenkins (VP)", text: "Acme Corp integration is pending custom field approvals. Do not run campaign yet.", time: "11:30 AM" }
-  ],
-  "crm-updates": [
-    { id: "msg-5", sender: "System", text: "Automated CRM Sync events log.", time: "09:00 AM" },
-    { id: "msg-6", sender: "HubSpot Bot", text: "Synced 45 contacts for TechSolutions.", time: "01:25 PM" }
-  ]
+const initialChannels: Record<string, any[]> = {
+  general: [],
+  escalations: [],
+  "crm-updates": []
 };
 
-const initialCallHistory = [
-  { id: "call-1", name: "John Smith (Acme)", phone: "+1 (555) 123-4567", direction: "Outbound", date: "2026-07-16 10:30 AM", duration: "03:45", status: "Completed", recording: true },
-  { id: "call-2", name: "Unknown", phone: "+1 (555) 777-8888", direction: "Inbound", date: "2026-07-15 02:15 PM", duration: "00:52", status: "Missed", recording: false },
-  { id: "call-3", name: "Sarah Connor (TechSolutions)", phone: "+1 (555) 987-6543", direction: "Outbound", date: "2026-07-14 01:10 PM", duration: "05:12", status: "Transferred", recording: true }
-];
+const initialCallHistory: any[] = [];
 
 const categories = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, color: 'text-blue-400' },
@@ -199,13 +113,32 @@ export default function WorkspaceContent() {
 
   // General App State
   const [selectedCategory, setSelectedCategory] = useState<typeof categories[number]>(categories[0]);
-  const [customers, setCustomers] = useState(initialCustomers);
-  const [selectedCustomer, setSelectedCustomer] = useState(initialCustomers[0]);
+  const [customers, setCustomers] = useState<any[]>(initialCustomers);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+
+  // Fetch live customers from database
+  useEffect(() => {
+    async function loadCustomers() {
+      try {
+        const res = await fetch("/api/admin/customers?limit=50");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.customers)) {
+          setCustomers(data.customers);
+          if (data.customers.length > 0) {
+            setSelectedCustomer(data.customers[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading agent customers:", err);
+      }
+    }
+    loadCustomers();
+  }, []);
 
   // Sync with leadId searchParam
   useEffect(() => {
-    if (leadId) {
-      const found = customers.find(c => c.id === leadId);
+    if (leadId && customers.length > 0) {
+      const found = customers.find((c) => c.id === leadId);
       if (found) {
         setSelectedCustomer(found);
         setSelectedCategory(categories[2]); // Auto-open Content Workspace
@@ -503,20 +436,20 @@ export default function WorkspaceContent() {
       date: new Date().toLocaleString()
     };
 
-    setCustomers(prev => prev.map(c => {
-      if (c.id === selectedCustomer.id) {
+    setCustomers((prev: any[]) => prev.map((c: any) => {
+      if (c.id === selectedCustomer?.id) {
         return {
           ...c,
-          history: [newHistoryItem, ...c.history]
+          history: [newHistoryItem, ...(c.history || [])]
         };
       }
       return c;
     }));
 
     // Update active view customer reference
-    setSelectedCustomer(prev => ({
+    setSelectedCustomer((prev: any) => ({
       ...prev,
-      history: [newHistoryItem, ...prev.history]
+      history: [newHistoryItem, ...(prev?.history || [])]
     }));
 
     setNewNoteText("");
@@ -536,19 +469,19 @@ export default function WorkspaceContent() {
       date: new Date().toISOString().split('T')[0]
     };
 
-    setCustomers(prev => prev.map(c => {
-      if (c.id === selectedCustomer.id) {
+    setCustomers((prev: any[]) => prev.map((c: any) => {
+      if (c.id === selectedCustomer?.id) {
         return {
           ...c,
-          cases: [newCaseItem, ...c.cases]
+          cases: [newCaseItem, ...(c.cases || [])]
         };
       }
       return c;
     }));
 
-    setSelectedCustomer(prev => ({
+    setSelectedCustomer((prev: any) => ({
       ...prev,
-      cases: [newCaseItem, ...prev.cases]
+      cases: [newCaseItem, ...(prev?.cases || [])]
     }));
 
     setNewCaseTitle("");
@@ -595,19 +528,19 @@ export default function WorkspaceContent() {
               date: new Date().toISOString().split('T')[0]
             };
 
-            setCustomers(prevCust => prevCust.map(c => {
-              if (c.id === selectedCustomer.id) {
+            setCustomers((prevCust: any[]) => prevCust.map((c: any) => {
+              if (c.id === selectedCustomer?.id) {
                 return {
                   ...c,
-                  documents: [newDoc, ...c.documents]
+                  documents: [newDoc, ...(c.documents || [])]
                 };
               }
               return c;
             }));
 
-            setSelectedCustomer(prevCust => ({
+            setSelectedCustomer((prevCust: any) => ({
               ...prevCust,
-              documents: [newDoc, ...prevCust.documents]
+              documents: [newDoc, ...(prevCust?.documents || [])]
             }));
 
             setUploadProgress(null);
@@ -1189,7 +1122,7 @@ export default function WorkspaceContent() {
 
                         {/* History Timeline */}
                         <div className="relative border-l border-slate-800 pl-4 ml-2 space-y-5">
-                          {selectedCustomer.history.map((hItem) => (
+                          {(selectedCustomer?.history || []).map((hItem: any) => (
                             <div key={hItem.id} className="relative">
                               <span className={cn(
                                 "absolute -left-[22px] top-1 h-3.5 w-3.5 rounded-full border-2 border-slate-950 flex items-center justify-center text-[8px]",
@@ -1332,10 +1265,10 @@ export default function WorkspaceContent() {
 
                         {/* Case Lists */}
                         <div className="space-y-3">
-                          {selectedCustomer.cases.length === 0 ? (
+                          {(!selectedCustomer?.cases || selectedCustomer.cases.length === 0) ? (
                             <p className="text-xs text-slate-550 italic text-center py-4">No support tickets opened for this customer.</p>
                           ) : (
-                            selectedCustomer.cases.map(cs => (
+                            selectedCustomer.cases.map((cs: any) => (
                               <div key={cs.id} className="p-4 rounded-xl bg-slate-900 border border-slate-800/80 flex items-start justify-between">
                                 <div className="space-y-1">
                                   <div className="flex items-center gap-2">
@@ -1457,10 +1390,10 @@ export default function WorkspaceContent() {
 
                         {/* File list */}
                         <div className="space-y-2">
-                          {selectedCustomer.documents.length === 0 ? (
+                          {(!selectedCustomer?.documents || selectedCustomer.documents.length === 0) ? (
                             <p className="text-xs text-slate-555 italic text-center py-4">No documents shared yet.</p>
                           ) : (
-                            selectedCustomer.documents.map(doc => (
+                            selectedCustomer.documents.map((doc: any) => (
                               <div key={doc.id} className="p-3 rounded-xl bg-slate-900 border border-slate-800/80 flex items-center justify-between text-xs">
                                 <div className="flex items-center gap-2.5">
                                   <FileText className="h-5 w-5 text-teal-400" />

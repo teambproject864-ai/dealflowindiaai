@@ -68,21 +68,17 @@ export async function POST(req: NextRequest) {
         if (snapshot && !snapshot.empty) {
           emailExists = true;
         }
-
       }
     } catch (e) {
       console.warn("[Register] Firebase not configured, skipping Firestore email check", e);
     }
 
-    // Also check demo customers fallback
     if (!emailExists) {
       emailExists = [...DEMO_CUSTOMERS, ...NEW_CUSTOMERS].some((c) => c.email === sanitizedEmail);
     }
 
     if (emailExists) {
       addAuditLog(sanitizedEmail, "customer", false, "Email already registered", ip, userAgent);
-      // Avoid account enumeration / verification leak - return generic success message 
-      // or standard message. To avoid leakage, we return a standard error that is generic.
       return NextResponse.json(
         { success: false, error: "This email address is not available for registration." },
         { status: 409 }
@@ -94,8 +90,9 @@ export async function POST(req: NextRequest) {
     const customerId = `customer-${Date.now()}`;
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // Secure 6-digit code
     const verificationExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 mins expiry
+    const nowIso = new Date().toISOString();
 
-    const newCustomer = {
+    const newCustomerUser = {
       id: customerId,
       email: sanitizedEmail,
       hashedPassword,
@@ -104,28 +101,52 @@ export async function POST(req: NextRequest) {
       isVerified: false,
       verificationCode,
       verificationExpiresAt,
-      createdAt: new Date().toISOString(),
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      isActive: true,
     };
 
-    // Save to Firestore
+    const newCustomerProfile = {
+      id: customerId,
+      name: sanitizedName,
+      email: sanitizedEmail,
+      phone: "",
+      companyName: sanitizedName ? `${sanitizedName}'s Organization` : "Customer Organization",
+      industry: "General Business",
+      status: "onboarding",
+      assignedAgentId: "",
+      assignedAgentName: "",
+      isVerified: false,
+      businessModel: "b2b",
+      serviceConfigurations: {
+        gtmReports: true,
+        leadScoring: true,
+        aiCalls: true,
+        wrenChatbot: true,
+        automatedGtmAnalysis: true,
+        playbookGeneration: true,
+      },
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+
+    // Save to Firestore users and customers collections
     try {
       const { db } = await import("@/lib/firebase-admin");
       if (db) {
-        await db.collection("users").doc(customerId).set(newCustomer);
-        console.log("[Register] New customer registered with code and stored in Firestore:", customerId);
+        await db.collection("users").doc(customerId).set(newCustomerUser);
+        await db.collection("customers").doc(customerId).set(newCustomerProfile);
+        console.log("[Register] New customer stored in Firestore (users & customers):", customerId);
       }
     } catch (e) {
       console.warn("[Register] Firebase not configured, storing in memory only", e);
     }
     
     // Also save to in-memory NEW_CUSTOMERS array
-    NEW_CUSTOMERS.push(newCustomer);
+    NEW_CUSTOMERS.push(newCustomerUser);
 
-    // S-02 FIX: Do NOT log the verification code — it must not appear in log aggregators.
     addAuditLog(sanitizedEmail, "customer", true, "Registration initiated. Verification code generated and stored server-side.", ip, userAgent);
 
-    // S-02 FIX: Return NO verificationCode in the response body.
-    // The code is delivered only via the email/SMS channel (server-side).
     return NextResponse.json({ 
       success: true, 
       requiresVerification: true,
