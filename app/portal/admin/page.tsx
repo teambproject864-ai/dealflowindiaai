@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { DealflowCRMWorkspace } from "@/components/portal/DealflowCRMWorkspace";
 import { cn } from "@/lib/utils";
+import { generateRandomStrongPassword } from "@/lib/password-utils";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import AuthProvider from "@/components/auth/AuthProvider";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
@@ -476,16 +477,11 @@ function AdminPortalContent() {
 
   // Handlers
   const handleGenerateResetPassword = () => {
-    if (!selectedRequest) return;
-    const cleanEmail = selectedRequest.email.split("@")[0].replace(/[^a-zA-Z0-9]/g, "") || "User";
-    const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-    setNewPassword(`Reset@${cleanEmail}!${suffix}`);
+    setNewPassword(generateRandomStrongPassword());
   };
 
   const handleGenerateAgentPassword = () => {
-    const cleanName = agentFormData.name.trim().replace(/[^a-zA-Z0-9]/g, "") || "Agent";
-    const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-    setAgentFormData((prev) => ({ ...prev, password: `Agent@${cleanName}!${suffix}` }));
+    setAgentFormData((prev) => ({ ...prev, password: generateRandomStrongPassword() }));
   };
 
   const handleCreateAgent = async (e: React.FormEvent) => {
@@ -772,31 +768,11 @@ function AdminPortalContent() {
   };
 
   const handleGenerateOwnPassword = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
-    let pwd = "";
-    // Ensure complexity requirements
-    pwd += "A";
-    pwd += "a";
-    pwd += "1";
-    pwd += "!";
-    for (let i = 0; i < 10; i++) {
-      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setOwnNewPassword(pwd);
+    setOwnNewPassword(generateRandomStrongPassword());
   };
 
   const handleGenerateDirectPassword = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
-    let pwd = "";
-    // Ensure complexity requirements
-    pwd += "A";
-    pwd += "a";
-    pwd += "1";
-    pwd += "!";
-    for (let i = 0; i < 10; i++) {
-      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setDirectResetPassword(pwd);
+    setDirectResetPassword(generateRandomStrongPassword());
   };
 
   const handleUpdateReqStatus = async (reqId: string, newStatus: string) => {

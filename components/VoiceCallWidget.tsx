@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Phone, X, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookingWidget } from "@/components/BookingWidget";
 
 export function VoiceCallWidget() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [showButton, setShowButton] = useState(false);
 
@@ -36,6 +38,11 @@ export function VoiceCallWidget() {
       setShowButton(true);
     }
   }, []);
+
+  // Completely hide in Admin and Agent portals
+  if (pathname?.startsWith("/portal/admin") || pathname?.startsWith("/portal/agent")) {
+    return null;
+  }
 
   return (
     <>

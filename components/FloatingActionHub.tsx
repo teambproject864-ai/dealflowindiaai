@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { Calendar, MessageSquare, Sparkles, X, Phone, Bot, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookingWidget } from "@/components/BookingWidget";
@@ -20,6 +21,7 @@ interface ChatMessage {
 }
 
 export function FloatingActionHub() {
+  const pathname = usePathname();
   const [activeWidget, setActiveWidget] = useState<"none" | "call" | "chat">("none");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isChatMinimized, setIsChatMinimized] = useState(false);
@@ -136,6 +138,12 @@ export function FloatingActionHub() {
       setChatLoading(false);
     }
   };
+
+  // Completely hide and exclude from rendering in both Admin and Agent Portals across all views
+  const isHiddenPortal = pathname?.startsWith("/portal/admin") || pathname?.startsWith("/portal/agent");
+  if (isHiddenPortal) {
+    return null;
+  }
 
   const isModalOrDrawerOpen = activeWidget !== "none";
 

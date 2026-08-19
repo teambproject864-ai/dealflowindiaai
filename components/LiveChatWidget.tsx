@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { MessageSquare, Send, X, Bot, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -12,6 +13,7 @@ interface Message {
 }
 
 export function LiveChatWidget() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -76,6 +78,11 @@ export function LiveChatWidget() {
       setMessages((prev) => [...prev, agentReply]);
     }, 1200);
   };
+
+  // Completely hide in Admin and Agent portals
+  if (pathname?.startsWith("/portal/admin") || pathname?.startsWith("/portal/agent")) {
+    return null;
+  }
 
   return (
     <AnimatePresence>

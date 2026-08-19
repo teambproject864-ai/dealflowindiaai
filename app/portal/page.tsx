@@ -74,18 +74,23 @@ export default function PortalLanding() {
         </Link>
 
         <Link href="/portal/customer" prefetch={false} className="group">
-          <GlassPanel material="glass" depth="mid" tilt={true} className="p-6 h-full flex flex-col justify-between border-slate-700/50 hover:border-orange-500/50 transition-all duration-300">
+          <GlassPanel material="glass" depth="mid" tilt={true} className="p-6 h-full flex flex-col justify-between border-slate-700/50 hover:border-indigo-500/60 transition-all duration-300 bg-gradient-to-b from-slate-900/80 to-indigo-950/40">
             <div>
-              <LineChart className="h-12 w-12 text-orange-400 mb-4 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]" />
-              <h3 className="text-2xl font-bold text-slate-100 group-hover:text-orange-400 transition-colors mb-2">
-                Customer
+              <div className="flex items-center justify-between mb-4">
+                <LineChart className="h-12 w-12 text-indigo-400 drop-shadow-[0_0_12px_rgba(129,140,248,0.4)]" />
+                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  Customer
+                </span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-100 group-hover:text-indigo-400 transition-colors mb-2">
+                Customer Portal
               </h3>
               <p className="text-slate-300 text-sm leading-relaxed mb-6">
-                View your account, interact with agents, and track progress on your tasks.
+                Client dashboard, AI agent assignments, automated GTM analysis, tickets, standup calendar, and messenger.
               </p>
             </div>
-            <ExtrudedButton className="w-full bg-orange-600 hover:bg-orange-700">
-              Go to Customer Portal
+            <ExtrudedButton className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-500/20">
+              Open Customer Portal
             </ExtrudedButton>
           </GlassPanel>
         </Link>
