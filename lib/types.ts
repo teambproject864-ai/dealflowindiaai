@@ -1040,3 +1040,14 @@ export interface FrameworkConfig {
   selfHealingEnabled: boolean;
   retryBackoffMs: number;
 }
+
+// --- Dealflow Core System Extensions ---
+export * from "./whatsapp/openwa-whatsapp-client";
+export * from "./whatsapp/whatsapp-router";
+export * from "./mcp/dealflow-mcp-protocol";
+export * from "./llm-router/content-analyzer";
+export * from "./llm-router/workflow-hub-rules";
+export * from "./llm-router/auto-llm-assigner";
+export * from "./history/universal-history-service";
+export * from "./history/history-export";
+

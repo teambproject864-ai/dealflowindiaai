@@ -1,9 +1,21 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, Calendar, Bell, Shield, User, Globe, Sun, Moon, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
+import { 
+  X, 
+  Calendar, 
+  Sun, 
+  Moon, 
+  ChevronDown, 
+  Sparkles, 
+  Bot, 
+  LayoutGrid, 
+  Database,
+  ArrowRight
+} from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
@@ -11,7 +23,7 @@ interface NavLink {
   name: string;
   href: string;
   icon?: any;
-  subOptions?: { name: string; href: string; description?: string }[];
+  subOptions?: { name: string; href: string; description?: string; badge?: string }[];
 }
 
 interface MobileCommandDrawerProps {
@@ -42,7 +54,19 @@ export function MobileCommandDrawer({
   const pathname = usePathname();
   const [expandedNav, setExpandedNav] = useState<string | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [mounted, setMounted] = useState(false);
   const shouldReduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem("df_theme");
+    if (saved === "light" || saved === "dark") {
+      setTheme(saved);
+    } else {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setTheme(prefersDark ? "dark" : "light");
+    }
+  }, []);
 
   const toggleTheme = useCallback(() => {
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -52,10 +76,40 @@ export function MobileCommandDrawer({
 
     if (newTheme === "light") {
       document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
+      document.documentElement.dataset.theme = "light";
     } else {
+      document.documentElement.classList.remove("light");
       document.documentElement.classList.add("dark");
+      document.documentElement.dataset.theme = "dark";
     }
   }, [theme]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [isOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [isOpen, onClose]);
+
+  if (!mounted || typeof document === "undefined") {
+    return null;
+  }
 
   const animationProps = shouldReduceMotion
     ? { initial: {}, animate: {}, exit: {}, transition: { duration: 0 } }
@@ -63,82 +117,114 @@ export function MobileCommandDrawer({
         initial: { x: "100%" },
         animate: { x: 0 },
         exit: { x: "100%" },
-        transition: { type: "spring" as const, damping: 25, stiffness: 200, mass: 0.8 },
+        transition: { type: "spring" as const, damping: 26, stiffness: 220, mass: 0.8 },
       };
 
-  return (
+  const quickTools = [
+    {
+      name: "Autonomous Browser Agent",
+      href: "/browser-agent",
+      icon: Bot,
+      badge: "Active",
+      badgeColor: "bg-[#34C759]/10 text-[#248A3D] dark:text-[#30D158] border-[#34C759]/20",
+      description: "Deploy AI web automation agents"
+    },
+    {
+      name: "RAG Knowledge Explorer",
+      href: "/rag",
+      icon: Database,
+      badge: "AI RAG",
+      badgeColor: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+      description: "Vector intelligence & semantic search"
+    },
+    {
+      name: "All Features Directory",
+      href: "/all-options",
+      icon: LayoutGrid,
+      badge: "Tools",
+      badgeColor: "bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF] border-[#0071E3]/20",
+      description: "Full directory of systems & portals"
+    }
+  ];
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] lg:hidden flex justify-end" role="dialog" aria-modal="true" aria-label="Main menu">
+        <div 
+          className="fixed inset-0 z-[9999] lg:hidden flex justify-end" 
+          role="dialog" 
+          aria-modal="true" 
+          aria-label="Main navigation menu"
+        >
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="absolute inset-0 bg-slate-200/60 dark:bg-black/60 backdrop-blur-sm"
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm"
             onClick={onClose}
             aria-hidden="true"
           />
 
-          {/* Drawer */}
+          {/* Drawer Panel */}
           <motion.div
             {...animationProps}
-            className="relative w-full max-w-sm h-full bg-gradient-to-b from-white to-slate-50 dark:from-[#060612] dark:to-[#040410] border-l border-slate-200 dark:border-white/15 shadow-2xl flex flex-col overflow-hidden"
+            className="relative w-full max-w-sm h-full bg-[#FAFAFC] dark:bg-[#0A0A10] border-l border-black/[0.08] dark:border-white/[0.12] shadow-2xl flex flex-col overflow-hidden z-10"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 px-6 py-5 bg-slate-50/50 dark:bg-white/[0.02]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500/20 via-cyan-500/15 to-teal-400/10 border border-teal-500/20 shadow-[0_0_20px_rgba(20,184,166,0.15)]">
-                  <span className="text-teal-700 dark:text-teal-400 font-bold text-sm">DF</span>
+            <div className="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] px-5 py-4 bg-white/80 dark:bg-[#121216]/80 backdrop-blur-md shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#0071E3] to-[#2997FF] text-white shadow-sm">
+                  <span className="font-bold text-xs">DF</span>
                 </div>
-                <span className="font-display font-bold text-base text-slate-900 dark:text-white">
-                  Menu
+                <span className="font-bold text-sm text-[#110F24] dark:text-white">
+                  Menu & Navigation
                 </span>
               </div>
               <button
                 onClick={onClose}
-                className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-650 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 hover:border-slate-300 dark:hover:border-white/20 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50"
+                className="p-2 rounded-xl bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.1] text-[#110F24] dark:text-white hover:bg-black/[0.08] dark:hover:bg-white/[0.12] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3]"
                 aria-label="Close menu"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4.5 w-4.5" />
               </button>
             </div>
 
-            {/* Drawer Content */}
-            <div className="flex-1 overflow-y-auto px-4 py-6 space-y-7">
-              {/* Quick Actions */}
-              <div className="space-y-3">
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-450 px-2">
-                  Quick Actions
-                </h3>
-                <div className="flex items-center gap-3 bg-gradient-to-r from-slate-100/50 dark:from-white/5 to-transparent p-4 rounded-3xl border border-slate-200 dark:border-white/10">
-                  <button
-                    onClick={toggleTheme}
-                    className="p-2.5 rounded-xl bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-300 flex items-center gap-2 transition-all duration-300"
-                    aria-label="Toggle system color theme"
-                  >
+            {/* Scrollable Drawer Body */}
+            <div className="flex-1 overflow-y-auto px-4 py-5 space-y-6">
+              
+              {/* Theme & Mode Quick Toggle */}
+              <div className="flex items-center justify-between bg-white dark:bg-[#14141A] p-3 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black/[0.04] dark:bg-white/[0.06]">
                     {theme === "dark" ? (
-                      <Moon className="h-4.5 w-4.5 text-teal-400" />
+                      <Moon className="h-4 w-4 text-[#2997FF]" />
                     ) : (
-                      <Sun className="h-4.5 w-4.5 text-amber-500" />
+                      <Sun className="h-4 w-4 text-amber-500" />
                     )}
-                  </button>
-                  <div className="flex-1">
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-300">Theme</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-455 mt-0.5">
-                      {theme === "dark" ? "Dark mode" : "Light mode"}
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-[#110F24] dark:text-white">Theme</p>
+                    <p className="text-[10px] text-[#86868B] dark:text-[#A1A1A6]">
+                      {theme === "dark" ? "Dark Mode" : "Light Mode"}
                     </p>
                   </div>
                 </div>
+                <button
+                  onClick={toggleTheme}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.1] dark:hover:bg-white/[0.15] text-[#110F24] dark:text-white transition-colors"
+                >
+                  Switch to {theme === "dark" ? "Light" : "Dark"}
+                </button>
               </div>
 
-              {/* Main Navigation */}
-              <div className="space-y-3">
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-450 px-2">
-                  Navigation
+              {/* Main Navigation Links */}
+              <div className="space-y-2">
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#86868B] dark:text-[#A1A1A6] px-1">
+                  Main Navigation
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {navLinks.map((link) => {
                     const isActive = pathname.startsWith(link.href);
                     const isExpanded = expandedNav === link.name;
@@ -146,30 +232,23 @@ export function MobileCommandDrawer({
 
                     if (link.subOptions) {
                       return (
-                        <div key={link.name} className="space-y-1.5">
+                        <div key={link.name} className="space-y-1">
                           <button
                             onClick={() => setExpandedNav(isExpanded ? null : link.name)}
-                            className={`w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 ${
+                            className={`w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border transition-all duration-200 ${
                               isActive
-                                ? "border-teal-500/30 bg-gradient-to-r from-teal-500/15 to-cyan-500/10 text-teal-700 dark:text-teal-300 font-bold"
-                                : "border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 hover:border-slate-200 dark:hover:border-white/10"
+                                ? "border-[#0071E3]/30 bg-[#0071E3]/5 dark:bg-[#2997FF]/10 text-[#0071E3] dark:text-[#2997FF] font-semibold"
+                                : "border-black/[0.04] dark:border-white/[0.06] bg-white dark:bg-[#14141A] text-[#110F24] dark:text-white hover:bg-black/[0.03] dark:hover:bg-white/[0.05]"
                             }`}
                             aria-expanded={isExpanded}
-                            aria-controls={`mobile-subnav-${link.name}`}
                           >
-                            <div className="flex items-center gap-3">
-                              {Icon && <Icon className={`h-5 w-5 ${isActive ? "text-teal-650 dark:text-teal-400" : "text-slate-500"}`} />}
-                              <span className="font-bold text-sm">{link.name}</span>
-                              {link.name === "Portal" && (
-                                <span className="relative flex h-1.5 w-1.5 ml-0.5" aria-hidden="true">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-500"></span>
-                                </span>
-                              )}
+                            <div className="flex items-center gap-2.5">
+                              {Icon && <Icon className={`h-4 w-4 ${isActive ? "text-[#0071E3] dark:text-[#2997FF]" : "text-[#86868B]"}`} />}
+                              <span className="font-medium text-xs text-left">{link.name}</span>
                             </div>
                             <ChevronDown
-                              className={`h-4.5 w-4.5 transition-all duration-300 ${
-                                isExpanded ? "rotate-180" : ""
+                              className={`h-4 w-4 text-[#86868B] transition-transform duration-200 ${
+                                isExpanded ? "rotate-180 text-[#0071E3] dark:text-[#2997FF]" : ""
                               }`}
                             />
                           </button>
@@ -177,32 +256,38 @@ export function MobileCommandDrawer({
                           <AnimatePresence>
                             {isExpanded && (
                               <motion.div
-                                id={`mobile-subnav-${link.name}`}
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: "auto", opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.25, ease: [0.2, 1, 0.3, 1] }}
+                                transition={{ duration: 0.2 }}
                                 className="overflow-hidden"
                               >
-                                <div className="pl-4 pr-1 pb-1 space-y-1.5 scrim-bg rounded-2xl border border-slate-200/50 dark:border-white/5 p-1.5 mt-1">
+                                <div className="pl-3 pr-1 py-1 space-y-1 bg-black/[0.02] dark:bg-white/[0.02] rounded-xl border border-black/[0.04] dark:border-white/[0.04] mt-1">
                                   <Link
                                     href={link.href}
                                     onClick={onClose}
-                                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs text-slate-650 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300"
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-[#0071E3] dark:text-[#2997FF] hover:bg-black/[0.03] dark:hover:bg-white/[0.05] transition-colors"
                                   >
-                                    <Sparkles className="h-3.5 w-3.5 text-teal-500 dark:text-teal-400" />
-                                    <span className="font-bold">Overview</span>
+                                    <Sparkles className="h-3.5 w-3.5" />
+                                    <span>All {link.name} Overview</span>
                                   </Link>
                                   {link.subOptions.map((option) => (
                                     <Link
                                       key={option.href}
                                       href={option.href}
                                       onClick={onClose}
-                                      className="flex flex-col gap-0.5 px-4 py-2.5 rounded-xl text-xs text-slate-655 dark:text-slate-400 hover:text-slate-955 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300"
+                                      className="flex flex-col gap-0.5 px-3 py-2 rounded-lg text-xs hover:bg-black/[0.03] dark:hover:bg-white/[0.05] transition-colors"
                                     >
-                                      <span className="font-bold">{option.name}</span>
+                                      <div className="flex items-center justify-between gap-1.5">
+                                        <span className="font-medium text-[#110F24] dark:text-white">{option.name}</span>
+                                        {option.badge && (
+                                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF]">
+                                            {option.badge}
+                                          </span>
+                                        )}
+                                      </div>
                                       {option.description && (
-                                        <span className="text-[10px] text-slate-500 dark:text-slate-500">
+                                        <span className="text-[10px] text-[#86868B] dark:text-[#A1A1A6]">
                                           {option.description}
                                         </span>
                                       )}
@@ -216,35 +301,73 @@ export function MobileCommandDrawer({
                       );
                     }
 
-                    const isAnchor = link.href.includes("#");
                     return (
                       <Link
                         key={link.href}
                         href={link.href}
                         onClick={onClose}
-                        className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 ${
+                        className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border transition-all duration-200 ${
                           isActive
-                            ? "border-teal-500/30 bg-gradient-to-r from-teal-500/15 to-cyan-500/10 text-teal-700 dark:text-teal-300 font-bold"
-                            : isAnchor
-                              ? "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/6"
-                              : "border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 hover:border-slate-200 dark:hover:border-white/10"
+                            ? "border-[#0071E3]/30 bg-[#0071E3]/5 dark:bg-[#2997FF]/10 text-[#0071E3] dark:text-[#2997FF] font-semibold"
+                            : "border-black/[0.04] dark:border-white/[0.06] bg-white dark:bg-[#14141A] text-[#110F24] dark:text-white hover:bg-black/[0.03] dark:hover:bg-white/[0.05]"
                         }`}
                       >
-                        {Icon && <Icon className={`h-5 w-5 ${isActive ? "text-teal-650 dark:text-teal-400" : "text-slate-500"}`} />}
-                        {isAnchor && <span className="text-teal-600 dark:text-teal-550/60 mr-1 font-bold">#</span>}
-                        <span className="font-bold text-sm">{link.name}</span>
+                        {Icon && <Icon className={`h-4 w-4 ${isActive ? "text-[#0071E3] dark:text-[#2997FF]" : "text-[#86868B]"}`} />}
+                        <span className="font-medium text-xs">{link.name}</span>
                       </Link>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Portals */}
-              <div className="space-y-3">
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-650 dark:text-slate-450 px-2">
-                  Portals
+              {/* AI & System Quick Tools */}
+              <div className="space-y-2">
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#86868B] dark:text-[#A1A1A6] px-1">
+                  AI Tools & Intelligence
                 </h3>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="space-y-1.5">
+                  {quickTools.map((tool) => {
+                    const Icon = tool.icon;
+                    const isActive = pathname === tool.href;
+                    return (
+                      <Link
+                        key={tool.href}
+                        href={tool.href}
+                        onClick={onClose}
+                        className={`flex items-start gap-3 p-2.5 rounded-xl border transition-all ${
+                          isActive
+                            ? "border-[#0071E3]/30 bg-[#0071E3]/5 dark:bg-[#2997FF]/10"
+                            : "border-black/[0.04] dark:border-white/[0.06] bg-white dark:bg-[#14141A] hover:bg-black/[0.03] dark:hover:bg-white/[0.05]"
+                        }`}
+                      >
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/[0.04] dark:bg-white/[0.08] text-[#110F24] dark:text-white shrink-0 mt-0.5">
+                          <Icon className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-xs font-semibold text-[#110F24] dark:text-white truncate">
+                              {tool.name}
+                            </span>
+                            <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border shrink-0 ${tool.badgeColor}`}>
+                              {tool.badge}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-[#86868B] dark:text-[#A1A1A6] mt-0.5">
+                            {tool.description}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Portals & Workspaces */}
+              <div className="space-y-2">
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#86868B] dark:text-[#A1A1A6] px-1">
+                  System Portals
+                </h3>
+                <div className="space-y-1.5">
                   {portalLinks.map((link) => {
                     const Icon = link.icon;
                     return (
@@ -252,38 +375,44 @@ export function MobileCommandDrawer({
                         key={link.href}
                         href={link.href}
                         onClick={onClose}
-                        className={`flex items-center gap-3.5 px-4 py-4 rounded-xl border transition-all duration-300 border-slate-200 dark:${link.borderColor} bg-white/70 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 hover:border-slate-350 dark:hover:border-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 shadow-sm`}
+                        className="flex items-center gap-3 p-2.5 rounded-xl border border-black/[0.04] dark:border-white/[0.06] bg-white dark:bg-[#14141A] hover:bg-black/[0.03] dark:hover:bg-white/[0.05] transition-all shadow-sm"
                       >
-                        <div className={`p-2.5 rounded-xl bg-slate-100 dark:${link.bgColor}`}>
-                          <Icon className={`h-5 w-5 ${link.color}`} />
+                        <div className={`p-2 rounded-lg bg-black/[0.04] dark:${link.bgColor}`}>
+                          <Icon className={`h-4 w-4 ${link.color}`} />
                         </div>
-                        <div className="flex-1 text-left">
-                          <div className="font-bold text-sm text-slate-800 dark:text-white">{link.name}</div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{link.description}</div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <div className="font-semibold text-xs text-[#110F24] dark:text-white truncate">
+                            {link.name}
+                          </div>
+                          <div className="text-[10px] text-[#86868B] dark:text-[#A1A1A6] truncate">
+                            {link.description}
+                          </div>
                         </div>
+                        <ArrowRight className="h-3.5 w-3.5 text-[#86868B] shrink-0" />
                       </Link>
                     );
                   })}
                 </div>
               </div>
+
             </div>
 
-            {/* Actions Footer */}
-            <div className="border-t border-slate-200 dark:border-white/10 p-5 space-y-3">
+            {/* Sticky Actions Footer */}
+            <div className="border-t border-black/[0.06] dark:border-white/[0.08] p-4 bg-white/90 dark:bg-[#121216]/90 backdrop-blur-md space-y-2 shrink-0">
               <Button
                 variant="outline"
-                className="w-full border border-teal-200 dark:border-teal-500/30 bg-gradient-to-r from-teal-500/10 via-cyan-500/5 to-teal-400/5 dark:from-teal-500/15 dark:to-cyan-500/10 hover:from-teal-500/20 dark:hover:from-teal-500/25 dark:hover:to-cyan-500/20 text-teal-700 dark:text-teal-300 font-bold h-12 flex items-center justify-center gap-2.5 rounded-3xl shadow-lg shadow-teal-700/5 dark:shadow-none"
+                className="w-full border border-black/[0.08] dark:border-white/[0.12] bg-white/80 dark:bg-[#161618]/80 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] text-[#110F24] dark:text-white font-semibold h-10 flex items-center justify-center gap-2 rounded-xl text-xs"
                 onClick={(e) => {
                   onClose();
                   handleBookMeeting(e);
                 }}
               >
-                <Calendar className="h-4.5 w-4.5" />
+                <Calendar className="h-3.5 w-3.5 text-[#0071E3] dark:text-[#2997FF]" />
                 Book Strategy Demo
               </Button>
 
               <Button
-                className="w-full bg-gradient-to-r from-teal-700 via-cyan-600 to-teal-650 hover:from-teal-650 hover:via-cyan-550 hover:to-teal-550 text-white font-bold h-12 rounded-3xl shadow-xl shadow-teal-700/20 dark:shadow-teal-500/30 transition-all duration-300 hover:shadow-teal-650/40"
+                className="btn-apple-primary w-full font-semibold h-10 rounded-xl text-xs flex items-center justify-center gap-1.5"
                 onClick={(e) => {
                   onClose();
                   handleGetStarted(e);
@@ -295,6 +424,7 @@ export function MobileCommandDrawer({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

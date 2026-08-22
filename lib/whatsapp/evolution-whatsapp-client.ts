@@ -11,7 +11,7 @@ export interface WhatsAppMessagePayload {
   senderName?: string;
   content: string;
   direction: "outbound" | "inbound";
-  triggerType?: "manual_chat" | "meeting_confirmation" | "meeting_reminder" | "deal_status_update" | "mom_dispatch";
+  triggerType?: "manual_chat" | "meeting_confirmation" | "meeting_reminder" | "deal_status_update" | "mom_dispatch" | "onboarding";
   status: "queued" | "sent" | "delivered" | "read" | "failed";
   encryptedHash: string;
   sentAt: string;
@@ -110,7 +110,7 @@ export async function sendWhatsAppMessage(params: {
   senderRole: "customer" | "agent" | "admin" | "system";
   senderId?: string;
   senderName?: string;
-  triggerType?: "manual_chat" | "meeting_confirmation" | "meeting_reminder" | "deal_status_update" | "mom_dispatch";
+  triggerType?: "manual_chat" | "meeting_confirmation" | "meeting_reminder" | "deal_status_update" | "mom_dispatch" | "onboarding";
 }): Promise<{ success: boolean; message: WhatsAppMessagePayload; error?: string }> {
   const senderKey = params.senderId || params.senderRole;
   const rateLimitCheck = checkWhatsAppRateLimit(senderKey, params.senderRole);

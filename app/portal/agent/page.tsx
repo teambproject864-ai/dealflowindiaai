@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useMemo, Suspense } from "react";
+import { createPortal } from "react-dom";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -13,6 +14,8 @@ import { GlassPanel } from "@/components/immersive/GlassPanel";
 import { ExtrudedButton } from "@/components/immersive/ExtrudedButton";
 import { ContentWorkflowWorkspace } from "@/components/portal/ContentWorkflowWorkspace";
 import { DealflowCRMWorkspace } from "@/components/portal/DealflowCRMWorkspace";
+import { WhatsAppIntegrationsList } from "@/components/whatsapp/WhatsAppIntegrationsList";
+import { WhatsAppConfiguredIntegration } from "@/app/api/whatsapp/integrations/route";
 import {
   Phone,
   MessageSquare,
@@ -57,7 +60,7 @@ import {
   Video,
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
-import { cn } from "@/lib/utils";
+import { cn, getCustomerDisplayName } from "@/lib/utils";
 import AuthProvider from "@/components/auth/AuthProvider";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { DashboardWidget } from "@/components/portal/DashboardWidget";
@@ -257,6 +260,49 @@ function AgentPortalContent() {
   // Settings States
   const [whatsAppParams, setWhatsAppParams] = useState("Default Campaign Sequence");
   const [callFramework, setCallFramework] = useState("Objective Discovery Framework");
+
+  // Live WhatsApp Chat State
+  const [selectedChatContactId, setSelectedChatContactId] = useState<string | null>(null);
+  const [chatInputText, setChatInputText] = useState("");
+  const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+  const [liveWhatsAppMessages, setLiveWhatsAppMessages] = useState<Record<string, Array<{ id: string; sender: "customer" | "agent"; text: string; time: string }>>>({});
+
+  const handleSendWhatsAppChat = async (targetPhone: string, contactId: string) => {
+    if (!chatInputText.trim()) return;
+    const msgText = chatInputText.trim();
+    setChatInputText("");
+    setIsSendingWhatsApp(true);
+
+    const newMsg = {
+      id: `msg-${Date.now()}`,
+      sender: "agent" as const,
+      text: msgText,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    setLiveWhatsAppMessages(prev => ({
+      ...prev,
+      [contactId]: [...(prev[contactId] || []), newMsg],
+    }));
+
+    try {
+      await fetch("/api/whatsapp/gateway", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          toPhone: targetPhone,
+          content: msgText,
+          senderRole: "agent",
+          triggerType: "manual_chat",
+        }),
+      });
+      showToast("success", "Message Dispatched", `Sent WhatsApp message to ${targetPhone}`);
+    } catch {
+      showToast("info", "Dispatched (Local)", `Message queued for ${targetPhone}`);
+    } finally {
+      setIsSendingWhatsApp(false);
+    }
+  };
 
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "info";
@@ -1017,27 +1063,33 @@ function AgentPortalContent() {
         />
 
         <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar relative">
-          {/* Toast Notification */}
-          {notification && (
-            <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-4 duration-300">
+          {/* Toast Notification (Portalled to document.body with z-[999999] to prevent clipping behind headers/glass panels) */}
+          {notification && typeof document !== "undefined" && createPortal(
+            <div className="fixed top-20 right-4 sm:top-24 sm:right-6 z-[999999] animate-in slide-in-from-top-3 fade-in duration-300 pointer-events-auto">
               <div className={cn(
-                "w-80 shadow-xl rounded-2xl border p-4 backdrop-blur-2xl text-xs flex items-start gap-3",
-                notification.type === "success" ? "border-[#34C759]/30 bg-white/95 dark:bg-[#161618]/95 text-[#248A3D] dark:text-[#30D158]" :
-                notification.type === "error" ? "border-[#FF3B30]/30 bg-white/95 dark:bg-[#161618]/95 text-[#D70015] dark:text-[#FF453A]" :
-                "border-[#0071E3]/30 bg-white/95 dark:bg-[#161618]/95 text-[#0071E3] dark:text-[#2997FF]"
+                "w-80 sm:w-96 shadow-2xl rounded-2xl border p-4 backdrop-blur-2xl text-xs flex items-start gap-3 ring-1 ring-black/10 dark:ring-white/10",
+                notification.type === "success" ? "border-[#34C759] bg-white/98 dark:bg-[#161618]/98 text-[#248A3D] dark:text-[#30D158] shadow-[0_10px_30px_rgba(52,199,89,0.25)]" :
+                notification.type === "error" ? "border-[#FF3B30] bg-white/98 dark:bg-[#161618]/98 text-[#D70015] dark:text-[#FF453A] shadow-[0_10px_30px_rgba(255,59,48,0.25)]" :
+                "border-[#0071E3] bg-white/98 dark:bg-[#161618]/98 text-[#0071E3] dark:text-[#2997FF] shadow-[0_10px_30px_rgba(0,113,227,0.25)]"
               )}>
-                {notification.type === "success" ? <CheckCircle2 className="h-5 w-5 text-[#34C759] shrink-0" /> :
-                 notification.type === "error" ? <AlertCircle className="h-5 w-5 text-[#FF3B30] shrink-0" /> :
-                 <AlertCircle className="h-5 w-5 text-[#0071E3] shrink-0" />}
-                <div className="flex-1">
-                  <p className="font-bold text-xs">{notification.title}</p>
-                  <p className="text-[11px] text-[#6E6E73] dark:text-[#A1A1A6] mt-0.5">{notification.message}</p>
+                {notification.type === "success" ? <CheckCircle2 className="h-5 w-5 text-[#34C759] shrink-0 mt-0.5" /> :
+                 notification.type === "error" ? <AlertCircle className="h-5 w-5 text-[#FF3B30] shrink-0 mt-0.5" /> :
+                 <AlertCircle className="h-5 w-5 text-[#0071E3] shrink-0 mt-0.5" />}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-xs text-[#1D1D1F] dark:text-white leading-tight">{notification.title}</p>
+                  <p className="text-[11px] text-[#6E6E73] dark:text-slate-300 mt-1 leading-normal break-words">{notification.message}</p>
                 </div>
-                <button onClick={() => setNotification(null)} className="text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white">
+                <button 
+                  type="button"
+                  onClick={() => setNotification(null)} 
+                  className="p-1 rounded-lg text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors shrink-0"
+                  aria-label="Close notification"
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
-            </div>
+            </div>,
+            document.body
           )}
 
           {/* Main Title Header */}
@@ -3213,77 +3265,180 @@ function AgentPortalContent() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
-                  <Zap className="h-6 w-6 text-emerald-400" /> Evolution API WhatsApp Workbench &amp; Live Chat
+                  <Zap className="h-6 w-6 text-emerald-400" /> WhatsApp Workbench &amp; Live Chat
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">Two-way encrypted WhatsApp communication hub with daily message limit meters, instant templates, and prospect history.</p>
+                <p className="text-xs text-slate-400 mt-1">Multi-gateway encrypted WhatsApp communication hub supporting Evolution API and Open WA clusters with quota meters and live sync.</p>
               </div>
               <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-mono font-bold">
                 Agent Meter: 200 msgs/day
               </span>
             </div>
 
+            {/* Configured WhatsApp Integrations List */}
+            <GlassPanel className="p-6 border-slate-800">
+              <WhatsAppIntegrationsList />
+            </GlassPanel>
+
+            {/* Live WhatsApp Prospect Conversation Workspace */}
             <GlassPanel className="p-6 border-slate-800 space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column: Recent Prospect WhatsApp Contacts */}
+                
+                {/* Left Column: Dynamic CRM Prospect WhatsApp Contacts */}
                 <div className="lg:col-span-1 space-y-3 border-r border-slate-800 pr-4">
-                  <h3 className="text-sm font-bold text-slate-200">Prospect WhatsApp Contacts</h3>
-                  <div className="space-y-2">
-                    <div className="p-3 bg-slate-950/60 rounded-xl border border-emerald-500/30 cursor-pointer hover:bg-slate-900 transition">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-200 text-xs">Praneeth Burada</span>
-                        <span className="text-[10px] text-emerald-400 font-mono font-bold">Active</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 mt-0.5">+1 (555) 019-2831</p>
-                      <p className="text-[10px] text-slate-500 truncate mt-1">&quot;Sounds great! When can we sign?&quot;</p>
-                    </div>
-
-                    <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-850 cursor-pointer hover:bg-slate-900 transition">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-200 text-xs">Anil Kumar</span>
-                        <span className="text-[10px] text-slate-400 font-mono">Delivered</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 mt-0.5">+1 (555) 014-9922</p>
-                      <p className="text-[10px] text-slate-500 truncate mt-1">&quot;Proposal updated to Negotiation stage.&quot;</p>
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-slate-200">Prospect WhatsApp Contacts</h3>
+                    <span className="text-[10px] text-emerald-400 font-mono font-bold">
+                      {customers.length} Contacts
+                    </span>
                   </div>
+
+                  {customers.length === 0 ? (
+                    <div className="p-6 text-center rounded-xl bg-slate-950/40 border border-slate-850 space-y-2">
+                      <Users className="h-6 w-6 text-slate-600 mx-auto" />
+                      <p className="text-xs text-slate-400 font-medium">No customer accounts available.</p>
+                      <p className="text-[10px] text-slate-500">Create or switch customer accounts to start WhatsApp conversations.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+                      {customers.map((cust) => {
+                        const targetId = cust.id;
+                        const isSelected = (selectedChatContactId || customers[0]?.id) === targetId;
+                        const cName = getCustomerDisplayName(cust);
+                        const cPhone = cust.personalDetails?.phone || cust.phone || "+1 (555) 019-2831";
+                        const cStage = cust.stage || cust.lifecycleStage || "Active Lead";
+
+                        return (
+                          <div
+                            key={targetId}
+                            onClick={() => setSelectedChatContactId(targetId)}
+                            className={`p-3 rounded-xl border transition-all cursor-pointer text-left ${
+                              isSelected
+                                ? "bg-slate-900/90 border-emerald-500/50 shadow-md shadow-emerald-950/30"
+                                : "bg-slate-950/60 border-slate-850 hover:bg-slate-900/50 hover:border-slate-750"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-slate-200 text-xs truncate max-w-[140px]">{cName}</span>
+                              <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                                {cStage}
+                              </span>
+                            </div>
+                            <p className="text-[11px] font-mono text-slate-400 mt-0.5">{cPhone}</p>
+                            <p className="text-[10px] text-slate-500 truncate mt-1">
+                              {cust.companyDetails?.companyName || cust.industry || "Dealflow Managed Client"}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
-                {/* Right Column: Encrypted Chat Thread & Composer */}
-                <div className="lg:col-span-2 space-y-4 flex flex-col">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                    <span className="font-bold text-slate-200 text-sm">Chatting with Praneeth Burada (+1 555 019-2831)</span>
-                    <span className="text-[10px] font-mono text-slate-400">SHA-256 Encrypted Payload</span>
-                  </div>
+                {/* Right Column: Dynamic Encrypted Chat Thread & Composer */}
+                {(() => {
+                  const activeCust = customers.find(c => c.id === (selectedChatContactId || customers[0]?.id)) || customers[0] || null;
+                  const activeCustName = activeCust ? getCustomerDisplayName(activeCust) : "Selected Prospect";
+                  const activeCustPhone = activeCust?.personalDetails?.phone || activeCust?.phone || "+1 (555) 019-2831";
+                  const activeCustId = activeCust?.id || "default";
+                  const currentMessages = liveWhatsAppMessages[activeCustId] || [];
 
-                  <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-                    <div className="p-3 bg-slate-900/60 rounded-2xl rounded-tl-sm border border-slate-800 text-xs text-slate-300 max-w-[80%]">
-                      <p className="font-bold text-[10px] text-emerald-400 mb-1">Praneeth (Prospect)</p>
-                      Hi, following up on our meeting bot demo. Can we schedule a review call?
-                    </div>
+                  return (
+                    <div className="lg:col-span-2 space-y-4 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <span className="font-bold text-slate-200 text-sm">
+                              Chatting with {activeCustName} ({activeCustPhone})
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                            SHA-256 Encrypted
+                          </span>
+                        </div>
 
-                    <div className="p-3 bg-emerald-950/40 rounded-2xl rounded-tr-sm border border-emerald-500/20 text-xs text-slate-200 ml-auto max-w-[80%]">
-                      <p className="font-bold text-[10px] text-emerald-300 mb-1">Alex Rivera (Agent)</p>
-                      Absolutely! I have dispatched a meeting bot invitation to your email with calendar sync links.
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-800 space-y-3">
-                    <Textarea
-                      placeholder="Type an encrypted WhatsApp message..."
-                      rows={2}
-                      className="bg-slate-950 border-slate-800 text-white text-xs"
-                    />
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="text-[10px] border-slate-800">Insert Demo Template</Button>
-                        <Button size="sm" variant="outline" className="text-[10px] border-slate-800">Insert Calendar Link</Button>
+                        {/* Thread Messages */}
+                        <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar pr-2 py-3">
+                          {currentMessages.length === 0 ? (
+                            <div className="p-8 text-center rounded-xl bg-slate-950/30 border border-dashed border-slate-850 space-y-2">
+                              <MessageSquare className="h-6 w-6 text-slate-600 mx-auto" />
+                              <p className="text-xs text-slate-300 font-semibold">
+                                Ready to message {activeCustName}
+                              </p>
+                              <p className="text-[10px] text-slate-500 max-w-sm mx-auto">
+                                Type a message below to dispatch autonomous meeting invitations, proposals, or live deal updates via WhatsApp.
+                              </p>
+                            </div>
+                          ) : (
+                            currentMessages.map((msg) => (
+                              <div
+                                key={msg.id}
+                                className={`p-3 text-xs max-w-[80%] rounded-2xl ${
+                                  msg.sender === "agent"
+                                    ? "bg-emerald-950/40 border border-emerald-500/20 text-slate-200 ml-auto rounded-tr-sm"
+                                    : "bg-slate-900/80 border border-slate-800 text-slate-300 rounded-tl-sm"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                  <span className={`text-[10px] font-bold ${msg.sender === "agent" ? "text-emerald-300" : "text-slate-400"}`}>
+                                    {msg.sender === "agent" ? "You (Agent)" : activeCustName}
+                                  </span>
+                                  <span className="text-[9px] font-mono text-slate-500">{msg.time}</span>
+                                </div>
+                                <p className="leading-relaxed">{msg.text}</p>
+                              </div>
+                            ))
+                          )}
+                        </div>
                       </div>
-                      <ExtrudedButton size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-xs font-bold flex items-center gap-1">
-                        <Send className="w-3.5 h-3.5" /> Send WhatsApp Message
-                      </ExtrudedButton>
+
+                      {/* Message Composer */}
+                      <div className="pt-3 border-t border-slate-800 space-y-3">
+                        <Textarea
+                          placeholder={`Type an encrypted WhatsApp message to ${activeCustName}...`}
+                          rows={2}
+                          value={chatInputText}
+                          onChange={(e) => setChatInputText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSendWhatsAppChat(activeCustPhone, activeCustId);
+                            }
+                          }}
+                          className="bg-slate-950 border-slate-800 text-white text-xs focus:border-emerald-500 rounded-xl"
+                        />
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => setChatInputText("Hi, following up regarding your sales proposal and scheduled strategy call.")}
+                              className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white border border-slate-800 text-[10px] transition"
+                            >
+                              Insert Demo Template
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setChatInputText("Please find our calendar availability to finalize next steps: https://calendly.com/dealflow-strategy")}
+                              className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white border border-slate-800 text-[10px] transition"
+                            >
+                              Insert Calendar Link
+                            </button>
+                          </div>
+                          <ExtrudedButton
+                            size="sm"
+                            onClick={() => handleSendWhatsAppChat(activeCustPhone, activeCustId)}
+                            disabled={isSendingWhatsApp || !chatInputText.trim()}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-xs font-bold flex items-center gap-1.5 shrink-0"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            <span>{isSendingWhatsApp ? "Sending..." : "Send WhatsApp Message"}</span>
+                          </ExtrudedButton>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })()}
+
               </div>
             </GlassPanel>
           </motion.div>

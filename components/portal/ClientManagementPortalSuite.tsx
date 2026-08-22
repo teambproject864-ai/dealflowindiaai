@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { 
   Users, 
@@ -846,27 +847,28 @@ export function ClientManagementPortalSuite({ initialRole }: { initialRole?: Use
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 relative">
-      {/* Dynamic Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 duration-300">
+      {/* Dynamic Toast Notification (Portalled to document.body with z-[999999]) */}
+      {toastMessage && typeof document !== "undefined" && createPortal(
+        <div className="fixed bottom-6 right-6 z-[999999] animate-in slide-in-from-bottom-5 duration-300 pointer-events-auto">
           <div className={cn(
-            "p-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-start gap-3 max-w-md",
-            toastMessage.type === "success" ? "bg-emerald-950/90 border-emerald-500/40 text-emerald-100 shadow-emerald-500/20" :
-            toastMessage.type === "error" ? "bg-rose-950/90 border-rose-500/40 text-rose-100 shadow-rose-500/20" :
-            "bg-indigo-950/90 border-indigo-500/40 text-indigo-100 shadow-indigo-500/20"
+            "p-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-start gap-3 max-w-md ring-1 ring-black/10 dark:ring-white/10",
+            toastMessage.type === "success" ? "bg-emerald-950/98 border-emerald-500 text-emerald-100 shadow-[0_10px_30px_rgba(16,185,129,0.25)]" :
+            toastMessage.type === "error" ? "bg-rose-950/98 border-rose-500 text-rose-100 shadow-[0_10px_30px_rgba(244,63,94,0.25)]" :
+            "bg-indigo-950/98 border-indigo-500 text-indigo-100 shadow-[0_10px_30px_rgba(99,102,241,0.25)]"
           )}>
             {toastMessage.type === "success" && <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />}
             {toastMessage.type === "error" && <AlertCircle className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />}
             {toastMessage.type === "info" && <Info className="h-5 w-5 text-indigo-400 shrink-0 mt-0.5" />}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h4 className="font-bold text-xs uppercase tracking-wider">{toastMessage.title}</h4>
-              <p className="text-xs opacity-90 mt-0.5 leading-relaxed">{toastMessage.text}</p>
+              <p className="text-xs opacity-90 mt-0.5 leading-relaxed break-words">{toastMessage.text}</p>
             </div>
-            <button onClick={() => setToastMessage(null)} className="text-white/60 hover:text-white">
+            <button onClick={() => setToastMessage(null)} className="text-white/60 hover:text-white shrink-0 p-1">
               <X className="h-4 w-4" />
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Top Command Bar & RBAC Switcher */}

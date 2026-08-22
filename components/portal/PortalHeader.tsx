@@ -1,8 +1,8 @@
 // components/portal/PortalHeader.tsx
 "use client";
 
-import React, { useState } from "react";
-import { Search, Bell, Sparkles, User, Shield, ChevronRight, Activity } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Search, Bell, Sparkles, User, Shield, ChevronRight, Activity, X } from "lucide-react";
 import { cn, getCustomerDisplayName } from "@/lib/utils";
 import { CustomerSwitcher, CustomerAccountOption } from "./CustomerSwitcher";
 
@@ -49,12 +49,26 @@ export function PortalHeader({
 }: PortalHeaderProps) {
   const meta = ROLE_HEADER_METADATA[role] || ROLE_HEADER_METADATA.customer;
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotificationsOpen(false);
+      }
+    };
+    if (notificationsOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [notificationsOpen]);
+
   const displayName = typeof getCustomerDisplayName === "function"
     ? getCustomerDisplayName({ name: userName, email: userEmail })
     : (userName && userName !== "Customer Name" ? userName : (userEmail.split("@")[0] || "Customer Name"));
 
   return (
-    <header className="sticky top-0 z-20 w-full border-b border-black/[0.06] dark:border-white/[0.08] bg-[#FBFBFD]/80 dark:bg-[#0A0A0C]/80 backdrop-blur-2xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3 sm:gap-4">
+    <header className="sticky top-0 z-50 w-full border-b border-black/[0.06] dark:border-white/[0.08] bg-[#FBFBFD]/90 dark:bg-[#0A0A0C]/90 backdrop-blur-2xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3 sm:gap-4">
       
       {/* Left: Breadcrumb Trail & Customer Switcher for Agent */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -119,21 +133,37 @@ export function PortalHeader({
         </div>
 
         {/* Notifications Button */}
-        <div className="relative">
+        <div ref={notifRef} className="relative">
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             className="p-2 rounded-full bg-black/[0.03] dark:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#1D1D1F] dark:hover:text-white transition-colors relative"
             title="Notifications"
+            aria-label="View notifications"
           >
             <Bell className="w-4 h-4" />
             <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#0071E3] animate-ping" />
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 rounded-3xl apple-glass-card p-4 space-y-3 z-50 text-xs shadow-xl">
+            <div className="absolute right-0 mt-2 w-80 rounded-3xl apple-glass-card p-4 space-y-3 z-[9999] text-xs shadow-2xl border border-black/[0.1] dark:border-white/[0.15] animate-in fade-in zoom-in-95 duration-150">
               <div className="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] pb-2">
-                <span className="font-bold text-[#1D1D1F] dark:text-white">System Notifications</span>
-                <span className="text-[10px] text-[#0071E3] dark:text-[#2997FF] font-semibold">2 New</span>
+                <span className="font-bold text-[#1D1D1F] dark:text-white flex items-center gap-1.5">
+                  <Bell className="w-3.5 h-3.5 text-[#0071E3]" />
+                  System Notifications
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-[#0071E3] dark:text-[#2997FF] font-semibold px-2 py-0.5 rounded-full bg-[#0071E3]/10">
+                    2 New
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setNotificationsOpen(false)}
+                    className="p-1 rounded-lg text-[#86868B] hover:text-white hover:bg-white/10 transition-colors"
+                    aria-label="Close notifications"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
               <div className="space-y-2">
                 <div className="p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/[0.06]">

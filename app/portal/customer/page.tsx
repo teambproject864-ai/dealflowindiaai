@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { GlassPanel } from "@/components/immersive/GlassPanel";
 import { ExtrudedButton } from "@/components/immersive/ExtrudedButton";
 import {
   CheckCircle2,
+  AlertCircle,
   MessageSquare,
   Star,
   FileText,
@@ -764,6 +766,35 @@ function CustomerPortalContent() {
         />
 
         <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar relative">
+          {/* Toast Notification (Portalled to document.body with z-[999999] to prevent clipping behind headers/glass panels) */}
+          {notification && typeof document !== "undefined" && createPortal(
+            <div className="fixed top-20 right-4 sm:top-24 sm:right-6 z-[999999] animate-in slide-in-from-top-3 fade-in duration-300 pointer-events-auto">
+              <div className={cn(
+                "w-80 sm:w-96 shadow-2xl rounded-2xl border p-4 backdrop-blur-2xl text-xs flex items-start gap-3 ring-1 ring-black/10 dark:ring-white/10",
+                notification.type === "success" ? "border-[#34C759] bg-white/98 dark:bg-[#161618]/98 text-[#248A3D] dark:text-[#30D158] shadow-[0_10px_30px_rgba(52,199,89,0.25)]" :
+                notification.type === "error" ? "border-[#FF3B30] bg-white/98 dark:bg-[#161618]/98 text-[#D70015] dark:text-[#FF453A] shadow-[0_10px_30px_rgba(255,59,48,0.25)]" :
+                "border-[#0071E3] bg-white/98 dark:bg-[#161618]/98 text-[#0071E3] dark:text-[#2997FF] shadow-[0_10px_30px_rgba(0,113,227,0.25)]"
+              )}>
+                {notification.type === "success" ? <CheckCircle2 className="h-5 w-5 text-[#34C759] shrink-0 mt-0.5" /> :
+                 notification.type === "error" ? <AlertCircle className="h-5 w-5 text-[#FF3B30] shrink-0 mt-0.5" /> :
+                 <AlertCircle className="h-5 w-5 text-[#0071E3] shrink-0 mt-0.5" />}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-xs text-[#1D1D1F] dark:text-white leading-tight">{notification.title}</p>
+                  <p className="text-[11px] text-[#6E6E73] dark:text-slate-300 mt-1 leading-normal break-words">{notification.message}</p>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setNotification(null)} 
+                  className="p-1 rounded-lg text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors shrink-0"
+                  aria-label="Close notification"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>,
+            document.body
+          )}
+
           {/* Top Header & Customer Greeting Banner */}
           <div className="flex items-center justify-between flex-wrap gap-4 border-b border-black/[0.06] dark:border-white/[0.08] pb-6">
             <div>

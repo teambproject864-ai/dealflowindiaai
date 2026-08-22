@@ -28,7 +28,7 @@ export class MCPClient {
   /**
    * Initializes the connection with the protocol server.
    */
-  public async initialize(clientName: string, clientVersion: string): Promise<InitializeResult> {
+  public async initialize(clientName: string = "Dealflow MCP Client", clientVersion: string = "2.0.0"): Promise<InitializeResult> {
     const params: InitializeParams = {
       protocolVersion: "2024-11-05",
       capabilities: {
@@ -135,11 +135,18 @@ export class MCPClient {
 export class LocalTransport implements Transport {
   private server: any; // MCPServer
 
-  constructor(server: any) {
+  constructor(server?: any) {
+    this.server = server;
+  }
+
+  public connect(server: any) {
     this.server = server;
   }
 
   async send(request: JSONRPCRequest): Promise<JSONRPCResponse> {
+    if (!this.server) {
+      throw { code: MCPErrorCode.InternalError, message: "LocalTransport not connected to an MCPServer" };
+    }
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 10));
     return await this.server.handleRequest(request);

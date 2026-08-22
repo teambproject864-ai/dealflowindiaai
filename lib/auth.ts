@@ -73,73 +73,16 @@ function requireEnvPassword(envVar: string, fallbackDefault: string): string {
   return value.trim();
 }
 
-const DEV_PASSWORDS = {
-  admin:            requireEnvPassword("ADMIN_PASSWORD",              "Admin@123"),
-  admin1:           requireEnvPassword("ADMIN1_PASSWORD",             "Admin@123"),
-  praneethAgent:    requireEnvPassword("AGENT_PRANEETH_PASSWORD",     "Praneeth@123"),
-  ashokAgent:       requireEnvPassword("AGENT_ASHOK_PASSWORD",        "Ashok@123"),
-  demoCustomer:     requireEnvPassword("CUSTOMER_DEMO_PASSWORD",      "Demo@123"),
-  praneethCustomer: requireEnvPassword("CUSTOMER_PRANEETH_PASSWORD",  "Praneeth@1909"),
-};
-
 export const DEMO_ADMIN = {
-  id: "admin-1",
-  email: "admin1@dealflow.ai",
-  name: "Administrator",
+  id: "",
+  email: "",
+  name: "",
   role: "admin" as const,
 };
 
-export const DEMO_ADMINS: (DemoAdmin & { hashedPassword: string })[] = [
-  {
-    id: "admin-1",
-    email: "admin1@dealflow.ai",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.admin1, SALT_ROUNDS),
-    name: "Administrator",
-    role: "admin",
-  },
-  {
-    id: "admin-2",
-    email: "admin@dealflow.ai",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.admin, SALT_ROUNDS),
-    name: "Admin One",
-    role: "admin",
-  },
-];
-
-export const DEMO_AGENTS: DemoAgent[] = [
-  {
-    id: "agent-1",
-    email: "praneeth@dealflow.ai",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.praneethAgent, SALT_ROUNDS),
-    name: "Praneeth",
-    role: "agent",
-  },
-  {
-    id: "agent-2",
-    email: "agent.ashok@dealflow.ai",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.ashokAgent, SALT_ROUNDS),
-    name: "Ashok",
-    role: "agent",
-  },
-];
-
-export const DEMO_CUSTOMERS: DemoCustomer[] = [
-  {
-    id: "cust-demo",
-    email: "demo@customer.com",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.demoCustomer, SALT_ROUNDS),
-    name: "Demo Customer",
-    role: "customer",
-  },
-  {
-    id: "cust-praneeth",
-    email: "praneethburada@gmail.com",
-    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.praneethCustomer, SALT_ROUNDS),
-    name: "Praneeth Customer",
-    role: "customer",
-  },
-];
-
+export const DEMO_ADMINS: (DemoAdmin & { hashedPassword: string })[] = [];
+export const DEMO_AGENTS: DemoAgent[] = [];
+export const DEMO_CUSTOMERS: DemoCustomer[] = [];
 export let NEW_CUSTOMERS: DemoCustomer[] = [];
 
 // --- Audit Logging ---

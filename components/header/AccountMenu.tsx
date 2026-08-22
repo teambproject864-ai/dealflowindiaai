@@ -160,7 +160,7 @@ export function AccountMenu() {
       {/* Account Dropdown */}
       {isOpen && (
         <div
-          className="absolute right-0 mt-3 w-80 rounded-3xl dropdown-glass shadow-2xl shadow-black/60 overflow-hidden p-4 space-y-4 transition-all duration-200"
+          className="absolute right-0 mt-3 w-80 rounded-3xl dropdown-glass shadow-2xl shadow-black/60 overflow-hidden p-4 space-y-4 transition-all duration-200 z-[9999]"
           role="menu"
           aria-orientation="vertical"
         >

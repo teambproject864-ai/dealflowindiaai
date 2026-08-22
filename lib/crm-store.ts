@@ -8,139 +8,10 @@ import {
   CRMFilterOptions 
 } from "./crm-types";
 
-// In-Memory Storage maps as reliable fallbacks
+// In-Memory Storage maps as reliable fallbacks (populated strictly from live database)
 const inMemoryCompanies = new Map<string, CRMCompany>();
 const inMemoryCustomers = new Map<string, CRMCustomer>();
 const inMemoryDeals = new Map<string, CRMDeal>();
-
-// Initial Seed Data (100% compliant with mandatory customer/company linkage)
-const SEED_COMPANIES: CRMCompany[] = [
-  {
-    id: "comp-1",
-    companyName: "Acme Enterprise SaaS",
-    industry: "Software & Technology",
-    websiteUrl: "https://acme-saas.com",
-    employeeCount: 150,
-    annualRevenue: "$15M",
-    contactEmail: "contact@acme-saas.com",
-    phone: "+1 (555) 019-2831",
-    createdAt: "2026-01-15T08:00:00.000Z",
-    updatedAt: "2026-01-15T08:00:00.000Z"
-  },
-  {
-    id: "comp-2",
-    companyName: "Global Fintech Dynamics",
-    industry: "Financial Technology",
-    websiteUrl: "https://fintechdynamics.io",
-    employeeCount: 85,
-    annualRevenue: "$8.5M",
-    contactEmail: "info@fintechdynamics.io",
-    phone: "+1 (555) 014-9922",
-    createdAt: "2026-02-01T09:30:00.000Z",
-    updatedAt: "2026-02-01T09:30:00.000Z"
-  },
-  {
-    id: "comp-3",
-    companyName: "Apex HealthTech",
-    industry: "Healthcare Software",
-    websiteUrl: "https://apexhealthtech.com",
-    employeeCount: 220,
-    annualRevenue: "$24M",
-    contactEmail: "sales@apexhealthtech.com",
-    phone: "+1 (555) 088-7711",
-    createdAt: "2026-02-10T11:15:00.000Z",
-    updatedAt: "2026-02-10T11:15:00.000Z"
-  }
-];
-
-const SEED_CUSTOMERS: CRMCustomer[] = [
-  {
-    id: "cust-1",
-    customerName: "Praneeth Burada",
-    email: "praneethburada@gmail.com",
-    phone: "+1 (555) 010-0007",
-    title: "VP of Revenue Operations",
-    companyId: "comp-1",
-    companyName: "Acme Enterprise SaaS",
-    createdAt: "2026-01-15T08:30:00.000Z",
-    updatedAt: "2026-01-15T08:30:00.000Z"
-  },
-  {
-    id: "cust-2",
-    customerName: "Anil Kumar",
-    email: "anil@cralgo.com",
-    phone: "+1 (555) 018-4421",
-    title: "Chief Technology Officer",
-    companyId: "comp-2",
-    companyName: "Global Fintech Dynamics",
-    createdAt: "2026-02-01T10:00:00.000Z",
-    updatedAt: "2026-02-01T10:00:00.000Z"
-  },
-  {
-    id: "cust-3",
-    customerName: "Sarah Jenkins",
-    email: "sarah.j@apexhealthtech.com",
-    phone: "+1 (555) 088-7712",
-    title: "Head of Growth",
-    companyId: "comp-3",
-    companyName: "Apex HealthTech",
-    createdAt: "2026-02-10T11:45:00.000Z",
-    updatedAt: "2026-02-10T11:45:00.000Z"
-  }
-];
-
-const SEED_DEALS: CRMDeal[] = [
-  {
-    id: "deal-1",
-    dealName: "Acme Enterprise AI Pipeline Expansion",
-    amount: 120000,
-    stage: "proposal",
-    probability: 75,
-    customerId: "cust-1",
-    customerName: "Praneeth Burada",
-    companyId: "comp-1",
-    companyName: "Acme Enterprise SaaS",
-    expectedCloseDate: "2026-08-31",
-    notes: "High intent prospect. Custom AI workflow proposal submitted.",
-    createdAt: "2026-01-20T14:00:00.000Z",
-    updatedAt: "2026-01-20T14:00:00.000Z"
-  },
-  {
-    id: "deal-2",
-    dealName: "Fintech Dynamics Outbound Automation",
-    amount: 85000,
-    stage: "negotiation",
-    probability: 90,
-    customerId: "cust-2",
-    customerName: "Anil Kumar",
-    companyId: "comp-2",
-    companyName: "Global Fintech Dynamics",
-    expectedCloseDate: "2026-08-15",
-    notes: "Contract security audit passed. Final pricing review.",
-    createdAt: "2026-02-05T16:20:00.000Z",
-    updatedAt: "2026-02-05T16:20:00.000Z"
-  },
-  {
-    id: "deal-3",
-    dealName: "Apex HealthTech HIPAA Compliance Suite",
-    amount: 195000,
-    stage: "closed-won",
-    probability: 100,
-    customerId: "cust-3",
-    customerName: "Sarah Jenkins",
-    companyId: "comp-3",
-    companyName: "Apex HealthTech",
-    expectedCloseDate: "2026-07-01",
-    notes: "Signed 12-month annual contract.",
-    createdAt: "2026-02-12T10:10:00.000Z",
-    updatedAt: "2026-07-01T10:10:00.000Z"
-  }
-];
-
-// Initialize seed data into memory
-SEED_COMPANIES.forEach(c => inMemoryCompanies.set(c.id, c));
-SEED_CUSTOMERS.forEach(c => inMemoryCustomers.set(c.id, c));
-SEED_DEALS.forEach(d => inMemoryDeals.set(d.id, d));
 
 /**
  * Mandatory Data Validation Rules:
@@ -203,9 +74,6 @@ export async function getCRMCompanies(): Promise<CRMCompany[]> {
   } catch (e) {
     console.warn("[CRMStore] Firestore read error, using memory fallback:", e);
   }
-  if (inMemoryCompanies.size === 0) {
-    SEED_COMPANIES.forEach(c => inMemoryCompanies.set(c.id, c));
-  }
   return Array.from(inMemoryCompanies.values());
 }
 
@@ -225,9 +93,6 @@ export async function getCRMCustomers(): Promise<CRMCustomer[]> {
   } catch (e) {
     console.warn("[CRMStore] Firestore read error, using memory fallback:", e);
   }
-  if (inMemoryCustomers.size === 0) {
-    SEED_CUSTOMERS.forEach(c => inMemoryCustomers.set(c.id, c));
-  }
   return Array.from(inMemoryCustomers.values());
 }
 
@@ -246,9 +111,6 @@ export async function getCRMDeals(): Promise<CRMDeal[]> {
     }
   } catch (e) {
     console.warn("[CRMStore] Firestore read error, using memory fallback:", e);
-  }
-  if (inMemoryDeals.size === 0) {
-    SEED_DEALS.forEach(d => inMemoryDeals.set(d.id, d));
   }
   return Array.from(inMemoryDeals.values());
 }

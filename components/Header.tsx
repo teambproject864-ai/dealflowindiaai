@@ -467,7 +467,7 @@ export function Header() {
   }, [pathname]);
 
   if (!mounted) {
-    return <header className="sticky top-0 z-50 w-full h-16 border-b border-black/[0.05] dark:border-white/[0.08] bg-[#FBFBFD]/80 dark:bg-[#000000]/80 backdrop-blur-xl" />;
+    return <header className="sticky top-0 z-50 w-full h-14 sm:h-16 border-b border-black/[0.05] dark:border-white/[0.08] bg-[#FBFBFD]/80 dark:bg-[#000000]/80 backdrop-blur-xl" />;
   }
 
   return (
@@ -478,24 +478,24 @@ export function Header() {
           : "border-black/[0.05] dark:border-white/[0.08]"
       }`}
     >
-      <div className="w-full max-w-[1440px] mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8 gap-3 sm:gap-4">
+      <div className="w-full max-w-[1440px] mx-auto flex h-14 sm:h-16 items-center justify-between px-3 sm:px-6 lg:px-8 gap-2 sm:gap-4">
         
         {/* Left: Clean Brand Logo */}
-        <div className="flex items-center gap-4 lg:gap-6 xl:gap-8 flex-shrink-0 min-w-0">
+        <div className="flex items-center gap-3 lg:gap-6 xl:gap-8 flex-shrink-0 min-w-0">
           <Link
             href="/"
-            className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] rounded-xl shrink-0"
+            className="flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] rounded-xl shrink-0"
             aria-label="DealFlow.AI Homepage"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#0071E3] to-[#2997FF] text-white shadow-sm transition-transform group-hover:scale-105 group-active:scale-95 shrink-0">
-              <IconDealflowLogo className="h-5 w-5" aria-hidden />
+            <div className="flex h-8 w-8 sm:h-8.5 sm:w-8.5 items-center justify-center rounded-xl bg-gradient-to-br from-[#0071E3] to-[#2997FF] text-white shadow-sm transition-transform group-hover:scale-105 group-active:scale-95 shrink-0">
+              <IconDealflowLogo className="h-4.5 w-4.5" aria-hidden />
             </div>
-            <span className="font-sans text-base lg:text-lg font-bold tracking-tight text-[#110F24] dark:text-[#F5F5F7] whitespace-nowrap">
+            <span className="font-sans text-sm sm:text-base font-bold tracking-tight text-[#110F24] dark:text-[#F5F5F7] whitespace-nowrap">
               DEALFLOW<span className="text-[#0071E3] dark:text-[#2997FF]">.AI</span>
             </span>
           </Link>
 
-          {/* Center: Desktop Navigation Links */}
+          {/* Center: Desktop Navigation Links (Large screens only) */}
           <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1" aria-label="Main Navigation">
             {navLinks.map((link) => {
               if (link.subOptions) {
@@ -532,13 +532,15 @@ export function Header() {
         </div>
 
         {/* Right: Consolidated Tools & Action Buttons */}
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           
-          {/* Combined AI Tools & Browser Agent Dropdown */}
-          <QuickToolsDropdown pathname={pathname} />
+          {/* Combined AI Tools & Browser Agent Dropdown (Hidden on mobile) */}
+          <div className="hidden sm:block">
+            <QuickToolsDropdown pathname={pathname} />
+          </div>
 
-          {/* Notification Center */}
-          <div className="hidden sm:block shrink-0">
+          {/* Notification Center (Hidden on mobile & tablet) */}
+          <div className="hidden lg:block shrink-0">
             <NotificationCenter />
           </div>
 
@@ -547,17 +549,17 @@ export function Header() {
             <ThemeToggle />
           </div>
 
-          {/* Account Profile Menu */}
-          <div className="hidden sm:block shrink-0">
+          {/* Account Profile Menu (Hidden on mobile & tablet) */}
+          <div className="hidden lg:block shrink-0">
             <AccountMenu />
           </div>
 
-          {/* Action CTAs */}
-          <div className="hidden md:flex items-center gap-2 pl-2 border-l border-black/[0.08] dark:border-white/[0.12] shrink-0">
+          {/* Action CTAs (Desktop lg+ only) */}
+          <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-black/[0.08] dark:border-white/[0.12] shrink-0">
             <Link
               href="/book-demo"
               onClick={handleBookMeeting}
-              className="hidden xl:flex items-center gap-1.5 px-3.5 py-1.5 h-8.5 text-xs font-semibold text-[#110F24] dark:text-white bg-white/80 dark:bg-[#161618]/80 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.12] rounded-lg transition-all whitespace-nowrap shadow-sm shrink-0"
+              className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 h-8 text-xs font-semibold text-[#110F24] dark:text-white bg-white/80 dark:bg-[#161618]/80 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.12] rounded-lg transition-all whitespace-nowrap shadow-sm shrink-0"
             >
               <Calendar className="h-3.5 w-3.5 text-[#0071E3] dark:text-[#2997FF]" />
               <span>Book Strategy Demo</span>
@@ -566,37 +568,33 @@ export function Header() {
             <Link
               href="/portal/customer/login?signup=true"
               onClick={handleGetStarted}
-              className="btn-apple-primary font-semibold px-4 py-1.5 h-8.5 flex items-center gap-1.5 text-xs shadow-sm rounded-lg transition-all whitespace-nowrap shrink-0"
+              className="btn-apple-primary font-semibold px-3.5 py-1.5 h-8 flex items-center gap-1.5 text-xs shadow-sm rounded-lg transition-all whitespace-nowrap shrink-0"
             >
               Deploy AI Workforce
             </Link>
           </div>
 
-          {/* Mobile Drawer Hamburger (screens < lg) */}
+          {/* Mobile & Tablet Drawer Hamburger (screens < lg) */}
           <button
             onClick={() => setIsMenuOpen(true)}
-            className="lg:hidden flex items-center justify-center h-8.5 w-8.5 rounded-lg border border-black/[0.08] dark:border-white/[0.12] bg-white/80 dark:bg-[#161618]/80 text-[#110F24] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] shrink-0"
+            className="lg:hidden flex items-center justify-center h-8 w-8 sm:h-8.5 sm:w-8.5 rounded-lg border border-black/[0.08] dark:border-white/[0.12] bg-white/80 dark:bg-[#161618]/80 text-[#110F24] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] shrink-0"
             aria-label="Open Navigation Menu"
             aria-expanded={isMenuOpen}
           >
-            <Menu className="h-4.5 w-4.5" />
+            <Menu className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
           </button>
         </div>
       </div>
 
       {/* Responsive Mobile Command Drawer */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <MobileCommandDrawer
-            isOpen={isMenuOpen}
-            onClose={() => setIsMenuOpen(false)}
-            navLinks={navLinks}
-            portalLinks={portalLinks}
-            handleBookMeeting={handleBookMeeting}
-            handleGetStarted={handleGetStarted}
-          />
-        )}
-      </AnimatePresence>
+      <MobileCommandDrawer
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        navLinks={navLinks}
+        portalLinks={portalLinks}
+        handleBookMeeting={handleBookMeeting}
+        handleGetStarted={handleGetStarted}
+      />
     </header>
   );
 }

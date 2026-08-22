@@ -21,8 +21,12 @@ import {
   RotateCcw,
   Check,
   AlertCircle,
+  QrCode,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WhatsAppProviderSelectorModal, WhatsAppProviderChoice } from "@/components/whatsapp/WhatsAppProviderSelectorModal";
+import { OpenWAOnboardingModal } from "@/components/portal/OpenWAOnboardingModal";
 
 export function DealflowConnectHub() {
   const [activeSubTab, setActiveSubTab] = useState<"api-vault" | "credits" | "bot-invite" | "bot-training">("api-vault");
@@ -66,6 +70,9 @@ export function DealflowConnectHub() {
 
   // WhatsApp Preference state
   const [whatsAppNotifications, setWhatsAppNotifications] = useState(true);
+  const [whatsAppProvider, setWhatsAppProvider] = useState<WhatsAppProviderChoice>("evolution");
+  const [isWhatsAppSelectorOpen, setIsWhatsAppSelectorOpen] = useState(false);
+  const [isOpenWAOnboardingOpen, setIsOpenWAOnboardingOpen] = useState(false);
 
   useEffect(() => {
     fetchApiKeys();
@@ -588,26 +595,44 @@ export function DealflowConnectHub() {
               )}
             </div>
 
-            {/* WhatsApp Preferences */}
+            {/* WhatsApp Preferences & Provider Selection */}
             <div className="pt-4 border-t border-slate-800/80 space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h4 className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
-                    <Zap className="w-4 h-4 text-emerald-400" /> Evolution API WhatsApp Alerts
+                    {whatsAppProvider === "openwa" ? (
+                      <><QrCode className="w-4 h-4 text-blue-400" /> Open WA WhatsApp Alerts</>
+                    ) : (
+                      <><Zap className="w-4 h-4 text-emerald-400" /> Evolution API WhatsApp Alerts</>
+                    )}
                   </h4>
-                  <p className="text-xs text-slate-400">Receive 15-min meeting reminders &amp; deal stage updates via WhatsApp.</p>
+                  <p className="text-xs text-slate-400">
+                    Receive 15-min meeting reminders, autonomous deal stage updates, and two-way chats.
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setWhatsAppNotifications(!whatsAppNotifications)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    whatsAppNotifications
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                      : "bg-slate-900 text-slate-500 border border-slate-800"
-                  }`}
-                >
-                  {whatsAppNotifications ? "Enabled (20 msg/day limit)" : "Disabled"}
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsWhatsAppSelectorOpen(true)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all flex items-center gap-1.5"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-[#25D366]" />
+                    <span>Gateway: {whatsAppProvider === "openwa" ? "Open WA" : "Evolution Whatsapp"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setWhatsAppNotifications(!whatsAppNotifications)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      whatsAppNotifications
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        : "bg-slate-900 text-slate-500 border border-slate-800"
+                    }`}
+                  >
+                    {whatsAppNotifications ? "Enabled" : "Disabled"}
+                  </button>
+                </div>
               </div>
             </div>
           </GlassPanel>
@@ -722,6 +747,25 @@ export function DealflowConnectHub() {
           </form>
         </GlassPanel>
       )}
+
+      {/* WhatsApp Provider Selector Modal */}
+      <WhatsAppProviderSelectorModal
+        isOpen={isWhatsAppSelectorOpen}
+        onClose={() => setIsWhatsAppSelectorOpen(false)}
+        currentProvider={whatsAppProvider}
+        onSelectProvider={(provider) => {
+          setWhatsAppProvider(provider);
+          if (provider === "openwa") {
+            setIsOpenWAOnboardingOpen(true);
+          }
+        }}
+      />
+
+      {/* OpenWA Onboarding / Pairing Modal */}
+      <OpenWAOnboardingModal
+        isOpen={isOpenWAOnboardingOpen}
+        onClose={() => setIsOpenWAOnboardingOpen(false)}
+      />
     </div>
   );
 }

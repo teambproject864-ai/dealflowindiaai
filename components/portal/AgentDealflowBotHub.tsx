@@ -21,8 +21,12 @@ import {
   ArrowRight,
   Clock,
   ExternalLink,
+  QrCode,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WhatsAppProviderSelectorModal, WhatsAppProviderChoice } from "@/components/whatsapp/WhatsAppProviderSelectorModal";
+import { OpenWAOnboardingModal } from "@/components/portal/OpenWAOnboardingModal";
 
 export function AgentDealflowBotHub() {
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
@@ -44,6 +48,9 @@ export function AgentDealflowBotHub() {
   const [waMessageContent, setWaMessageContent] = useState("");
   const [waSending, setWaSending] = useState(false);
   const [waStatusMsg, setWaStatusMsg] = useState<string | null>(null);
+  const [whatsAppProvider, setWhatsAppProvider] = useState<WhatsAppProviderChoice>("evolution");
+  const [isWhatsAppSelectorOpen, setIsWhatsAppSelectorOpen] = useState(false);
+  const [isOpenWAOnboardingOpen, setIsOpenWAOnboardingOpen] = useState(false);
 
   // Agent CRM Portfolio State
   const [assignedDeals, setAssignedDeals] = useState<any[]>([]);
@@ -97,7 +104,7 @@ export function AgentDealflowBotHub() {
 
     try {
       setWaSending(true);
-      const res = await fetch("/api/whatsapp/send", {
+      const res = await fetch("/api/whatsapp/gateway", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -106,14 +113,16 @@ export function AgentDealflowBotHub() {
           senderRole: "agent",
           senderId: "agent-1",
           senderName: "Agent Pro Specialist",
+          preferredGateway: whatsAppProvider,
         }),
       });
       const data = await res.json();
       if (data.success) {
-        setWaStatusMsg(`WhatsApp Message Sent! (Encrypted Hash: ${data.message?.encryptedHash?.substring(0, 10)}...)`);
+        const hash = data.message?.encryptedHash || data.message?.complianceHash || "verified";
+        setWaStatusMsg(`WhatsApp Message Sent via ${data.gatewayUsed === "openwa" ? "Open WA" : "Evolution Whatsapp"}! (Hash: ${hash.substring(0, 10)}...)`);
         setWaMessageContent("");
       } else {
-        setWaStatusMsg(`WhatsApp Limit Alert: ${data.error}`);
+        setWaStatusMsg(`WhatsApp Alert: ${data.error}`);
       }
     } catch (err: any) {
       setWaStatusMsg(`WhatsApp Send Error: ${err?.message}`);
@@ -538,12 +547,28 @@ export function AgentDealflowBotHub() {
 
           {/* In-Portal WhatsApp Communication Workbench */}
           <GlassPanel className="p-6 space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-emerald-400" />
-                Evolution API WhatsApp Workbench
-              </h3>
-              <p className="text-xs text-slate-400">Compose two-way encrypted WhatsApp communications to prospects directly from the portal.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                  {whatsAppProvider === "openwa" ? (
+                    <><QrCode className="w-5 h-5 text-blue-400" /> Open WA WhatsApp Workbench</>
+                  ) : (
+                    <><Zap className="w-5 h-5 text-emerald-400" /> Evolution API WhatsApp Workbench</>
+                  )}
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Compose two-way encrypted WhatsApp communications to prospects directly from the portal.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsWhatsAppSelectorOpen(true)}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all flex items-center gap-1.5 self-start sm:self-auto"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-[#25D366]" />
+                <span>Switch Gateway ({whatsAppProvider === "openwa" ? "Open WA" : "Evolution"})</span>
+              </button>
             </div>
 
             <form onSubmit={handleSendWhatsAppMessage} className="space-y-3">
@@ -642,6 +667,25 @@ export function AgentDealflowBotHub() {
           </GlassPanel>
         </div>
       </div>
+
+      {/* WhatsApp Provider Selector Modal */}
+      <WhatsAppProviderSelectorModal
+        isOpen={isWhatsAppSelectorOpen}
+        onClose={() => setIsWhatsAppSelectorOpen(false)}
+        currentProvider={whatsAppProvider}
+        onSelectProvider={(provider) => {
+          setWhatsAppProvider(provider);
+          if (provider === "openwa") {
+            setIsOpenWAOnboardingOpen(true);
+          }
+        }}
+      />
+
+      {/* OpenWA Onboarding / Pairing Modal */}
+      <OpenWAOnboardingModal
+        isOpen={isOpenWAOnboardingOpen}
+        onClose={() => setIsOpenWAOnboardingOpen(false)}
+      />
     </div>
   );
 }

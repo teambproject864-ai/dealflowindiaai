@@ -19,15 +19,14 @@ import {
 } from "lucide-react";
 import { FormValidator } from "@/lib/form-validator";
 import { cn } from "@/lib/utils";
+import { 
+  CustomerAccountOption, 
+  DEFAULT_SEEDED_CUSTOMERS, 
+  FALLBACK_DEFAULT_CUSTOMER 
+} from "@/lib/customer-accounts";
 
-export interface CustomerAccountOption {
-  id: string;
-  name: string;
-  companyName: string;
-  email?: string;
-  industry?: string;
-  status?: string;
-}
+export type { CustomerAccountOption };
+export { DEFAULT_SEEDED_CUSTOMERS, FALLBACK_DEFAULT_CUSTOMER };
 
 export interface CustomerSwitcherProps {
   customers?: CustomerAccountOption[];
@@ -37,50 +36,6 @@ export interface CustomerSwitcherProps {
   className?: string;
   align?: "left" | "right" | "auto";
 }
-
-export const DEFAULT_SEEDED_CUSTOMERS: CustomerAccountOption[] = [
-  {
-    id: "cust-1",
-    name: "Praneeth Burada",
-    companyName: "Acme Enterprise SaaS",
-    email: "praneethburada@gmail.com",
-    industry: "Software & Technology",
-    status: "active"
-  },
-  {
-    id: "cust-2",
-    name: "Anil Kumar",
-    companyName: "Global Fintech Dynamics",
-    email: "anil@cralgo.com",
-    industry: "Financial Technology",
-    status: "active"
-  },
-  {
-    id: "cust-3",
-    name: "Sarah Jenkins",
-    companyName: "Apex HealthTech",
-    email: "sarah.j@apexhealthtech.com",
-    industry: "Healthcare Software",
-    status: "active"
-  },
-  {
-    id: "cust-4",
-    name: "Marcus Vance",
-    companyName: "HyperScale Analytics",
-    email: "marcus@hyperscale.ai",
-    industry: "Enterprise AI & Data",
-    status: "active"
-  }
-];
-
-export const FALLBACK_DEFAULT_CUSTOMER: CustomerAccountOption = {
-  id: "cust-default",
-  name: "Customer Account",
-  companyName: "Enterprise Account",
-  email: "support@dealflow.ai",
-  industry: "Enterprise SaaS",
-  status: "active"
-};
 
 export function CustomerSwitcher({
   customers = DEFAULT_SEEDED_CUSTOMERS,
@@ -133,6 +88,8 @@ export function CustomerSwitcher({
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const dropdownMenuRef = useRef<HTMLDivElement>(null);
+  const [dropdownCoords, setDropdownCoords] = useState<{ top: number; left: number; right: number } | null>(null);
 
   // Quick-Add Modal States (strictly initialized to empty string, NEVER populated with placeholder text)
   const [showAddModal, setShowAddModal] = useState(false);
@@ -146,12 +103,61 @@ export function CustomerSwitcher({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
+  const updatePosition = useCallback(() => {
+    if (dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      setDropdownCoords({
+        top: rect.bottom + 8,
+        left: rect.left,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, []);
+
+  const toggleDropdown = () => {
+    if (!isOpen) {
+      updatePosition();
+    }
+    setIsOpen(prev => !prev);
+  };
+
+  // Re-calculate position on scroll/resize when open
+  useEffect(() => {
+    if (!isOpen) return;
+    updatePosition();
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [isOpen, updatePosition]);
+
   // Synchronize when external selectedCustomerId changes
   useEffect(() => {
     if (selectedCustomerId && selectedCustomerId !== activeCustomerId) {
       setActiveCustomerId(selectedCustomerId);
     }
   }, [selectedCustomerId, activeCustomerId]);
+
+  // Fetch customer accounts from backend API on mount
+  useEffect(() => {
+    async function loadCustomers() {
+      try {
+        const res = await fetch("/api/portal/customers");
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.customers)) {
+            setInternalCustomers(data.customers);
+          }
+        }
+      } catch (e) {
+        console.warn("[CustomerSwitcher] Backend fetch warning, using local/seeded list:", e);
+      }
+    }
+    loadCustomers();
+  }, []);
 
   // Load any draft input from localStorage on mount (prevents data loss)
   useEffect(() => {
@@ -190,17 +196,32 @@ export function CustomerSwitcher({
     }
   }, []);
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click or Escape
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(target) &&
+        dropdownMenuRef.current &&
+        !dropdownMenuRef.current.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
         setIsOpen(false);
       }
     };
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
     }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [isOpen]);
 
   // Focus search input when dropdown opens
@@ -295,7 +316,7 @@ export function CustomerSwitcher({
     }
   };
 
-  // Handle Form Submission (Validates all fields on commit)
+  // Handle Form Submission (Validates all fields on commit & saves to backend)
   const handleCreateCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -319,33 +340,66 @@ export function CustomerSwitcher({
     }
 
     setIsSubmitting(true);
-    const newCust: CustomerAccountOption = {
+    setFormErrors({});
+
+    let createdCustomer: CustomerAccountOption = {
       id: `cust_${Date.now()}`,
       name: newCustomerName.trim(),
       companyName: newCompanyName.trim(),
       email: newEmail.trim() || undefined,
       industry: newIndustry,
-      status: "active"
+      status: "active",
     };
 
     try {
-      if (onAddCustomer) {
-        await onAddCustomer(newCust);
+      // 1. Persist customer to backend API
+      try {
+        const res = await fetch("/api/portal/customers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: newCustomerName.trim(),
+            companyName: newCompanyName.trim(),
+            email: newEmail.trim() || undefined,
+            industry: newIndustry,
+          }),
+        });
+
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const data = await res.json();
+          if (data.success && data.customer) {
+            createdCustomer = data.customer;
+          } else if (!res.ok) {
+            throw new Error(data.error || "Failed to save customer account to database.");
+          }
+        }
+      } catch (apiErr: any) {
+        console.warn("[CustomerSwitcher] Backend API sync warning, saving locally to active context:", apiErr);
       }
-      setInternalCustomers(prev => [newCust, ...prev]);
-      handleSelectCustomer(newCust);
+
+      // 2. Call optional parent onAddCustomer handler
+      if (onAddCustomer) {
+        await onAddCustomer(createdCustomer);
+      }
+
+      // 3. Immediately add and display newly created customer account without page refresh
+      setInternalCustomers(prev => [createdCustomer, ...prev.filter(c => c.id !== createdCustomer.id)]);
+      handleSelectCustomer(createdCustomer);
       setShowAddModal(false);
       setNewCustomerName("");
       setNewCompanyName("");
       setNewEmail("");
       updateDraftStorage("", "", "", "Enterprise SaaS");
-      setSuccessNotice(`Account "${newCust.companyName}" added and switched successfully.`);
+      setSuccessNotice(`Account "${createdCustomer.companyName}" successfully created and switched.`);
       setTimeout(() => setSuccessNotice(null), 3500);
+
+      // 4. Dispatch global event
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("dealflow_customer_switched", { detail: newCust }));
+        window.dispatchEvent(new CustomEvent("dealflow_customer_switched", { detail: createdCustomer }));
       }
     } catch (err: any) {
-      setFormErrors({ general: err.message || "Failed to add customer account." });
+      setFormErrors({ general: err.message || "Failed to save customer account." });
     } finally {
       setIsSubmitting(false);
     }
@@ -363,7 +417,7 @@ export function CustomerSwitcher({
       {/* TRIGGER BUTTON (Top Panel Badge & Switcher) */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleDropdown}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label={`Active Customer: ${activeCustomer.companyName}. Click to switch account.`}
@@ -385,15 +439,22 @@ export function CustomerSwitcher({
         <ChevronDown className={`w-3.5 h-3.5 text-[#86868B] transition-transform duration-200 shrink-0 ${isOpen ? "rotate-180 text-violet-400" : ""}`} />
       </button>
 
-      {/* DROPDOWN MENU (Safely bounded & fully visible across viewports) */}
-      {isOpen && (
+      {/* DROPDOWN MENU (Portalled to document.body with z-[99999] to prevent clipping & containing-block traps) */}
+      {isOpen && isMounted && dropdownCoords && createPortal(
         <div 
+          ref={dropdownMenuRef}
           role="listbox" 
           aria-label="Customer accounts"
-          className={cn(
-            "absolute mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-white/95 dark:bg-[#161618]/95 border border-black/[0.08] dark:border-white/[0.12] shadow-2xl backdrop-blur-2xl p-2.5 z-50 space-y-2 animate-in fade-in duration-150",
-            alignmentClass
-          )}
+          style={{
+            position: "fixed",
+            top: `${dropdownCoords.top}px`,
+            ...(align === "right"
+              ? { right: `${Math.max(12, dropdownCoords.right)}px` }
+              : { left: `${Math.max(12, Math.min(dropdownCoords.left, (typeof window !== "undefined" ? window.innerWidth : 1200) - 340))}px` }),
+            zIndex: 99999,
+          }}
+          className="w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-white/98 dark:bg-[#161618]/98 border border-black/[0.12] dark:border-white/[0.18] shadow-2xl backdrop-blur-2xl p-2.5 space-y-2 animate-in fade-in zoom-in-95 duration-150 text-left"
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex justify-between items-center px-2 py-1 border-b border-black/[0.06] dark:border-white/[0.08]">
@@ -488,7 +549,8 @@ export function CustomerSwitcher({
               <span>Add New Customer Account</span>
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* QUICK-ADD CUSTOMER MODAL (Portalled to document.body to prevent clipping & containing-block traps) */}
