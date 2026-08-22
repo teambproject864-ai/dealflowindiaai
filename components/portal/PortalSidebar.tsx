@@ -79,6 +79,7 @@ const CATEGORY_MAP: Record<string, string> = {
   "password-requests": "Platform & Governance",
   "system-health-module": "Platform & Governance",
   "platform-settings-module": "Platform & Governance",
+  "account-settings": "Platform & Governance",
 };
 
 export function PortalSidebar({

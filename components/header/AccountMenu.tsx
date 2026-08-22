@@ -128,6 +128,14 @@ export function AccountMenu() {
     return "Customer Name";
   })();
 
+  const getAccountSettingsHref = () => {
+    if (!user) return "/profile";
+    if (user.role === "agent") return "/portal/agent?tab=account-settings";
+    if (user.role === "admin") return "/portal/admin?tab=platform-settings-module";
+    if (user.role === "customer") return "/portal/customer?tab=account-settings";
+    return "/profile";
+  };
+
   return (
     <div ref={dropdownRef} className="relative z-40">
       {/* Account Avatar Trigger */}
@@ -187,7 +195,7 @@ export function AccountMenu() {
               <div className="space-y-1.5 scrim-bg rounded-2xl p-1.5 border border-slate-200/50 dark:border-white/5">
                 <Link
                   ref={firstFocusableRef}
-                  href="/portal/customer?tab=account-settings"
+                  href={getAccountSettingsHref()}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs text-slate-800 dark:text-slate-200 hover:text-violet-755 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-slate-200 dark:hover:border-white/10"
                   role="menuitem"

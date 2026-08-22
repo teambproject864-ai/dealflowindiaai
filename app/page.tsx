@@ -133,38 +133,38 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#FBFBFD] dark:bg-[#000000] text-[#1D1D1F] dark:text-[#F5F5F7] transition-colors font-sans selection:bg-[#0071E3]/20" suppressHydrationWarning>
       
-      {/* ─── HERO SECTION: APPLE PRODUCT SHOWCASE + SAAS COMMAND CENTER ──────── */}
+      {/* ─── HERO SECTION: AUTONOMOUS AI WORKFORCE COMMAND CENTER ──────── */}
       <section id="hero" className="relative pt-12 pb-20 sm:pt-24 sm:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-black/[0.06] dark:border-white/[0.08]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
           
-          {/* Left Column: Minimalist Value Proposition */}
+          {/* Left Column: Autonomous Workforce Value Proposition */}
           <div className="lg:col-span-7 space-y-8 text-left">
             
             {/* Apple-style Pill Eyebrow */}
             <div className="apple-pill-badge">
               <span className="w-2 h-2 rounded-full bg-[#0071E3] animate-pulse" />
-              <span>Revenue Intelligence Platform</span>
+              <span>Autonomous AI Sales & Business Workforce</span>
             </div>
 
             {/* Display Headline */}
-            <h1 className="text-4xl sm:text-6xl lg:text-[64px] font-bold leading-[1.08] tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
-              The AI Operating System for Revenue Teams.{" "}
-              <span className="text-[#0071E3] dark:text-[#2997FF] block sm:inline">From ICP to closed deal.</span>
+            <h1 className="text-4xl sm:text-6xl lg:text-[60px] font-bold leading-[1.08] tracking-tight text-[#1D1D1F] dark:text-[#F5F5F7]">
+              The Autonomous AI Workforce That{" "}
+              <span className="text-[#0071E3] dark:text-[#2997FF] block sm:inline">Actually Does the Work.</span>
             </h1>
 
-            {/* Subtitle */}
+            {/* Core Positioning Subtitle */}
             <p className="text-[#6E6E73] dark:text-[#A1A1A6] text-base sm:text-lg leading-relaxed max-w-2xl font-normal">
-              DealFlow AI deploys universal meeting bots and collaborative agents with persistent memory directly integrated with your CRM. Reclaim 60% of your sales reps&apos; calendar with automated calls, standups, 15-minute MOM emails, and outreach sequences.
+              DealFlow.ai is an autonomous AI workforce that doesn&apos;t just recommend what your business should do &mdash; it actually does the work. You provide the business goal, and our AI agents autonomously discover prospects, research pain points, join sales calls as AI human representatives, negotiate within boundaries, close deals, and execute agreed customer requirements end-to-end.
             </p>
 
             {/* Apple-Style Pill CTAs */}
             <div className="flex flex-wrap items-center gap-3.5 pt-2">
               <Link
-                href="/portal"
+                href="/portal/customer/login?signup=true"
                 onClick={() => trackEvent("cta_landing_portal", { surface: "hero" })}
                 className="btn-apple-primary inline-flex items-center gap-2 text-sm font-semibold shadow-md transition-all"
               >
-                Launch Portals
+                Deploy AI Workforce
                 <ArrowRight className="h-4 w-4" />
               </Link>
               
@@ -173,15 +173,15 @@ export default function HomePage() {
                 className="btn-apple-secondary inline-flex items-center gap-2 text-sm font-semibold shadow-sm transition-all"
               >
                 <Target className="h-4 w-4 text-[#0071E3]" />
-                Go to Market Assessment
+                Define Business Goal
               </Link>
 
-              <a
-                href="#pricing"
+              <Link
+                href="/features"
                 className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#0071E3] dark:hover:text-white transition-colors"
               >
-                View Pricing <ChevronRight className="h-3 w-3" />
-              </a>
+                Explore Architecture <ChevronRight className="h-3 w-3" />
+              </Link>
             </div>
 
             {/* Trust Markers */}
@@ -191,11 +191,11 @@ export default function HomePage() {
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <Check className="h-3.5 w-3.5 text-[#32ADE6]" /> GDPR Ready
+                <Check className="h-3.5 w-3.5 text-[#32ADE6]" /> Boundary-Enforced Negotiation
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <Check className="h-3.5 w-3.5 text-[#34C759]" /> 14-Day Free Trial
+                <Check className="h-3.5 w-3.5 text-[#34C759]" /> End-to-End Requirement Delivery
               </span>
             </div>
 
@@ -213,15 +213,15 @@ export default function HomePage() {
                   </div>
                   <div>
                     <span className="text-xs font-bold text-[#1D1D1F] dark:text-white tracking-tight block">
-                      DEALFLOW TELEMETRY
+                      DEALFLOW WORKFORCE TELEMETRY
                     </span>
-                    <span className="text-[10px] text-[#86868B]">Live Control Center</span>
+                    <span className="text-[10px] text-[#86868B]">Autonomous Agents Live Status</span>
                   </div>
                 </div>
 
                 <span className="px-3 py-1 rounded-full bg-[#34C759]/15 border border-[#34C759]/30 text-[#248A3D] dark:text-[#30D158] text-[10px] font-semibold flex items-center gap-1.5 w-fit">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#34C759] animate-pulse" />
-                  ONLINE
+                  AUTONOMOUS FLEET ACTIVE
                 </span>
               </div>
 
@@ -237,7 +237,7 @@ export default function HomePage() {
                         : "text-[#6E6E73] dark:text-[#A1A1A6] hover:text-[#1D1D1F] dark:hover:text-white"
                     }`}
                   >
-                    {tab}
+                    {tab === "velocity" ? "Velocity" : tab === "meeting" ? "AI Call Rep" : tab === "watchdog" ? "Negotiate" : "Prospecting"}
                   </button>
                 ))}
               </div>
@@ -256,26 +256,26 @@ export default function HomePage() {
                     >
                       <div className="p-4 rounded-2xl bg-white dark:bg-[#161618] border border-black/[0.06] dark:border-white/[0.08] space-y-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-[#6E6E73] dark:text-[#A1A1A6]">Pipeline Velocity Index</span>
-                          <span className="text-[#34C759] font-bold">+34.2% MoM</span>
+                          <span className="text-[#6E6E73] dark:text-[#A1A1A6]">Autonomous Execution Index</span>
+                          <span className="text-[#34C759] font-bold">+41.8% Velocity</span>
                         </div>
                         <div className="h-2 w-full bg-black/[0.04] dark:bg-white/[0.06] rounded-full overflow-hidden">
-                          <div className="h-full bg-[#0071E3] rounded-full w-[82%]" />
+                          <div className="h-full bg-[#0071E3] rounded-full w-[88%]" />
                         </div>
                         <div className="flex justify-between items-center text-[10px] text-[#86868B] pt-1">
-                          <span>Active Deals: $4.2M</span>
-                          <span>Conversion Rate: 31.8%</span>
+                          <span>Active Deals in Negotiation: $4.2M</span>
+                          <span>Closed & Executed: 34 Deals</span>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2.5">
                         <div className="p-3 rounded-2xl bg-white dark:bg-[#161618] border border-black/[0.06] dark:border-white/[0.08]">
-                          <span className="text-[10px] text-[#86868B] block">Deal Acceleration</span>
-                          <strong className="text-sm font-bold text-[#1D1D1F] dark:text-white">+28.4%</strong>
+                          <span className="text-[10px] text-[#86868B] block">AI Call Win Rate</span>
+                          <strong className="text-sm font-bold text-[#1D1D1F] dark:text-white">44.2%</strong>
                         </div>
                         <div className="p-3 rounded-2xl bg-white dark:bg-[#161618] border border-black/[0.06] dark:border-white/[0.08]">
-                          <span className="text-[10px] text-[#86868B] block">Rep Hours Saved</span>
-                          <strong className="text-sm font-bold text-[#0071E3] dark:text-[#2997FF]">18.5 hrs/wk</strong>
+                          <span className="text-[10px] text-[#86868B] block">Autonomous Hours Saved</span>
+                          <strong className="text-sm font-bold text-[#0071E3] dark:text-[#2997FF]">24.5 hrs/wk</strong>
                         </div>
                       </div>
                     </motion.div>
@@ -296,17 +296,17 @@ export default function HomePage() {
                             <Bot className="h-4 w-4" />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-[#1D1D1F] dark:text-white">Dealflow Meeting Bot</p>
-                            <p className="text-[10px] text-[#86868B]">Universal Zoom/Teams/Meet Audio</p>
+                            <p className="text-xs font-bold text-[#1D1D1F] dark:text-white">AI Sales Representative</p>
+                            <p className="text-[10px] text-[#86868B]">Live Video/Audio Meeting Participant</p>
                           </div>
                         </div>
                         <span className="text-[10px] font-semibold text-[#32ADE6] bg-[#32ADE6]/10 px-2 py-0.5 rounded-full">
-                          Connected
+                          On Live Call
                         </span>
                       </div>
                       <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.04] text-[11px] text-[#6E6E73] dark:text-[#A1A1A6] space-y-1">
-                        <p className="font-semibold text-[#1D1D1F] dark:text-white">Auto-Generated 15-Min MOM:</p>
-                        <p>&quot;Client confirmed enterprise budget approval for Q3. Next step: security review sync.&quot;</p>
+                        <p className="font-semibold text-[#1D1D1F] dark:text-white">Live Objection Handling & Discovery:</p>
+                        <p>&quot;Prospect inquired about ISO 27001 compliance. AI rep verified certifications and negotiated standard 14-day SLA terms.&quot;</p>
                       </div>
                     </motion.div>
                   )}
@@ -326,17 +326,17 @@ export default function HomePage() {
                             <TrendingUp className="h-4 w-4" />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-[#1D1D1F] dark:text-white">Stalled Deal Watchdog</p>
-                            <p className="text-[10px] text-[#86868B]">Latency Spike Detection</p>
+                            <p className="text-xs font-bold text-[#1D1D1F] dark:text-white">Autonomous Negotiation Engine</p>
+                            <p className="text-[10px] text-[#86868B]">Boundary & Contract Structuring</p>
                           </div>
                         </div>
-                        <span className="text-[10px] font-semibold text-[#FF3B30] bg-[#FF3B30]/10 px-2 py-0.5 rounded-full">
-                          Intervention Ready
+                        <span className="text-[10px] font-semibold text-[#34C759] bg-[#34C759]/10 px-2 py-0.5 rounded-full">
+                          Boundary Enforced
                         </span>
                       </div>
                       <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.04] text-[11px] text-[#6E6E73] dark:text-[#A1A1A6] space-y-1">
-                        <p className="font-semibold text-[#FF3B30]">Trigger Fired: Acme Corp Deal</p>
-                        <p>No response in 72h after proposal sent. Auto-queued personalized warm re-engagement.</p>
+                        <p className="font-semibold text-[#0071E3] dark:text-[#2997FF]">Automated Contract Proposal:</p>
+                        <p>Structured $74,000 annual term within approved 12% discount ceiling. Sent to buyer with auto-provisions.</p>
                       </div>
                     </motion.div>
                   )}
@@ -356,17 +356,17 @@ export default function HomePage() {
                             <Rocket className="h-4 w-4" />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-[#1D1D1F] dark:text-white">Autonomous Outreach Fleet</p>
-                            <p className="text-[10px] text-[#86868B]">FAPO Multi-Agent Sequences</p>
+                            <p className="text-xs font-bold text-[#1D1D1F] dark:text-white">Autonomous Prospecting Fleet</p>
+                            <p className="text-[10px] text-[#86868B]">Pain Point Scraping & Multichannel</p>
                           </div>
                         </div>
                         <span className="text-[10px] font-semibold text-[#34C759] bg-[#34C759]/10 px-2 py-0.5 rounded-full">
-                          Dispatched
+                          Actively Sourcing
                         </span>
                       </div>
                       <div className="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.04] text-[11px] text-[#6E6E73] dark:text-[#A1A1A6] space-y-1">
-                        <p className="font-semibold text-[#1D1D1F] dark:text-white">ALMA Self-Supervised Optimization:</p>
-                        <p>240 tailored enterprise touches delivered with 41.2% reply rate.</p>
+                        <p className="font-semibold text-[#1D1D1F] dark:text-white">ALMA Continuous Self-Learning:</p>
+                        <p>580 prospect requirements analyzed &bull; 46.8% positive engagement rate &bull; 18 discovery calls booked.</p>
                       </div>
                     </motion.div>
                   )}
@@ -375,7 +375,7 @@ export default function HomePage() {
                 {/* Footer Telemetry Strip */}
                 <div className="pt-3 flex justify-between items-center text-[10px] text-[#86868B] border-t border-black/[0.06] dark:border-white/[0.08]">
                   <span>AES-256 BYOK Encryption</span>
-                  <span className="text-[#0071E3] dark:text-[#2997FF] font-semibold">HubSpot & Salesforce Synced</span>
+                  <span className="text-[#0071E3] dark:text-[#2997FF] font-semibold">CRM & ERP Auto-Synchronized</span>
                 </div>
               </div>
 
@@ -385,100 +385,152 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── MODULAR BENTO SUITE: REVENUE OPERATING SYSTEM ───────────────────── */}
+      {/* ─── 10-STEP CORE JOURNEY VISUAL STRIP ───────────────────────────── */}
+      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-black/[0.06] dark:border-white/[0.08]">
+        <div className="text-center max-w-3xl mx-auto mb-10 space-y-2">
+          <div className="apple-pill-badge">
+            <Sparkles className="h-3.5 w-3.5 text-[#0071E3]" />
+            <span>End-to-End Autonomous Journey</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
+            How DealFlow.ai Executes Your Business Goal
+          </h2>
+          <p className="text-xs sm:text-sm text-[#6E6E73] dark:text-[#A1A1A6]">
+            From initial objective intake to closing deals, executing requirements, and continuous self-improvement.
+          </p>
+        </div>
+
+        {/* 10-Step Horizontal Scrollable / Responsive Pipeline */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2">
+          {[
+            { step: "1", title: "Business Goal", desc: "You set target & boundaries", color: "border-blue-500/30 text-blue-500" },
+            { step: "2", title: "AI Understands", desc: "Parses ICP & strategy", color: "border-cyan-500/30 text-cyan-500" },
+            { step: "3", title: "Finds Prospects", desc: "Scrapes & identifies buyers", color: "border-teal-500/30 text-teal-500" },
+            { step: "4", title: "Engages", desc: "Multichannel sequences", color: "border-emerald-500/30 text-emerald-500" },
+            { step: "5", title: "Joins Calls", desc: "Live AI human rep", color: "border-indigo-500/30 text-indigo-500" },
+            { step: "6", title: "Understands Pain", desc: "Deep technical discovery", color: "border-purple-500/30 text-purple-500" },
+            { step: "7", title: "Sells & Negotiates", desc: "Handles objections", color: "border-amber-500/30 text-amber-500" },
+            { step: "8", title: "Closes Deals", desc: "Secures contract & terms", color: "border-emerald-500/30 text-emerald-500" },
+            { step: "9", title: "Executes Work", desc: "Delivers requirements", color: "border-blue-500/30 text-blue-500" },
+            { step: "10", title: "Improves", desc: "ALMA continuous learning", color: "border-violet-500/30 text-violet-500" },
+          ].map((item, idx) => (
+            <div
+              key={idx}
+              className="p-3 rounded-2xl bg-white dark:bg-[#161618] border border-black/[0.06] dark:border-white/[0.08] space-y-1.5 flex flex-col justify-between transition-all hover:border-[#0071E3]/40"
+            >
+              <div className="flex items-center justify-between">
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-black/[0.02] dark:bg-white/[0.04] ${item.color}`}>
+                  {item.step}
+                </span>
+                {idx < 9 && <ChevronRight className="h-3 w-3 text-slate-400 hidden lg:block opacity-40" />}
+              </div>
+              <div>
+                <strong className="text-xs font-bold text-[#1D1D1F] dark:text-white block leading-tight">
+                  {item.title}
+                </strong>
+                <span className="text-[10px] text-[#86868B] leading-tight block mt-0.5">
+                  {item.desc}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── MODULAR BENTO SUITE: 4 AUTONOMOUS WORKFORCE PILLARS ───────────────────── */}
       <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-black/[0.06] dark:border-white/[0.08]">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
           <div className="apple-pill-badge">
-            <span>Revenue Operating System</span>
+            <span>Autonomous Workforce Architecture</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
-            Four interconnected roles for full-funnel velocity.
+            Four interconnected pillars. Complete execution.
           </h2>
           <p className="text-[#6E6E73] dark:text-[#A1A1A6] text-sm sm:text-base leading-relaxed">
-            Eliminate pipeline leakage by giving your revenue motion an autonomous control system.
+            Eliminate manual friction by deploying an autonomous AI workforce that moves prospects through every stage of the customer lifecycle.
           </p>
         </div>
 
         {/* 4 Connected Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
           
-          {/* Card 1: Capture Every Signal */}
+          {/* Card 1: Autonomous Prospect Discovery */}
           <div className="apple-glass-card p-6 sm:p-7 rounded-3xl flex flex-col justify-between space-y-6">
             <div className="space-y-4">
               <div className="w-10 h-10 rounded-2xl bg-[#32ADE6]/15 text-[#0071A4] dark:text-[#64D2FF] flex items-center justify-center font-bold">
                 <Database className="h-5 w-5" />
               </div>
               <div className="space-y-1.5">
-                <span className="text-[10px] font-semibold text-[#0071A4] dark:text-[#64D2FF] uppercase tracking-wider">1. CAPTURE EVERY SIGNAL</span>
-                <h3 className="text-lg font-bold text-[#1D1D1F] dark:text-white">Eliminate CRM Drudgery</h3>
+                <span className="text-[10px] font-semibold text-[#0071A4] dark:text-[#64D2FF] uppercase tracking-wider">1. PROSPECT DISCOVERY & RESEARCH</span>
+                <h3 className="text-lg font-bold text-[#1D1D1F] dark:text-white">Autonomous Research</h3>
                 <p className="text-xs text-[#6E6E73] dark:text-[#A1A1A6] leading-relaxed">
-                  Universal Dealflow Meeting Bot transcribes client calls, standups, dispatches 15-min MOM emails, and syncs Salesforce/HubSpot logs automatically.
+                  AI agents continuously identify high-intent target accounts, extract technical pain points, and map key decision-makers based on your business goal.
                 </p>
               </div>
             </div>
             <div className="pt-4 border-t border-black/[0.06] dark:border-white/[0.08] flex justify-between items-center text-[10px] text-[#0071A4] dark:text-[#64D2FF] font-semibold">
-              <span>✓ Salesforce Synced</span>
-              <span>✓ HubSpot Synced</span>
+              <span>✓ ICP Auto-Extraction</span>
+              <span>✓ Pain Point Mapping</span>
             </div>
           </div>
 
-          {/* Card 2: Unstick Stalled Motion */}
+          {/* Card 2: AI Call Representative */}
+          <div className="apple-glass-card p-6 sm:p-7 rounded-3xl flex flex-col justify-between space-y-6">
+            <div className="space-y-4">
+              <div className="w-10 h-10 rounded-2xl bg-[#34C759]/15 text-[#248A3D] dark:text-[#30D158] flex items-center justify-center font-bold">
+                <Bot className="h-5 w-5" />
+              </div>
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-semibold text-[#248A3D] dark:text-[#30D158] uppercase tracking-wider">2. AI SALES CALL REPRESENTATIVE</span>
+                <h3 className="text-lg font-bold text-[#1D1D1F] dark:text-white">Live Call Representation</h3>
+                <p className="text-xs text-[#6E6E73] dark:text-[#A1A1A6] leading-relaxed">
+                  AI human representatives join live Zoom, Teams, and Meet sessions to run product discovery, answer technical questions, and resolve objections.
+                </p>
+              </div>
+            </div>
+            <div className="pt-4 border-t border-black/[0.06] dark:border-white/[0.08] flex justify-between items-center text-[10px] text-[#248A3D] dark:text-[#30D158] font-semibold">
+              <span>Live Video & Voice</span>
+              <span>Real-Time Objections</span>
+            </div>
+          </div>
+
+          {/* Card 3: Boundary-Enforced Negotiation */}
           <div className="apple-glass-card p-6 sm:p-7 rounded-3xl flex flex-col justify-between space-y-6">
             <div className="space-y-4">
               <div className="w-10 h-10 rounded-2xl bg-[#FF3B30]/15 text-[#D70015] dark:text-[#FF453A] flex items-center justify-center font-bold">
                 <TrendingUp className="h-5 w-5" />
               </div>
               <div className="space-y-1.5">
-                <span className="text-[10px] font-semibold text-[#D70015] dark:text-[#FF453A] uppercase tracking-wider">2. UNSTICK STALLED MOTION</span>
-                <h3 className="text-lg font-bold text-[#1D1D1F] dark:text-white">Rescue Stalled Deals</h3>
+                <span className="text-[10px] font-semibold text-[#D70015] dark:text-[#FF453A] uppercase tracking-wider">3. NEGOTIATE & CLOSE DEALS</span>
+                <h3 className="text-lg font-bold text-[#1D1D1F] dark:text-white">Autonomous Deal Closure</h3>
                 <p className="text-xs text-[#6E6E73] dark:text-[#A1A1A6] leading-relaxed">
-                  Proactive triggers alert revenue agents the instant pipeline deals stall or decision-maker response latency spikes.
+                  Agents navigate pricing terms and contract clauses within your strict commercial boundaries, drafting agreements and closing deals autonomously.
                 </p>
               </div>
             </div>
             <div className="pt-4 border-t border-black/[0.06] dark:border-white/[0.08] flex justify-between items-center text-[10px] text-[#D70015] dark:text-[#FF453A] font-semibold">
-              <span>Active Triggers:</span>
-              <span className="animate-pulse">● OUTREACH QUEUED</span>
+              <span>Boundary Safeguards</span>
+              <span>Auto-Contracting</span>
             </div>
           </div>
 
-          {/* Card 3: Deploy Specialized Agents */}
-          <div className="apple-glass-card p-6 sm:p-7 rounded-3xl flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <div className="w-10 h-10 rounded-2xl bg-[#34C759]/15 text-[#248A3D] dark:text-[#30D158] flex items-center justify-center font-bold">
-                <Cpu className="h-5 w-5" />
-              </div>
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-semibold text-[#248A3D] dark:text-[#30D158] uppercase tracking-wider">3. DEPLOY SPECIALIZED AGENTS</span>
-                <h3 className="text-lg font-bold text-[#1D1D1F] dark:text-white">Fleet of GTM Agents</h3>
-                <p className="text-xs text-[#6E6E73] dark:text-[#A1A1A6] leading-relaxed">
-                  Orchestrate meeting bots, outbound campaign playbooks, BYOK key management, and pre-meeting executive dossiers.
-                </p>
-              </div>
-            </div>
-            <div className="pt-4 border-t border-black/[0.06] dark:border-white/[0.08] flex justify-between items-center text-[10px] text-[#248A3D] dark:text-[#30D158] font-semibold">
-              <span>Average Win Rate:</span>
-              <span>+22% Growth</span>
-            </div>
-          </div>
-
-          {/* Card 4: Keep Trust & Compliance */}
+          {/* Card 4: Requirement Execution & ALMA */}
           <div className="apple-glass-card p-6 sm:p-7 rounded-3xl flex flex-col justify-between space-y-6">
             <div className="space-y-4">
               <div className="w-10 h-10 rounded-2xl bg-[#5856D6]/15 text-[#4341A8] dark:text-[#5E5CE6] flex items-center justify-center font-bold">
-                <Shield className="h-5 w-5" />
+                <Cpu className="h-5 w-5" />
               </div>
               <div className="space-y-1.5">
-                <span className="text-[10px] font-semibold text-[#4341A8] dark:text-[#5E5CE6] uppercase tracking-wider">4. TRUST & COMPLIANCE</span>
-                <h3 className="text-lg font-bold text-[#1D1D1F] dark:text-white">Enterprise Firewall</h3>
+                <span className="text-[10px] font-semibold text-[#4341A8] dark:text-[#5E5CE6] uppercase tracking-wider">4. POST-SALE EXECUTION & ALMA</span>
+                <h3 className="text-lg font-bold text-[#1D1D1F] dark:text-white">Requirement Fulfillment</h3>
                 <p className="text-xs text-[#6E6E73] dark:text-[#A1A1A6] leading-relaxed">
-                  AES-256 encrypted BYOK key vaults, isolated client session data flows, and continuous compliance audit trails.
+                  Post-sale agents orchestrate delivery on agreed client deliverables, track business milestones, and continuously improve models using ALMA.
                 </p>
               </div>
             </div>
             <div className="pt-4 border-t border-black/[0.06] dark:border-white/[0.08] flex justify-between items-center text-[10px] text-[#4341A8] dark:text-[#5E5CE6] font-semibold">
-              <span>SOC 2 Type II</span>
-              <span>GDPR Ready</span>
+              <span>Deliverable Sync</span>
+              <span>ALMA Self-Learning</span>
             </div>
           </div>
 
@@ -492,20 +544,20 @@ export default function HomePage() {
           <div className="lg:col-span-4 space-y-5 text-left">
             <div className="apple-pill-badge">
               <Target className="h-3.5 w-3.5 text-[#0071E3]" />
-              <span>GTM Assessment Wizard</span>
+              <span>Define Business Objective</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight leading-tight">
-              Map your motion. We&apos;ll show you what&apos;s next.
+              Set your business goal. Your AI workforce executes it.
             </h2>
             <p className="text-[#6E6E73] dark:text-[#A1A1A6] text-sm leading-relaxed">
-              Complete the questionnaire below to configure your custom revenue intelligence model and generate tailored outbound pipelines in real time.
+              Complete the intake questionnaire below to define your business objective, commercial boundaries, and target criteria. DealFlow.ai immediately deploys autonomous agents to find prospects, engage, sell, and execute.
             </p>
             <div className="p-5 rounded-2xl bg-white dark:bg-[#161618] border border-black/[0.06] dark:border-white/[0.08] space-y-2.5 text-xs shadow-sm">
-              <span className="font-semibold text-[#1D1D1F] dark:text-white block">What you receive:</span>
+              <span className="font-semibold text-[#1D1D1F] dark:text-white block">What happens next:</span>
               <ul className="space-y-2 text-[#6E6E73] dark:text-[#A1A1A6]">
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-[#0071E3]" /> ICP & Persona Breakdown</li>
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-[#32ADE6]" /> Custom Campaign Playbook</li>
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-[#34C759]" /> Instant CRM Workflow Blueprint</li>
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-[#0071E3]" /> Autonomous Prospect Identification</li>
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-[#32ADE6]" /> AI Call Representative Assignment</li>
+                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-[#34C759]" /> End-to-End Requirement Fulfillment</li>
               </ul>
             </div>
           </div>
@@ -516,7 +568,7 @@ export default function HomePage() {
 
         </div>
       </section>
-
+          
       {/* ─── FAPO SIMULATOR SECTION: DEVELOPER PLAYGROUND CONSOLE ───────────── */}
       {isClient && (
         <section id="fapo" className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-black/[0.06] dark:border-white/[0.08]">
@@ -525,25 +577,25 @@ export default function HomePage() {
             <div className="lg:col-span-5 space-y-6">
               <div className="apple-pill-badge">
                 <Rocket className="h-3.5 w-3.5 text-[#0071E3]" />
-                <span>FAPO Engine Simulator</span>
+                <span>Autonomous Reasoning Engine</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
-                Fully Autonomous Prompt Optimization.
+                Fully Autonomous Negotiation & Outreach Optimization.
               </h2>
               <p className="text-[#6E6E73] dark:text-[#A1A1A6] text-sm leading-relaxed">
-                Don&apos;t spend hours trying to fine-tune sales templates manually. Our FAPO algorithms run recursive generation, evaluation, and comparison cycles to output outreach copy that converts 15-30% higher.
+                DealFlow.ai doesn&apos;t just generate templates &mdash; it runs recursive simulation and multi-model evaluation cycles to synthesize conversational strategies, handle objections, and negotiate within your defined commercial boundaries.
               </p>
 
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs text-[#1D1D1F] dark:text-white font-semibold" htmlFor="original-prompt-input">
-                    Your Core Outreach Concept
+                    Your Business Goal or Value Proposition
                   </label>
                   <input
                     id="original-prompt-input"
                     value={originalPrompt}
                     onChange={(e) => setOriginalPrompt(e.target.value)}
-                    placeholder="e.g. Write an email selling software..."
+                    placeholder="e.g. Sell our enterprise cloud security platform to mid-market fintechs..."
                     className="w-full bg-white dark:bg-[#161618] border border-black/[0.08] dark:border-white/[0.12] focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/20 rounded-2xl px-4 py-3 text-xs text-[#1D1D1F] dark:text-white focus:outline-none transition-all shadow-sm"
                   />
                 </div>
@@ -556,12 +608,12 @@ export default function HomePage() {
                   {isOptimizing ? (
                     <>
                       <RefreshCw className="h-4 w-4 animate-spin" />
-                      Optimizing Sequences...
+                      Synthesizing Strategy...
                     </>
                   ) : (
                     <>
                       <Zap className="h-4 w-4" />
-                      Simulate FAPO Optimization
+                      Simulate Autonomous Execution
                     </>
                   )}
                 </button>
@@ -573,15 +625,15 @@ export default function HomePage() {
               <div className="flex items-center justify-between pb-3 border-b border-black/[0.06] dark:border-white/[0.08]">
                 <div className="flex items-center gap-2">
                   <Terminal className="h-4 w-4 text-[#0071E3]" />
-                  <span className="text-[11px] font-mono text-[#86868B]">fapo-optimization-pipeline.log</span>
+                  <span className="text-[11px] font-mono text-[#86868B]">autonomous-workforce-orchestration.log</span>
                 </div>
-                <span className="text-[10px] font-semibold text-[#0071E3] dark:text-[#2997FF]">12 Evaluation Criteria</span>
+                <span className="text-[10px] font-semibold text-[#0071E3] dark:text-[#2997FF]">12 Boundary Constraints</span>
               </div>
 
               <div className="min-h-[220px] flex flex-col justify-center">
                 {isOptimizing && (
                   <div className="space-y-3 font-mono text-xs text-[#0071E3] bg-[#F5F5F7] dark:bg-[#161618] p-4 rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
-                    <p className="animate-pulse">→ Running FAPO iteration cycle...</p>
+                    <p className="animate-pulse">→ Orchestrating autonomous workforce execution cycle...</p>
                     <p className="text-[#1D1D1F] dark:text-white font-bold">{optimizationStep}</p>
                   </div>
                 )}
@@ -589,30 +641,30 @@ export default function HomePage() {
                 {!isOptimizing && !optimizedResult && (
                   <div className="text-center py-10 text-[#86868B] space-y-2">
                     <Brain className="h-8 w-8 mx-auto text-[#86868B]" />
-                    <p className="text-xs">Enter a concept and click simulate to view optimized sequence outputs.</p>
+                    <p className="text-xs">Enter your business goal and simulate to view autonomous prospect engagement & negotiation output.</p>
                   </div>
                 )}
 
                 {!isOptimizing && optimizedResult && (
                   <div className="space-y-4 animate-in fade-in duration-300">
                     <div className="bg-[#F5F5F7] dark:bg-[#161618] border border-black/[0.06] dark:border-white/[0.08] p-4 rounded-2xl space-y-1.5 max-h-[200px] overflow-y-auto">
-                      <span className="text-[9px] uppercase font-bold text-[#0071E3] dark:text-[#2997FF]">Optimized Delivery</span>
+                      <span className="text-[9px] uppercase font-bold text-[#0071E3] dark:text-[#2997FF]">Autonomous Execution Output</span>
                       <pre className="font-mono text-[11px] text-[#1D1D1F] dark:text-white whitespace-pre-wrap leading-relaxed">
                         {optimizedResult}
                       </pre>
                     </div>
                     <div className="grid grid-cols-3 gap-2.5 text-center">
                       <div className="p-2.5 rounded-2xl bg-[#34C759]/15 border border-[#34C759]/30">
-                        <span className="text-[9px] text-[#248A3D] dark:text-[#30D158] block font-semibold uppercase">Win Rate</span>
-                        <strong className="text-[#248A3D] dark:text-[#30D158] text-xs font-bold">+28.4%</strong>
+                        <span className="text-[9px] text-[#248A3D] dark:text-[#30D158] block font-semibold uppercase">Close Rate</span>
+                        <strong className="text-[#248A3D] dark:text-[#30D158] text-xs font-bold">+34.2%</strong>
                       </div>
                       <div className="p-2.5 rounded-2xl bg-[#32ADE6]/15 border border-[#32ADE6]/30">
-                        <span className="text-[9px] text-[#0071A4] dark:text-[#64D2FF] block font-semibold uppercase">Tokens Saved</span>
-                        <strong className="text-[#0071A4] dark:text-[#64D2FF] text-xs font-bold">-14%</strong>
+                        <span className="text-[9px] text-[#0071A4] dark:text-[#64D2FF] block font-semibold uppercase">Rep Time Saved</span>
+                        <strong className="text-[#0071A4] dark:text-[#64D2FF] text-xs font-bold">24 hrs/wk</strong>
                       </div>
                       <div className="p-2.5 rounded-2xl bg-[#0071E3]/15 border border-[#0071E3]/30">
-                        <span className="text-[9px] text-[#0071E3] dark:text-[#2997FF] block font-semibold uppercase">ICP Fit</span>
-                        <strong className="text-[#0071E3] dark:text-[#2997FF] text-xs font-bold">98%</strong>
+                        <span className="text-[9px] text-[#0071E3] dark:text-[#2997FF] block font-semibold uppercase">Execution Fit</span>
+                        <strong className="text-[#0071E3] dark:text-[#2997FF] text-xs font-bold">99.4%</strong>
                       </div>
                     </div>
                   </div>
@@ -628,7 +680,7 @@ export default function HomePage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-b border-black/[0.06] dark:border-white/[0.08]">
         <div className="text-center space-y-10">
           <p className="text-xs uppercase tracking-widest text-[#86868B] font-semibold">
-            Trusted by fast-growing revenue operations at scale
+            Trusted by fast-growing companies deploying autonomous AI workforces
           </p>
           
           {/* Logo Strip */}
@@ -643,7 +695,7 @@ export default function HomePage() {
           {/* Testimonial Card */}
           <div className="apple-glass-card p-8 md:p-10 rounded-3xl max-w-2xl mx-auto text-center space-y-4 shadow-sm">
             <p className="text-base sm:text-lg text-[#1D1D1F] dark:text-white leading-relaxed font-normal">
-              &quot;DealFlow AI transformed our revenue operations. The universal Dealflow Meeting Bot handles client calls and dispatches 15-minute MOM emails automatically, driving over 91% alignment on deal action execution.&quot;
+              &quot;DealFlow.ai is the first platform where AI doesn&apos;t just give suggestions &mdash; its AI representatives joined our prospect calls, negotiated within our pricing guardrails, closed 40+ deals in Q3, and automated our customer requirement handoffs end-to-end.&quot;
             </p>
             <div>
               <strong className="text-xs font-bold text-[#1D1D1F] dark:text-white block">Sarah Jenkins</strong>

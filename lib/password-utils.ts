@@ -18,10 +18,10 @@ export function generateRandomStrongPassword(length = 16): string {
   const all = upper + lower + digits + special;
 
   const getCryptoInstance = (): Crypto => {
-    if (typeof window !== "undefined" && window.crypto?.getRandomValues) {
+    if (typeof window !== "undefined" && typeof window.crypto?.getRandomValues === "function") {
       return window.crypto;
     }
-    if (typeof globalThis !== "undefined" && globalThis.crypto?.getRandomValues) {
+    if (typeof globalThis !== "undefined" && typeof globalThis.crypto?.getRandomValues === "function") {
       return globalThis.crypto;
     }
     throw new Error("Web Crypto API (crypto.getRandomValues) is required for secure password generation");

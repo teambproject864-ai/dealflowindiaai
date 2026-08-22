@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback, Suspense } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo, Suspense } from "react";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -74,6 +74,7 @@ import { AgentDealflowBotHub } from "@/components/portal/AgentDealflowBotHub";
 import { AIWebinarModule } from "@/components/webinar/AIWebinarModule";
 import CommunityMiningPage from "@/app/agent-portal/community-mining/page";
 import { AssignedCustomersWorkspace } from "@/components/portal/AssignedCustomersWorkspace";
+import { CustomerProfileSettingsTab } from "@/components/portal/CustomerProfileSettingsTab";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
@@ -97,6 +98,7 @@ const tabs = [
   { id: "genbi", label: "Chatbot (Wren AI)", icon: Bot, color: "text-fuchsia-400 border-fuchsia-500/30 hover:border-fuchsia-500/60 shadow-fuchsia-500/10" },
   { id: "whatsapp-chat", label: "WhatsApp Workbench & Live Chat", icon: Zap, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
   { id: "dealflow-crm", label: "Dealflow CRM", icon: Briefcase, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
+  { id: "account-settings", label: "Account Settings & Profile", icon: Settings, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
 ] as const;
 
 
@@ -161,13 +163,21 @@ function AgentPortalContent() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [activeWorkspaceCustomerId, setActiveWorkspaceCustomerId] = useState<string>("");
 
-  // Customer Switcher Handler for top panel
+  const activeCustomer = useMemo(() => {
+    if (!customers || customers.length === 0) return null;
+    return customers.find(c => c.id === activeWorkspaceCustomerId) || customers[0] || null;
+  }, [customers, activeWorkspaceCustomerId]);
+
+  // Customer Switcher Handler for top panel & workspace modules
   const handleCustomerSwitch = (selectedCust: any) => {
-    setActiveWorkspaceCustomerId(selectedCust.id);
-    setActiveStrategyCustomerId(selectedCust.id);
-    setSelectedWorkflowCustomer(selectedCust.id);
-    setSelectedPlaybookCustomerId(selectedCust.id);
-    showToast("success", "Active Customer Switched", `Workspace context switched to ${selectedCust.companyName || selectedCust.name}`);
+    if (!selectedCust) return;
+    const targetId = selectedCust.id || (typeof selectedCust === "string" ? selectedCust : "");
+    const fullCust = typeof selectedCust === "object" ? selectedCust : customers.find(c => c.id === targetId) || { id: targetId };
+    setActiveWorkspaceCustomerId(fullCust.id || targetId);
+    setActiveStrategyCustomerId(fullCust.id || targetId);
+    setSelectedWorkflowCustomer(fullCust.id || targetId);
+    setSelectedPlaybookCustomerId(fullCust.id || targetId);
+    showToast("success", "Active Customer Switched", `Workspace context switched to ${fullCust.companyName || fullCust.name || "Customer"}`);
   };
 
   // Content Hub States
@@ -305,13 +315,19 @@ function AgentPortalContent() {
       }
       if (customersData.success && customersData.customers) {
         setCustomers(customersData.customers);
-        // Pre-select first customer for workflow trigger if not set
-        if (customersData.customers.length > 0 && !selectedWorkflowCustomer) {
+        // Pre-select first customer for workspace & workflow contexts if not set
+        if (customersData.customers.length > 0) {
           const firstCustomer = customersData.customers[0];
-          setSelectedWorkflowCustomer(firstCustomer.id);
-        }
-        if (customersData.customers.length > 0 && !activeStrategyCustomerId) {
-          setActiveStrategyCustomerId(customersData.customers[0].id);
+          setActiveWorkspaceCustomerId(prev => prev || firstCustomer.id);
+          if (!selectedWorkflowCustomer) {
+            setSelectedWorkflowCustomer(firstCustomer.id);
+          }
+          if (!activeStrategyCustomerId) {
+            setActiveStrategyCustomerId(firstCustomer.id);
+          }
+          if (!selectedPlaybookCustomerId) {
+            setSelectedPlaybookCustomerId(firstCustomer.id);
+          }
         }
       }
       if (workflowsData.success) {
@@ -1165,7 +1181,10 @@ function AgentPortalContent() {
             exit={{ opacity: 0, x: -15 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
-            <CustomerICPDetailsView />
+            <CustomerICPDetailsView
+              customerId={activeWorkspaceCustomerId || activeCustomer?.id}
+              customerData={activeCustomer}
+            />
           </motion.div>
         )}
 
@@ -1178,7 +1197,11 @@ function AgentPortalContent() {
             exit={{ opacity: 0, x: -15 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
-            <EmbeddedCampaignPlaybooks />
+            <EmbeddedCampaignPlaybooks
+              customerId={activeWorkspaceCustomerId || activeCustomer?.id}
+              customerData={activeCustomer}
+              companyName={activeCustomer?.companyName || activeCustomer?.name || "Client Account"}
+            />
           </motion.div>
         )}
 
@@ -3263,6 +3286,20 @@ function AgentPortalContent() {
                 </div>
               </div>
             </GlassPanel>
+          </motion.div>
+        )}
+
+        {/* 22. ACCOUNT SETTINGS & PROFILE TAB */}
+        {activeTab === "account-settings" && (
+          <motion.div
+            key="account-settings"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            <CustomerProfileSettingsTab />
           </motion.div>
         )}
 

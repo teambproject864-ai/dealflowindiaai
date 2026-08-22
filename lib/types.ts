@@ -619,24 +619,23 @@ export const AGENT_FULL_NAMES = {
 };
 
 export const AGENT_EXPERTISE = {
-  ashok: ["B2B SaaS", "Outbound", "Pipeline"],
-  harsha: ["Content", "GTM", "Product-Led"],
-  kiran: ["Growth", "Paid Ads", "Metrics"],
-  vijay: ["Enterprise Sales", "Strategic Planning"],
-  avinash: ["Account Management", "Customer Success"],
-  kunal: ["Marketing Automation", "Lead Generation"],
-  praneeth: ["B2B SaaS", "GTM Strategy", "RevOps", "Pipeline Optimization"],
+  ashok: ["Prospect Discovery", "Pain Point Research", "ICP Profiling"],
+  harsha: ["AI Call Presence", "Live Objection Handling", "Discovery Calls"],
+  kiran: ["Deal Negotiation", "Boundary Control", "Commercial Structuring"],
+  vijay: ["Deal Closing", "Contract Finalization", "Enterprise Agreements"],
+  avinash: ["Requirement Execution", "Post-Sale Delivery", "Client Onboarding"],
+  kunal: ["Multi-Channel Outreach", "Adaptive Sequences", "Conversation Routing"],
+  praneeth: ["Workforce Orchestration", "Goal Execution", "ALMA Self-Learning", "End-to-End Pipeline"],
 };
 
 export const REVENUE_AGENTS = [
-
-  { key: "ashok", name: "Ashok", title: "Outbound Lead Specialist", bio: "Expert in outbound pipeline generation, enterprise B2B sales development, and cold outreach.", specialties: ["B2B SaaS", "Outbound", "Pipeline"] },
-  { key: "harsha", name: "Harsha", title: "Content & GTM Architect", bio: "Specializes in product-led growth, content automation pipelines, and ICP alignment.", specialties: ["Content", "GTM", "Product-Led"] },
-  { key: "kiran", name: "Kiran", title: "Growth & Performance Strategist", bio: "Focuses on paid ad optimization, conversion funnel analytics, and CAC reduction.", specialties: ["Growth", "Paid Ads", "Metrics"] },
-  { key: "vijay", name: "Vijay", title: "Enterprise Sales Director", bio: "Strategic account executive managing multi-stakeholder enterprise deals and contract negotiations.", specialties: ["Enterprise Sales", "Strategic Planning"] },
-  { key: "avinash", name: "Avinash", title: "Customer Success & Expansion Lead", bio: "Drives account retention, expansion playbooks, and post-sale onboarding experience.", specialties: ["Account Management", "Customer Success"] },
-  { key: "kunal", name: "Kunal", title: "Marketing Automation Lead", bio: "Engineers automated lead generation workflows and multi-channel drip campaigns.", specialties: ["Marketing Automation", "Lead Generation"] },
-  { key: "praneeth", name: "Praneeth", title: "Chief RevOps & Pipeline Specialist", bio: "Pioneers B2B RevOps optimization, deal velocity acceleration, and custom GTM frameworks.", specialties: ["B2B SaaS", "GTM Strategy", "RevOps", "Pipeline Optimization"] }
+  { key: "ashok", name: "Ashok", title: "Autonomous Prospecting & Research Agent", bio: "Autonomously researches target markets, uncovers buyer pain points, and profiles high-intent decision makers.", specialties: ["Prospect Discovery", "Pain Point Research", "ICP Profiling"] },
+  { key: "harsha", name: "Harsha", title: "AI Sales Representative (Calls & Demos)", bio: "Joins sales calls as an interactive AI human representative, conducts discovery, and resolves objections in real time.", specialties: ["AI Call Presence", "Live Objection Handling", "Discovery Calls"] },
+  { key: "kiran", name: "Kiran", title: "Autonomous Negotiation & Boundaries Specialist", bio: "Handles commercial conversations, navigates pricing boundaries, and structures win-win closing proposals.", specialties: ["Deal Negotiation", "Boundary Control", "Commercial Structuring"] },
+  { key: "vijay", name: "Vijay", title: "Autonomous Deal Closer & Contracting Lead", bio: "Executes final contract terms, coordinates stakeholder sign-offs, and autonomously closes enterprise deals.", specialties: ["Deal Closing", "Contract Finalization", "Enterprise Agreements"] },
+  { key: "avinash", name: "Avinash", title: "Post-Sale Requirement Execution Specialist", bio: "Takes closed deal specifications and autonomously orchestrates onboarding, delivery, and requirement fulfillment.", specialties: ["Requirement Execution", "Post-Sale Delivery", "Client Onboarding"] },
+  { key: "kunal", name: "Kunal", title: "Autonomous Multi-Channel Engagement Agent", bio: "Dispatches personalized multi-touch sequences across email, SMS, and WhatsApp with self-improving reply loops.", specialties: ["Multi-Channel Outreach", "Adaptive Sequences", "Conversation Routing"] },
+  { key: "praneeth", name: "Praneeth", title: "Chief Workforce Orchestrator & RevOps Lead", bio: "Orchestrates the entire AI workforce lifecycle — from business goal intake through close and requirement delivery.", specialties: ["Workforce Orchestration", "Goal Execution", "ALMA Self-Learning", "End-to-End Pipeline"] }
 ];
 
 

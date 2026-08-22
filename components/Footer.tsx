@@ -59,7 +59,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-xs text-[#6E6E73] dark:text-[#A1A1A6] leading-relaxed max-w-xs font-normal">
-              The AI Operating System for Revenue Teams. Pipeline intelligence, autonomous agents, and GTM clarity &mdash; unified.
+              DealFlow.ai is an autonomous AI workforce that doesn&apos;t just recommend what your business should do &mdash; it actually does the work. From objective intake to closed deals and requirement delivery.
             </p>
             {/* Social links */}
             <div className="flex gap-2 pt-2">

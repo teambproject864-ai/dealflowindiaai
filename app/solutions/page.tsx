@@ -152,16 +152,16 @@ export default function SolutionsPage() {
           <div className="space-y-4 max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-300 text-xs font-semibold uppercase tracking-wider">
               <Sparkles className="h-3.5 w-3.5 text-teal-400" />
-              <span>Operations Console</span>
+              <span>Autonomous Workforce Operations Console</span>
             </div>
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-white leading-tight font-sans">
-              Autonomous GTM{" "}
+              Autonomous AI Sales &{" "}
               <span className="bg-gradient-to-r from-teal-400 via-cyan-400 to-violet-500 bg-clip-text text-transparent">
-                Solutions OS
+                Business Workforce
               </span>
             </h1>
             <p className="text-slate-400 text-lg max-w-2xl">
-              Monitor, orchestrate, and refine active revenue pipelines with live Firestore updates, agent logic execution paths, and carrier delivery loops.
+              Monitor and orchestrate your autonomous agents across prospect discovery, live AI call representation, boundary-enforced negotiation, and post-sale requirement fulfillment.
             </p>
           </div>
 

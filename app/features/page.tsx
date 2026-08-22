@@ -827,7 +827,7 @@ function FeaturesContent() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-300 text-xs font-semibold uppercase tracking-wider mb-2"
           >
             <Sparkles className="h-3.5 w-3.5 text-fuchsia-500 dark:text-fuchsia-400" />
-            <span>Updated v2.0 Platform Capabilities</span>
+            <span>Autonomous AI Sales & Business Workforce Architecture</span>
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 15 }}
@@ -835,28 +835,28 @@ function FeaturesContent() {
             transition={{ delay: 0.1 }}
             className="text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto leading-tight"
           >
-            Autonomous Revenue Operations Powered by{" "}
+            An Autonomous AI Workforce That{" "}
             <span className="bg-gradient-to-r from-fuchsia-500 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-              Wren AI & Memory OS
+              Executes End-to-End
             </span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed"
+            className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed"
           >
-            Scale your sales pipeline with natural language database intelligence, automated GTM playbooks, and secure agent orchestration.
+            DealFlow.ai doesn&apos;t just recommend what your business should do &mdash; it actually does the work. Discover prospects, join sales calls as an AI human rep, negotiate within boundaries, close deals, and execute agreed requirements.
           </motion.p>
           <div className="flex flex-wrap gap-4 justify-center pt-2">
-            <Link href="/portal/agent">
-              <Button size="lg" className="h-12 px-6 rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 hover:from-fuchsia-500 hover:to-indigo-500 text-white font-semibold shadow-lg shadow-fuchsia-500/20">
-                Explore Agent Portal <ArrowRight className="ml-2 h-4 w-4" />
+            <Link href="/portal/customer/login?signup=true">
+              <Button size="lg" className="h-12 px-6 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-semibold shadow-lg shadow-teal-500/20">
+                Deploy AI Workforce <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
             <Link href="/book-demo">
               <Button size="lg" variant="outline" className="h-12 px-6 rounded-xl border-slate-300 dark:border-white/10 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-semibold">
-                Schedule Demo
+                Schedule Strategy Demo
               </Button>
             </Link>
           </div>

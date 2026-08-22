@@ -30,52 +30,52 @@ const renderFeatureText = (text: string) => {
 
 const faqItems = [
   {
-    question: "Can I switch plans or cancel at any time?",
-    answer: "Yes, absolutely. You can upgrade, downgrade, or cancel your subscription directly from your account billing dashboard. If you upgrade, the new rate is prorated for the remainder of the billing cycle. If you cancel, your access continues until the end of your current paid period."
+    question: "Can I switch workforce tiers or cancel at any time?",
+    answer: "Yes, absolutely. You can upgrade, downgrade, or cancel your autonomous workforce subscription directly from your billing dashboard. When upgrading, new agent capabilities (such as live AI call representation or custom post-sale execution pipelines) are provisioned immediately."
   },
   {
-    question: "Is there a free trial period?",
-    answer: "Yes, we offer a 14-day free trial on the Growth plan. No credit card is required to set up your sandbox and test out autonomous lead intake, GTM plans, and basic memory features. You can transition to a paid plan at any time during the trial."
+    question: "How does the AI join sales calls as a human representative?",
+    answer: "Our AI Sales Representative agent seamlessly joins Zoom, Microsoft Teams, and Google Meet meetings. Equipped with low-latency conversational speech models and real-time knowledge retrieval, the AI conducts product discovery, answers complex technical queries, handles objections, and takes live meeting notes with instant MOM generation."
   },
   {
-    question: "How does the memory synchronization (Hermes) scale across multiple agents?",
-    answer: "Memory OS (Hermes) and MEM Palace utilize structured semantic storage pipelines. This allows state variables to sync instantly regardless of the number of active agents. All data is isolated within secure namespaces, preventing cross-tenant leakage while assuring sub-50ms query operations."
+    question: "How do commercial boundaries prevent unauthorized discounts?",
+    answer: "You define strict negotiation floors, maximum discounting allowances, and approved payment structures in your governance dashboard. The Autonomous Closer & Negotiation agents are mathematically constrained by these guardrails and cannot execute or approve any deal terms outside your approved boundaries."
   },
   {
-    question: "What is your refund policy and guarantee?",
-    answer: "We offer a 30-day money-back guarantee on all subscription plans. If you find that DealFlow.AI is not a fit for your revenue operations workflow, contact our support team within the first 30 days of activation for a full refund."
+    question: "What happens after the AI closes a deal?",
+    answer: "DealFlow.ai doesn't stop at closing. Our Autonomous Post-Sale Execution Engine ingests agreed customer requirements, provisions starter workflows, syncs contracts to your CRM and billing tools, and triggers milestone tracking to ensure end-to-end requirement fulfillment."
   },
   {
-    question: "How does the compliance firewall secure my customer data?",
-    answer: "The Agent Security Firewall intercepts all outbound and inbound messages, automatically redacting PII (personally identifiable information), verifying context boundaries to prevent hallucinations, and recording audit transactions to an immutable log. Our infrastructure is hosted on AWS SOC 2 certified networks."
+    question: "Is there a trial period available?",
+    answer: "Yes, we offer a 14-day trial on the Growth Workforce tier. You can define your business objectives, launch autonomous prospect research, and test simulated call representation without upfront commitment."
   }
 ];
 
 const featureCategories = [
   {
-    name: "Pipeline & Data Intake",
+    name: "Autonomous Prospecting & Research",
     items: [
-      { name: "Intelligent Lead Intake Form", starter: "6-step basic", growth: "Advanced validation", enterprise: "Customizable dynamic forms" },
-      { name: "Auto-Enrichment Insights", starter: "Basic", growth: "Standard database", enterprise: "Deep enrichment vectors" },
-      { name: "CRM Bidirectional Sync", starter: "❌", growth: "HubSpot & Salesforce", enterprise: "Custom APIs & webhooks" },
+      { name: "Business Objective Intake", starter: "Standard intake", growth: "Advanced multi-goal", enterprise: "Continuous goal orchestration" },
+      { name: "Pain Point & Requirement Research", starter: "Basic profiles", growth: "Deep ICP dossiers", enterprise: "Custom signals & intent scraping" },
+      { name: "Multi-Channel Autonomous Outreach", starter: "Email only", growth: "Email + SMS + LinkedIn", enterprise: "Omni-channel + Custom Voice" },
     ]
   },
   {
-    name: "AI & Learning Models",
+    name: "Live AI Call Rep & Negotiation",
     items: [
-      { name: "Memory OS (Hermes) Sync", starter: "Standard", growth: "Real-time state", enterprise: "Enterprise cluster allocation" },
-      { name: "MEM Palace Indexing", starter: "❌", growth: "500 assets", enterprise: "Unlimited assets + semantic routing" },
-      { name: "ALMA Self-Supervision", starter: "❌", growth: "Standard model", enterprise: "Dedicated fine-tuning layers" },
-      { name: "Verification validation", starter: "Standard", growth: "Advanced logic", enterprise: "Zero-compromise custom rules" },
+      { name: "AI Human Call Representative", starter: "❌", growth: "Up to 50 calls/mo", enterprise: "Unlimited live calls & demos" },
+      { name: "Real-Time Objection Handling", starter: "Basic playbooks", growth: "Dynamic memory retrieval", enterprise: "ALMA real-time adaptive synthesis" },
+      { name: "Boundary-Enforced Negotiation", starter: "Fixed pricing only", growth: "Tiered discount guardrails", enterprise: "Full contractual & term boundaries" },
+      { name: "Autonomous Deal Closure & Contracts", starter: "❌", growth: "Standard e-sign sync", enterprise: "Full redlining & custom agreements" },
     ]
   },
   {
-    name: "Security & Ops",
+    name: "Post-Sale Execution & Governance",
     items: [
-      { name: "PII Redaction Guardrails", starter: "❌", growth: "Standard logs", enterprise: "Enterprise-wide compliance" },
-      { name: "Agent Security Firewall", starter: "Basic policy", growth: "Full isolation", enterprise: "Immutable compliance logs (SOC 2 audit in progress)" },
-      { name: "Support Channels", starter: "Email (24h)", growth: "Priority (4h SLA)", enterprise: "Dedicated account strategist" },
-      { name: "Uptime SLA", starter: "❌", growth: "❌", enterprise: "99.9% guaranteed" },
+      { name: "Requirement Fulfillment Engine", starter: "Task handover", growth: "Automated onboarding sync", enterprise: "Full delivery orchestration" },
+      { name: "ALMA Self-Learning Loop", starter: "Standard", growth: "Continuous improvement", enterprise: "Dedicated company fine-tuning" },
+      { name: "Agent Security & PII Redaction", starter: "Standard", growth: "Advanced guardrails", enterprise: "SOC 2 compliant vaults & firewalls" },
+      { name: "Support & RevOps SLA", starter: "Email (24h)", growth: "Priority (4h SLA)", enterprise: "Dedicated RevOps workforce strategist" },
     ]
   }
 ];
@@ -118,44 +118,36 @@ export default function PricingPage() {
   const [currency, setCurrency] = useState<"USD" | "EUR" | "GBP" | "CAD" | "INR">("USD");
 
   const formatCurrency = (amount: number, currencyCode: string) => {
-    const localeMap: Record<string, string> = {
-      USD: "en-US",
-      EUR: "de-DE",
-      GBP: "en-GB",
-      CAD: "en-CA",
-      INR: "en-IN",
-    };
-    
-    const convertedAmount = amount * CONVERSION_RATES[currencyCode];
-    
-    return new Intl.NumberFormat(localeMap[currencyCode] || "en-US", {
-      style: "currency",
-      currency: currencyCode,
-      maximumFractionDigits: 0,
-    }).format(convertedAmount);
+    switch (currencyCode) {
+      case "EUR": return `€${Math.round(amount * 0.92)}`;
+      case "GBP": return `£${Math.round(amount * 0.79)}`;
+      case "CAD": return `C$${Math.round(amount * 1.35)}`;
+      case "INR": return `₹${Math.round(amount * 83)}`;
+      default: return `$${amount}`;
+    }
   };
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
-      {/* Decorative gradients */}
-      <div className="absolute top-[10%] left-[-15%] w-[35rem] h-[35rem] rounded-full bg-violet-600/5 blur-[120px] pointer-events-none" />
-      <div className="absolute top-[40%] right-[-15%] w-[35rem] h-[35rem] rounded-full bg-teal-600/5 blur-[120px] pointer-events-none" />
+    <div className="relative overflow-hidden min-h-screen">
+      {/* Dynamic Background Glows */}
+      <div className="absolute top-[10%] left-[5%] w-[40rem] h-[40rem] rounded-full bg-teal-500/10 blur-[130px] pointer-events-none" />
+      <div className="absolute top-[35%] right-[5%] w-[35rem] h-[35rem] rounded-full bg-violet-600/10 blur-[130px] pointer-events-none" />
 
-      {/* Hero Section */}
-      <section className="relative pt-28 pb-12 md:pt-36 md:pb-16 text-center border-b border-slate-200 dark:border-white/5">
-        <div className="max-w-4xl mx-auto px-6 space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-600 dark:text-teal-300 text-xs font-semibold uppercase tracking-wider mb-2">
-            <Sparkles className="h-3.5 w-3.5 text-teal-500 dark:text-teal-400" />
-            <span>Pricing Packages</span>
+      {/* Header Section */}
+      <section className="pt-24 pb-12 md:pt-32 md:pb-16 text-center px-6 relative z-10">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-600 dark:text-teal-400 text-xs font-semibold uppercase tracking-wider mb-2">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Autonomous AI Workforce Pricing</span>
           </div>
           <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight font-sans">
-            Transparent Pricing for{" "}
+            Deploy an AI Workforce That{" "}
             <span className="bg-gradient-to-r from-teal-600 via-cyan-600 to-violet-700 dark:from-teal-400 dark:via-cyan-400 dark:to-violet-500 bg-clip-text text-transparent">
-              Any Scale
+              Actually Does The Work
             </span>
           </h1>
           <p className="text-slate-650 dark:text-slate-400 text-lg md:text-xl max-w-2xl mx-auto">
-            Choose the operational framework that fits your sales team. Deploy fully compliant autonomous agents in under 10 minutes.
+            From business goal intake to autonomous prospecting, live AI call representation, and post-sale requirement fulfillment.
           </p>
 
           {/* Monthly/Annual Toggle Switch & Currency Selector */}

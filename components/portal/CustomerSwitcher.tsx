@@ -1,7 +1,8 @@
 // components/portal/CustomerSwitcher.tsx
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { 
   Users, 
   Building2, 
@@ -17,6 +18,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { FormValidator } from "@/lib/form-validator";
+import { cn } from "@/lib/utils";
 
 export interface CustomerAccountOption {
   id: string;
@@ -33,9 +35,10 @@ export interface CustomerSwitcherProps {
   onSelectCustomer?: (customer: CustomerAccountOption) => void;
   onAddCustomer?: (newCustomer: CustomerAccountOption) => Promise<boolean> | boolean;
   className?: string;
+  align?: "left" | "right" | "auto";
 }
 
-const DEFAULT_SEEDED_CUSTOMERS: CustomerAccountOption[] = [
+export const DEFAULT_SEEDED_CUSTOMERS: CustomerAccountOption[] = [
   {
     id: "cust-1",
     name: "Praneeth Burada",
@@ -84,15 +87,36 @@ export function CustomerSwitcher({
   selectedCustomerId,
   onSelectCustomer,
   onAddCustomer,
-  className = ""
+  className = "",
+  align = "auto"
 }: CustomerSwitcherProps) {
   const STORAGE_KEY_SELECTED = "dealflow_active_agent_customer_id";
   const STORAGE_KEY_DRAFT = "dealflow_customer_switcher_draft";
 
-  // Merge provided customer list with fallbacks, ensuring empty list falls back to default object
-  const customerList = (Array.isArray(customers) && customers.length > 0)
-    ? customers
-    : (DEFAULT_SEEDED_CUSTOMERS && DEFAULT_SEEDED_CUSTOMERS.length > 0 ? DEFAULT_SEEDED_CUSTOMERS : [FALLBACK_DEFAULT_CUSTOMER]);
+  const [isMounted, setIsMounted] = useState(false);
+  const [internalCustomers, setInternalCustomers] = useState<CustomerAccountOption[]>([]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Merge provided customer list with internal updates and fallbacks
+  const customerList = useMemo(() => {
+    const map = new Map<string, CustomerAccountOption>();
+    
+    // 1. Seed with defaults if no external customers
+    if (!customers || customers.length === 0) {
+      DEFAULT_SEEDED_CUSTOMERS.forEach(c => map.set(c.id, c));
+    } else {
+      customers.forEach(c => map.set(c.id, c));
+    }
+    
+    // 2. Overlay any internally created customers
+    internalCustomers.forEach(c => map.set(c.id, c));
+
+    const result = Array.from(map.values());
+    return result.length > 0 ? result : [FALLBACK_DEFAULT_CUSTOMER];
+  }, [customers, internalCustomers]);
 
   // Active Customer Selection State with persistence
   const [activeCustomerId, setActiveCustomerId] = useState<string>(() => {
@@ -213,7 +237,7 @@ export function CustomerSwitcher({
     }
   };
 
-  // Input Change Handlers (Clears active field errors while typing - no premature error interruption)
+  // Input Change Handlers
   const handleNameChange = (val: string) => {
     setNewCustomerName(val);
     updateDraftStorage(val, newCompanyName, newEmail, newIndustry);
@@ -250,7 +274,7 @@ export function CustomerSwitcher({
     }
   };
 
-  // Non-Intrusive On-Blur Validation Handlers (Validates ONLY when user leaves the field)
+  // Non-Intrusive On-Blur Validation Handlers
   const handleNameBlur = () => {
     const err = FormValidator.validateField(newCustomerName, { required: true, minLength: 2, maxLength: 80 }, "Customer Name");
     if (err) setFormErrors(prev => ({ ...prev, name: err }));
@@ -279,8 +303,8 @@ export function CustomerSwitcher({
     const nameErr = FormValidator.validateField(newCustomerName, { required: true, minLength: 2, maxLength: 80 }, "Customer Name");
     if (nameErr) errors.name = nameErr;
 
-    const compErr = FormValidator.validateField(newCompanyName, { required: true, minLength: 2, maxLength: 100 }, "Company Name");
-    if (compErr) errors.company = compErr;
+    const companyErr = FormValidator.validateField(newCompanyName, { required: true, minLength: 2, maxLength: 100 }, "Company Name");
+    if (companyErr) errors.company = companyErr;
 
     if (newEmail.trim()) {
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -308,20 +332,30 @@ export function CustomerSwitcher({
       if (onAddCustomer) {
         await onAddCustomer(newCust);
       }
+      setInternalCustomers(prev => [newCust, ...prev]);
       handleSelectCustomer(newCust);
       setShowAddModal(false);
       setNewCustomerName("");
       setNewCompanyName("");
       setNewEmail("");
       updateDraftStorage("", "", "", "Enterprise SaaS");
-      setSuccessNotice(`Account "${newCust.companyName}" added successfully.`);
+      setSuccessNotice(`Account "${newCust.companyName}" added and switched successfully.`);
       setTimeout(() => setSuccessNotice(null), 3500);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("dealflow_customer_switched", { detail: newCust }));
+      }
     } catch (err: any) {
       setFormErrors({ general: err.message || "Failed to add customer account." });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const alignmentClass = align === "left" 
+    ? "left-0 origin-top-left" 
+    : align === "right" 
+    ? "right-0 origin-top-right" 
+    : "left-0 sm:left-0 origin-top-left";
 
   return (
     <div ref={dropdownRef} className={`relative inline-block text-left ${className}`}>
@@ -339,7 +373,7 @@ export function CustomerSwitcher({
           <Building2 className="w-3 h-3" />
         </div>
 
-        <div className="flex flex-col text-left max-w-[150px] sm:max-w-[200px] truncate">
+        <div className="flex flex-col text-left max-w-[140px] sm:max-w-[190px] truncate">
           <span className="font-bold text-[#1D1D1F] dark:text-[#F5F5F7] text-[11px] truncate leading-tight">
             {activeCustomer.companyName}
           </span>
@@ -351,12 +385,15 @@ export function CustomerSwitcher({
         <ChevronDown className={`w-3.5 h-3.5 text-[#86868B] transition-transform duration-200 shrink-0 ${isOpen ? "rotate-180 text-violet-400" : ""}`} />
       </button>
 
-      {/* DROPDOWN MENU */}
+      {/* DROPDOWN MENU (Safely bounded & fully visible across viewports) */}
       {isOpen && (
         <div 
           role="listbox" 
           aria-label="Customer accounts"
-          className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-72 sm:w-80 rounded-2xl bg-white/95 dark:bg-[#161618]/95 border border-black/[0.08] dark:border-white/[0.12] shadow-2xl backdrop-blur-2xl p-2.5 z-50 space-y-2 animate-in fade-in duration-150"
+          className={cn(
+            "absolute mt-2 w-72 sm:w-80 max-w-[calc(100vw-24px)] rounded-2xl bg-white/95 dark:bg-[#161618]/95 border border-black/[0.08] dark:border-white/[0.12] shadow-2xl backdrop-blur-2xl p-2.5 z-50 space-y-2 animate-in fade-in duration-150",
+            alignmentClass
+          )}
         >
           {/* Header */}
           <div className="flex justify-between items-center px-2 py-1 border-b border-black/[0.06] dark:border-white/[0.08]">
@@ -454,16 +491,25 @@ export function CustomerSwitcher({
         </div>
       )}
 
-      {/* QUICK-ADD CUSTOMER MODAL (Strict Input Preservation, Isolated Placeholders, On-Blur Validation) */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white dark:bg-[#161618] border border-black/[0.1] dark:border-white/[0.15] rounded-3xl shadow-2xl p-6 space-y-5 relative animate-in fade-in zoom-in-95 duration-200">
+      {/* QUICK-ADD CUSTOMER MODAL (Portalled to document.body to prevent clipping & containing-block traps) */}
+      {showAddModal && isMounted && createPortal(
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="quick-add-modal-title"
+          onClick={() => setShowAddModal(false)}
+        >
+          <div 
+            className="w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar my-auto bg-white dark:bg-[#161618] border border-black/[0.1] dark:border-white/[0.15] rounded-3xl shadow-2xl p-6 space-y-5 relative animate-in fade-in zoom-in-95 duration-200 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
             
             {/* Close Button */}
             <button
               type="button"
               onClick={() => setShowAddModal(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white"
+              className="absolute top-4 right-4 p-1.5 rounded-full text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition-colors"
               aria-label="Close dialog"
             >
               <X className="w-4 h-4" />
@@ -474,7 +520,7 @@ export function CustomerSwitcher({
               <span className="text-[10px] font-mono font-bold text-violet-500 uppercase tracking-wider">
                 Workstation Customer Management
               </span>
-              <h3 className="text-lg font-bold text-[#1D1D1F] dark:text-white mt-0.5 flex items-center gap-2">
+              <h3 id="quick-add-modal-title" className="text-lg font-bold text-[#1D1D1F] dark:text-white mt-0.5 flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-violet-500" />
                 Add Customer Account
               </h3>
@@ -598,14 +644,14 @@ export function CustomerSwitcher({
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white"
+                  className="px-4 py-2 rounded-xl text-xs font-medium text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-md shadow-violet-500/20 flex items-center gap-1.5 transition-all"
+                  className="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-md shadow-violet-500/20 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...</>
@@ -616,19 +662,21 @@ export function CustomerSwitcher({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Accessible Success Announcement Toast */}
-      {successNotice && (
+      {/* Accessible Success Announcement Toast (Portalled to document.body) */}
+      {successNotice && isMounted && createPortal(
         <div 
           role="status" 
           aria-live="polite"
-          className="fixed bottom-6 right-6 z-50 bg-emerald-950/90 border border-emerald-500/60 text-emerald-200 px-4 py-2.5 rounded-2xl text-xs font-medium shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom-3 duration-200"
+          className="fixed bottom-6 right-6 z-[10000] bg-emerald-950/90 border border-emerald-500/60 text-emerald-200 px-4 py-2.5 rounded-2xl text-xs font-medium shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom-3 duration-200"
         >
           <Check className="w-4 h-4 text-emerald-400" />
           <span>{successNotice}</span>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

@@ -60,6 +60,7 @@ import { runOwaspAuthzGateTests } from "./owasp-authz-gates.test";
 import { runKeywordStudioEnhancedTests } from "./keyword-studio-enhanced.test";
 import { runCommunityMiningTestSuite } from "./community-mining.test";
 import { runMiddlewareTests } from "./middleware-verification.test";
+import { runAgentPortalModulesSyncTests } from "./agent-portal-modules-sync.test";
 
 
 
@@ -370,7 +371,8 @@ async function main() {
     runOwaspAuthzGateTests,
     runKeywordStudioEnhancedTests,
     runCommunityMiningTestSuite,
-    runMiddlewareTests
+    runMiddlewareTests,
+    runAgentPortalModulesSyncTests
   ];
 
 

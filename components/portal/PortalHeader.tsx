@@ -74,6 +74,7 @@ export function PortalHeader({
               selectedCustomerId={selectedCustomerId}
               onSelectCustomer={onSelectCustomer}
               onAddCustomer={onAddCustomer}
+              align="left"
             />
           </div>
         )}
@@ -106,6 +107,7 @@ export function PortalHeader({
               selectedCustomerId={selectedCustomerId}
               onSelectCustomer={onSelectCustomer}
               onAddCustomer={onAddCustomer}
+              align="right"
             />
           </div>
         )}

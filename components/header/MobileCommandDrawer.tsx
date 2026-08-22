@@ -279,7 +279,7 @@ export function MobileCommandDrawer({
                 }}
               >
                 <Calendar className="h-4.5 w-4.5" />
-                Book a Demo
+                Book Strategy Demo
               </Button>
 
               <Button
@@ -289,7 +289,7 @@ export function MobileCommandDrawer({
                   handleGetStarted(e);
                 }}
               >
-                Get Started
+                Deploy AI Workforce
               </Button>
             </div>
           </motion.div>

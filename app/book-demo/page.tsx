@@ -23,38 +23,38 @@ import { useRouter } from "next/navigation";
 const BENEFITS = [
   {
     icon: <Zap className="h-6 w-6 text-purple-400" />,
-    title: "Instant 1-on-1 Consultation",
-    description: "Discover tailored AI workflows for your specific revenue pipeline",
+    title: "Autonomous Workforce Walkthrough",
+    description: "Experience how AI agents understand business goals, research pain points, and autonomously engage prospects.",
   },
   {
     icon: <Shield className="h-6 w-6 text-teal-400" />,
-    title: "Official Calendly Scheduler",
-    description: "Standardized booking system synchronized with live calendar availability",
+    title: "Live AI Call Rep & Negotiation Demo",
+    description: "See the AI join live calls as a human representative, handle objections, and negotiate within commercial boundaries.",
   },
   {
     icon: <Globe className="h-6 w-6 text-amber-400" />,
-    title: "Enterprise Encryption",
-    description: "SOC 2 Type II audit in progress, end-to-end encrypted session security",
+    title: "Post-Sale Requirement Execution",
+    description: "Learn how the workforce transitions closed deals into automated deliverable fulfillment and ALMA self-learning.",
   },
 ];
 
 const TESTIMONIALS = [
   {
-    name: "Sarah Chen",
-    role: "VP Sales at TechCorp",
-    content: "DealFlow AI helped us close 30% more deals in the first quarter.",
+    name: "Sarah Jenkins",
+    role: "VP of Revenue Operations, TechScale",
+    content: "DealFlow.ai's AI representatives joined prospect calls, negotiated within our guardrails, and closed 40+ deals.",
     rating: 5,
   },
   {
     name: "Marcus Johnson",
     role: "CEO at GrowthLab",
-    content: "Automated meeting summaries save us 20+ hours a week!",
+    content: "Our AI workforce took our quarterly business goal and delivered an automated pipeline that closed in weeks.",
     rating: 5,
   },
   {
     name: "Emily Rodriguez",
     role: "Sales Director at InnovateCo",
-    content: "Pipeline insights are game-changing for our revenue team.",
+    content: "The post-sale requirement fulfillment engine transformed how we deliver agreed client deliverables.",
     rating: 5,
   },
 ];
@@ -92,20 +92,20 @@ export default function BookDemoPage() {
           </button>
           <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1.5 text-xs font-semibold text-teal-300 uppercase tracking-wider shadow-sm">
             <Calendar className="h-4 w-4" />
-            <span>Official Calendly Scheduler</span>
+            <span>Official Workforce Strategy Session</span>
           </div>
         </div>
 
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white leading-tight">
-            See DealFlow AI{" "}
-            <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
+            See the Autonomous AI Workforce{" "}
+            <span className="bg-gradient-to-r from-teal-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent">
               in Action
             </span>
           </h1>
           <p className="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto">
-            Schedule a 30-minute personalized walkthrough with our Solutions Engineering team using the official Calendly booking interface below.
+            Schedule a 30-minute personalized strategy session with our Solutions Engineering team to see how DealFlow.ai executes your revenue operations end-to-end.
           </p>
         </div>
 

@@ -106,9 +106,39 @@ export const DEMO_ADMINS: (DemoAdmin & { hashedPassword: string })[] = [
   },
 ];
 
-export const DEMO_AGENTS: DemoAgent[] = [];
+export const DEMO_AGENTS: DemoAgent[] = [
+  {
+    id: "agent-1",
+    email: "praneeth@dealflow.ai",
+    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.praneethAgent, SALT_ROUNDS),
+    name: "Praneeth",
+    role: "agent",
+  },
+  {
+    id: "agent-2",
+    email: "agent.ashok@dealflow.ai",
+    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.ashokAgent, SALT_ROUNDS),
+    name: "Ashok",
+    role: "agent",
+  },
+];
 
-export const DEMO_CUSTOMERS: DemoCustomer[] = [];
+export const DEMO_CUSTOMERS: DemoCustomer[] = [
+  {
+    id: "cust-demo",
+    email: "demo@customer.com",
+    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.demoCustomer, SALT_ROUNDS),
+    name: "Demo Customer",
+    role: "customer",
+  },
+  {
+    id: "cust-praneeth",
+    email: "praneethburada@gmail.com",
+    hashedPassword: bcrypt.hashSync(DEV_PASSWORDS.praneethCustomer, SALT_ROUNDS),
+    name: "Praneeth Customer",
+    role: "customer",
+  },
+];
 
 export let NEW_CUSTOMERS: DemoCustomer[] = [];
 

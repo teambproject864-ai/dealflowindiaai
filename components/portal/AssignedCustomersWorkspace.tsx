@@ -64,19 +64,40 @@ export function AssignedCustomersWorkspace({
 
   // Filter only customers explicitly assigned to the current agent
   const assignedCustomers = useMemo(() => {
-    if (!customers || customers.length === 0) return [];
-    const agentId = currentAgent?.id || "agent-praneeth";
-    const agentEmail = currentAgent?.email?.toLowerCase() || "praneeth@dealflow.ai";
-    const agentName = currentAgent?.name?.toLowerCase() || "praneeth";
+    if (!customers || customers.length === 0 || !currentAgent) return [];
 
-    return customers.filter(c => {
-      // If customer has explicit assignment fields
-      if (c.assignedAgentId && c.assignedAgentId === agentId) return true;
-      if (c.assignedAgentEmail && c.assignedAgentEmail.toLowerCase() === agentEmail) return true;
-      if (c.assignedAgentName && c.assignedAgentName.toLowerCase().includes(agentName)) return true;
-      
-      // Fallback: If no explicit assignment flag on sample, assign first 3 to logged-in agent
-      return true;
+    const agentId = currentAgent.id?.toLowerCase().trim();
+    const agentEmail = currentAgent.email?.toLowerCase().trim();
+    const agentName = currentAgent.name?.toLowerCase().trim();
+    const agentKey = agentId?.replace(/^agent-/, "") || agentEmail?.split("@")[0];
+
+    return customers.filter((c) => {
+      if (!c) return false;
+
+      // 1. Direct ID match
+      if (c.assignedAgentId && agentId && c.assignedAgentId.toLowerCase() === agentId) return true;
+
+      // 2. Direct Email match
+      if (c.assignedAgentEmail && agentEmail && c.assignedAgentEmail.toLowerCase() === agentEmail) return true;
+
+      // 3. Direct Key match
+      if (c.assignedAgentKey && agentKey && (c.assignedAgentKey.toLowerCase() === agentKey || (agentId && c.assignedAgentKey.toLowerCase() === agentId))) return true;
+
+      // 4. Direct Name match
+      if (c.assignedAgentName && agentName && c.assignedAgentName.toLowerCase() === agentName) return true;
+
+      // 5. Nested assignedAgent object match
+      if (c.assignedAgent) {
+        const nestedId = (c.assignedAgent.agentId || c.assignedAgent.id)?.toLowerCase();
+        const nestedEmail = c.assignedAgent.email?.toLowerCase();
+        const nestedName = c.assignedAgent.name?.toLowerCase();
+        if (nestedId && agentId && nestedId === agentId) return true;
+        if (nestedEmail && agentEmail && nestedEmail === agentEmail) return true;
+        if (nestedName && agentName && nestedName === agentName) return true;
+      }
+
+      // Strict RBAC: If no explicit assignment matches the current agent, do not display
+      return false;
     });
   }, [customers, currentAgent]);
 

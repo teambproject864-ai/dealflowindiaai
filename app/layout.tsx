@@ -21,28 +21,28 @@ const serif = Source_Serif_4({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3089"),
-  title: "DEALFLOW AI — GTM & Revenue Operations",
+  title: "DealFlow.ai — Autonomous AI Sales & Business Workforce",
   description:
-    "AI agents for revenue teams. Pipeline intelligence, persistent memory, and autonomous outreach — from ICP to closed deal.",
+    "DealFlow.ai is an autonomous AI workforce that doesn't just recommend what your business should do — it actually does the work. From objective intake to finding prospects, joining sales calls, closing deals, and executing requirements end-to-end.",
   openGraph: {
-    title: "DEALFLOW AI — GTM & Revenue Operations",
-    description: "AI agents for revenue teams. Pipeline intelligence, persistent memory, and autonomous outreach — from ICP to closed deal.",
+    title: "DealFlow.ai — Autonomous AI Sales & Business Workforce",
+    description: "DealFlow.ai is an autonomous AI workforce that doesn't just recommend what your business should do — it actually does the work. From objective intake to closing deals and executing requirements end-to-end.",
     type: "website",
     locale: "en_US",
-    siteName: "DealFlow AI",
+    siteName: "DealFlow.ai",
     images: [
       {
         url: "/opengraph-image.png",
         width: 1200,
         height: 630,
-        alt: "DealFlow AI GTM & Revenue Operations Platform",
+        alt: "DealFlow.ai Autonomous AI Sales & Business Workforce",
       }
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "DEALFLOW AI — GTM & Revenue Operations",
-    description: "AI agents for revenue teams. Pipeline intelligence, persistent memory, and autonomous outreach — from ICP to closed deal.",
+    title: "DealFlow.ai — Autonomous AI Sales & Business Workforce",
+    description: "DealFlow.ai is an autonomous AI workforce that doesn't just recommend what your business should do — it actually does the work. From objective intake to closing deals and executing requirements end-to-end.",
     images: ["/opengraph-image.png"],
   }
 };
