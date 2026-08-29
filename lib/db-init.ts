@@ -1,13 +1,19 @@
 import { db, markFirestoreQuotaExhausted } from "./firebase-admin";
 import bcrypt from "bcrypt";
 import { SALT_ROUNDS } from "./auth";
+import { isBuildPhase } from "./utils";
 
+// S-01: In production runtime, required database seed credentials MUST come from environment variables.
+// In development/testing and build phase, a stable default is permitted.
 function getSeedPassword(envVar: string, devDefault: string): string {
   const value = process.env[envVar];
   if (value && value.trim() !== "") {
     return value.trim();
   }
   if (process.env.NODE_ENV === "production") {
+    if (isBuildPhase()) {
+      return devDefault;
+    }
     throw new Error(`CRITICAL SECURITY ERROR: Required database seed environment variable '${envVar}' must be configured in production.`);
   }
   return devDefault;

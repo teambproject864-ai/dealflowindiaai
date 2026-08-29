@@ -60,15 +60,19 @@ export interface DemoAdmin {
   role: "admin";
 }
 
-// S-01: In production, missing env vars throw at module load time (fail-fast).
-// In development/testing, stable documented default development passwords are used
-// to allow consistent local login across server restarts.
+import { isBuildPhase } from "./utils";
+
+// S-01: In production runtime, required auth credentials MUST come from environment variables.
+// In development/testing and build phase, a stable default is permitted.
 function requireEnvPassword(envVar: string, devDefault: string): string {
   const value = process.env[envVar];
   if (value && value.trim() !== "") {
     return value.trim();
   }
   if (process.env.NODE_ENV === "production") {
+    if (isBuildPhase()) {
+      return devDefault;
+    }
     throw new Error(`CRITICAL SECURITY ERROR: Required authentication environment variable '${envVar}' must be configured in production.`);
   }
   return devDefault;
