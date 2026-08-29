@@ -2,7 +2,7 @@ import { encryptAES, decryptAES } from "./security";
 import { createHash, randomUUID } from "crypto";
 import { db } from "./firebase-admin";
 
-export type APIKeyProvider = "openai" | "anthropic" | "huggingface" | "pinecone" | "custom";
+export type APIKeyProvider = "openai" | "anthropic" | "huggingface" | "pinecone" | "billionmail" | "scrapegraph" | "custom";
 
 export interface CustomerAPIKeyRecord {
   id: string;
@@ -31,19 +31,24 @@ function getMasterKey(): Buffer {
  * Validates raw API Key format for supported providers
  */
 export function validateAPIKeyFormat(provider: APIKeyProvider, rawKey: string): { isValid: boolean; error?: string } {
-  const k = rawKey.trim();
-  if (!k || k.length < 8) {
+  if (!rawKey || rawKey.trim().length < 8) {
     return { isValid: false, error: "API Key must be at least 8 characters long" };
   }
 
-  if (provider === "openai" && !k.startsWith("sk-")) {
+  if (provider === "openai" && !rawKey.startsWith("sk-")) {
     return { isValid: false, error: "OpenAI API keys must start with 'sk-'" };
   }
-  if (provider === "anthropic" && !k.startsWith("sk-ant-")) {
+  if (provider === "anthropic" && !rawKey.startsWith("sk-ant-")) {
     return { isValid: false, error: "Anthropic API keys must start with 'sk-ant-'" };
   }
-  if (provider === "huggingface" && !k.startsWith("hf_")) {
+  if (provider === "huggingface" && !rawKey.startsWith("hf_")) {
     return { isValid: false, error: "Hugging Face tokens must start with 'hf_'" };
+  }
+  if (provider === "billionmail" && !rawKey.startsWith("bm_") && !rawKey.startsWith("billion_")) {
+    return { isValid: false, error: "Billionmail API keys must start with 'bm_' or 'billion_'" };
+  }
+  if (provider === "scrapegraph" && !rawKey.startsWith("sgai-") && !rawKey.startsWith("sg_")) {
+    return { isValid: false, error: "ScrapeGraphAI API keys must start with 'sgai-' or 'sg_'" };
   }
 
   return { isValid: true };

@@ -45,6 +45,7 @@ import {
   CreditCard,
   Trash2,
   Lock,
+  Mail,
 } from "lucide-react";
 import { DealflowCRMWorkspace } from "@/components/portal/DealflowCRMWorkspace";
 import { cn } from "@/lib/utils";
@@ -69,6 +70,8 @@ import { SystemHealthModule } from "@/components/portal/admin/SystemHealthModule
 import { PlatformSettingsModule } from "@/components/portal/admin/PlatformSettingsModule";
 import { AgentsModule } from "@/components/portal/admin/AgentsModule";
 import { CustomersModule } from "@/components/portal/admin/CustomersModule";
+import { BillionmailHub } from "@/components/portal/BillionmailHub";
+import { ScrapeGraphStudio } from "@/components/portal/ScrapeGraphStudio";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: Activity, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
@@ -95,6 +98,8 @@ const tabs = [
   { id: "interactions", label: "Interactions", icon: MessageSquare, color: "text-sky-400 border-sky-500/30 hover:border-sky-500/60 shadow-sky-500/10" },
   { id: "whatsapp-archive", label: "WhatsApp Vault", icon: MessageSquare, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
   { id: "crm-sync-center", label: "CRM Sync Queue", icon: RefreshCw, color: "text-amber-400 border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/10" },
+  { id: "billionmail-hub", label: "Billionmail Outbound Hub", icon: Mail, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
+  { id: "scrapegraph-studio", label: "ScrapeGraphAI Studio", icon: Globe, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
 ] as const;
 
 function AdminPortalContent() {
@@ -2589,6 +2594,20 @@ function AdminPortalContent() {
         {activeTab === "dealflow-crm" && (
           <div className="animate-in fade-in duration-300">
             <DealflowCRMWorkspace userRole="admin" />
+          </div>
+        )}
+
+        {/* 17. BILLIONMAIL OUTBOUND HUB TAB */}
+        {activeTab === "billionmail-hub" && (
+          <div className="animate-in fade-in duration-300">
+            <BillionmailHub />
+          </div>
+        )}
+
+        {/* 18. SCRAPEGRAPH-AI STUDIO TAB */}
+        {activeTab === "scrapegraph-studio" && (
+          <div className="animate-in fade-in duration-300">
+            <ScrapeGraphStudio />
           </div>
         )}
 

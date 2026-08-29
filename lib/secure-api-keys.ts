@@ -21,7 +21,7 @@ export class RateLimitExceededError extends Error {
 // Access Control Matrix Registry
 export interface APIKeyPermission {
   envVar: string;
-  provider: 'huggingface' | 'nvidia' | 'kimi';
+  provider: 'huggingface' | 'nvidia' | 'kimi' | 'billionmail' | 'scrapegraph';
   permittedPillar: string;
   permittedSubOption: string;
 }
@@ -42,6 +42,9 @@ export const API_KEY_PERMISSIONS: Record<string, APIKeyPermission> = {
   'kimi_imagery_gen': { envVar: 'ENC_KIMI_API_KEY', provider: 'kimi', permittedPillar: 'ai_automated_content', permittedSubOption: 'automated_personalization' },
   'kimi_video_blueprint': { envVar: 'ENC_KIMI_API_KEY', provider: 'kimi', permittedPillar: 'ai_automated_content', permittedSubOption: 'ai_copy_generator' },
   'kimi_general_chat': { envVar: 'ENC_KIMI_API_KEY', provider: 'kimi', permittedPillar: 'ai_automated_content', permittedSubOption: 'faq_auto_bots' },
+  // Billionmail & ScrapeGraphAI Permissions
+  'billionmail_campaigns': { envVar: 'ENC_BILLIONMAIL_API_KEY', provider: 'billionmail', permittedPillar: 'communications_and_campaigns', permittedSubOption: 'billionmail_hub' },
+  'scrapegraph_extractions': { envVar: 'ENC_SCRAPEGRAPH_API_KEY', provider: 'scrapegraph', permittedPillar: 'data_intelligence_scraping', permittedSubOption: 'scrapegraph_studio' },
 };
 
 

@@ -320,6 +320,8 @@ export function DealflowConnectHub() {
                   <option value="openai">OpenAI (sk-...)</option>
                   <option value="anthropic">Anthropic (sk-ant-...)</option>
                   <option value="huggingface">Hugging Face (hf_...)</option>
+                  <option value="billionmail">Billionmail (bm_... / API Key)</option>
+                  <option value="scrapegraph">ScrapeGraphAI (sgai-... / API Key)</option>
                   <option value="pinecone">Pinecone</option>
                   <option value="custom">Custom API Gateway Key</option>
                 </select>

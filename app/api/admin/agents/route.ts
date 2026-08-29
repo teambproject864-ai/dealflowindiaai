@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/firebase-admin";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, SALT_ROUNDS } from "@/lib/auth";
 import bcrypt from "bcrypt";
 
 export const dynamic = "force-dynamic";
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     const newAgentId = `agent-${Date.now().toString(36)}`;
-    const hashedPassword = bcrypt.hashSync(password, 10);
+    const hashedPassword = bcrypt.hashSync(password, SALT_ROUNDS);
     const nowIso = new Date().toISOString();
 
     const newAgent = {
@@ -262,7 +262,7 @@ export async function PUT(request: NextRequest) {
           { status: 400 }
         );
       }
-      updateData.hashedPassword = bcrypt.hashSync(pwdToSet, 10);
+      updateData.hashedPassword = bcrypt.hashSync(pwdToSet, SALT_ROUNDS);
     }
 
     await agentRef.update(updateData);

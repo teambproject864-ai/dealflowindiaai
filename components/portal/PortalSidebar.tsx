@@ -63,12 +63,14 @@ const CATEGORY_MAP: Record<string, string> = {
   requirements: "Entity Management",
   resignations: "Entity Management",
 
-  // Communications
+  // Communications & Integrations
   "bot-monitor": "Communications & Integrations",
   interactions: "Communications & Integrations",
   "whatsapp-archive": "Communications & Integrations",
   "crm-sync-center": "Communications & Integrations",
   "dealflow-crm": "Communications & Integrations",
+  "billionmail-hub": "Communications & Integrations",
+  "scrapegraph-studio": "Communications & Integrations",
 
   // Governance & Security
   "users-orgs": "Platform & Governance",

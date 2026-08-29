@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, SALT_ROUNDS } from "@/lib/auth";
 import { db } from "@/lib/firebase-admin";
 import bcrypt from "bcrypt";
 
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
       const { randomBytes } = await import("crypto");
       const randomSecret = randomBytes(6).toString("hex");
       const defaultPassword = `Df#${randomSecret.slice(0, 4)}_${randomSecret.slice(4)}!9`;
-      const hashedPassword = bcrypt.hashSync(defaultPassword, 10);
+      const hashedPassword = bcrypt.hashSync(defaultPassword, SALT_ROUNDS);
       const nowIso = new Date().toISOString();
 
       const customerUser = {

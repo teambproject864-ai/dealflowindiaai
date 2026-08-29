@@ -329,12 +329,12 @@ export async function POST(req: NextRequest) {
             user = { id: extraAdmin.id, email: extraAdmin.email, name: extraAdmin.name, role: "admin" as const };
           }
         } else if (email.toLowerCase() === DEMO_ADMIN.email.toLowerCase()) {
-          let isValidPassword = false;
-          if (process.env.ADMIN_PASSWORD_HASH) {
+          let isValidPassword = await verifyPassword(password, DEMO_ADMIN.hashedPassword);
+          if (!isValidPassword && process.env.ADMIN_PASSWORD_HASH) {
             isValidPassword = await verifyPassword(password, process.env.ADMIN_PASSWORD_HASH);
           }
           if (isValidPassword) {
-            user = { ...DEMO_ADMIN, role: "admin" as const };
+            user = { id: DEMO_ADMIN.id, email: DEMO_ADMIN.email, name: DEMO_ADMIN.name, role: "admin" as const };
           }
         }
       } else if (role === "agent") {

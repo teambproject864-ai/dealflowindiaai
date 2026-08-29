@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
-import { requireAuth, hashPassword, addAuditLog, DEMO_ADMIN, DEMO_AGENTS, DEMO_CUSTOMERS } from "@/lib/auth";
+import { NextResponse, NextRequest } from "next/server";
+import { requireAuth, hashPassword, addAuditLog, DEMO_ADMIN, DEMO_ADMINS, DEMO_AGENTS, DEMO_CUSTOMERS } from "@/lib/auth";
 import { db } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: Request) {
-  // Enforce admin-only access
-  const { user: currentUser, errorResponse } = await requireAuth(req, ["admin"]);
-  if (errorResponse) return errorResponse;
+export async function POST(req: NextRequest) {
+  const authResult = await requireAuth(req, ["admin"]);
+  if (authResult instanceof NextResponse) return authResult;
+  const currentUser = (authResult as any).user;
 
   try {
     const body = await req.json();
@@ -44,9 +44,9 @@ export async function POST(req: Request) {
     }
 
     const requestData = requestDoc.data();
-    if (!requestData) {
+    if (!requestData || requestData.status === "completed") {
       return NextResponse.json(
-        { success: false, error: "Invalid request data" },
+        { success: false, error: "Invalid or already processed request" },
         { status: 400 }
       );
     }
@@ -77,9 +77,10 @@ export async function POST(req: Request) {
       });
     } else {
       // User doesn't exist in Firestore. Let's find name/id from demo data, or generate new ones.
-      if (email.toLowerCase() === DEMO_ADMIN.email.toLowerCase() && role === "admin") {
-        userId = DEMO_ADMIN.id;
-        name = DEMO_ADMIN.name;
+      if (role === "admin") {
+        const adminUser = DEMO_ADMINS.find((a) => a.email.toLowerCase() === email.toLowerCase()) || (email.toLowerCase() === DEMO_ADMIN.email.toLowerCase() ? DEMO_ADMIN : null);
+        userId = adminUser ? adminUser.id : `admin-${Date.now()}`;
+        name = adminUser ? adminUser.name : "Admin";
       } else if (role === "agent") {
         const agent = DEMO_AGENTS.find((a) => a.email.toLowerCase() === email.toLowerCase());
         userId = agent ? agent.id : `agent-${Date.now()}`;

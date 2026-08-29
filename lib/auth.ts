@@ -18,7 +18,7 @@ function getJwtSecret(): string {
 }
 const JWT_EXPIRES_IN = "8h"; // 8-hour sessions — auto-refreshed on activity
 const AUTH_COOKIE_NAME = "df_auth_token";
-const SALT_ROUNDS = 12;
+export const SALT_ROUNDS = 12;
 
 // --- Types ---
 export type UserRole = "admin" | "agent" | "customer";
@@ -60,29 +60,78 @@ export interface DemoAdmin {
   role: "admin";
 }
 
-// S-01 FIX: No plaintext password fallbacks. All credentials MUST come from env vars.
-// In production, missing env vars throw at module load time (fail-fast).
-// In development/CI, a placeholder sentinel is used so demo accounts exist without
-// exposing real credentials in source control. The sentinel is bcrypt-salted and
-// never a real password — logins will be rejected unless the env var is set.
-function requireEnvPassword(envVar: string, fallbackDefault: string): string {
+// S-01: In production, missing env vars throw at module load time (fail-fast).
+// In development/testing, stable documented default development passwords are used
+// to allow consistent local login across server restarts.
+function requireEnvPassword(envVar: string, devDefault: string): string {
   const value = process.env[envVar];
-  if (!value || value.trim() === "") {
-    return fallbackDefault;
+  if (value && value.trim() !== "") {
+    return value.trim();
   }
-  return value.trim();
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(`CRITICAL SECURITY ERROR: Required authentication environment variable '${envVar}' must be configured in production.`);
+  }
+  return devDefault;
 }
 
 export const DEMO_ADMIN = {
-  id: "",
-  email: "",
-  name: "",
+  id: "admin-2",
+  email: "admin@dealflow.ai",
+  name: "Admin One",
   role: "admin" as const,
+  hashedPassword: bcrypt.hashSync(requireEnvPassword("ADMIN_PASSWORD", "DealFlowDev!Admin2026"), SALT_ROUNDS),
 };
 
-export const DEMO_ADMINS: (DemoAdmin & { hashedPassword: string })[] = [];
-export const DEMO_AGENTS: DemoAgent[] = [];
-export const DEMO_CUSTOMERS: DemoCustomer[] = [];
+export const DEMO_ADMINS: (DemoAdmin & { hashedPassword: string })[] = [
+  {
+    id: "admin-1",
+    email: "admin1@dealflow.ai",
+    name: "Administrator",
+    role: "admin",
+    hashedPassword: bcrypt.hashSync(requireEnvPassword("ADMIN1_PASSWORD", "DealFlowDev!Admin12026"), SALT_ROUNDS),
+  },
+  {
+    id: "admin-3",
+    email: "admin3@dealflow.ai",
+    name: "Admin Ops",
+    role: "admin",
+    hashedPassword: bcrypt.hashSync(requireEnvPassword("ADMIN3_PASSWORD", "DealFlowDev!Admin32026"), SALT_ROUNDS),
+  },
+];
+
+export const DEMO_AGENTS: DemoAgent[] = [
+  {
+    id: "agent-1",
+    email: "praneeth@dealflow.ai",
+    name: "Praneeth",
+    role: "agent",
+    hashedPassword: bcrypt.hashSync(requireEnvPassword("AGENT_PRANEETH_PASSWORD", "DealFlowDev!Agent12026"), SALT_ROUNDS),
+  },
+  {
+    id: "agent-2",
+    email: "agent.ashok@dealflow.ai",
+    name: "Ashok",
+    role: "agent",
+    hashedPassword: bcrypt.hashSync(requireEnvPassword("AGENT_ASHOK_PASSWORD", "DealFlowDev!Agent22026"), SALT_ROUNDS),
+  },
+];
+
+export const DEMO_CUSTOMERS: DemoCustomer[] = [
+  {
+    id: "cust-1",
+    email: "demo@customer.com",
+    name: "Demo Customer",
+    role: "customer",
+    hashedPassword: bcrypt.hashSync(requireEnvPassword("CUSTOMER_DEMO_PASSWORD", "DealFlowDev!Cust12026"), SALT_ROUNDS),
+  },
+  {
+    id: "cust-2",
+    email: "praneethburada@gmail.com",
+    name: "Praneeth Burada",
+    role: "customer",
+    hashedPassword: bcrypt.hashSync(requireEnvPassword("CUSTOMER_PRANEETH_PASSWORD", "DealFlowDev!Cust22026"), SALT_ROUNDS),
+  },
+];
 export let NEW_CUSTOMERS: DemoCustomer[] = [];
 
 // --- Audit Logging ---
@@ -254,6 +303,8 @@ export async function getAuthenticatedUser(req?: Request): Promise<AuthUser | nu
 export async function getCurrentUser(req?: Request): Promise<AuthUser | null> {
   return getAuthenticatedUser(req);
 }
+
+export const getCurrentUserFromRequest = getAuthenticatedUser;
 
 /**
  * Reusable RBAC/Auth Guard for Next.js endpoints.

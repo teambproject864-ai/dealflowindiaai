@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { db } from "@/lib/firebase-admin";
 import { logger } from "@/lib/logger";
-import { DEMO_ADMIN, DEMO_AGENTS, DEMO_CUSTOMERS } from "@/lib/auth";
+import { DEMO_ADMIN, DEMO_ADMINS, DEMO_AGENTS, DEMO_CUSTOMERS } from "@/lib/auth";
 
 // Get JWT secret from environment or use fallback for dev
 function getJwtSecret(): string {
@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
     let userRole: "admin" | "agent" | "customer" = "customer";
 
     // Check demo admin
-    if (DEMO_ADMIN.email.toLowerCase() === email.toLowerCase()) {
+    const foundAdmin = DEMO_ADMINS.find((a) => a.email.toLowerCase() === email.toLowerCase()) || (DEMO_ADMIN.email.toLowerCase() === email.toLowerCase() ? DEMO_ADMIN : null);
+    if (foundAdmin) {
       userExists = true;
       userRole = "admin";
     }

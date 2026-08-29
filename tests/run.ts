@@ -61,6 +61,7 @@ import { runKeywordStudioEnhancedTests } from "./keyword-studio-enhanced.test";
 import { runCommunityMiningTestSuite } from "./community-mining.test";
 import { runMiddlewareTests } from "./middleware-verification.test";
 import { runAgentPortalModulesSyncTests } from "./agent-portal-modules-sync.test";
+import { runBillionmailScrapeGraphIntegrationTests } from "./billionmail-scrapegraph-integrations.test";
 
 
 
@@ -372,7 +373,8 @@ async function main() {
     runKeywordStudioEnhancedTests,
     runCommunityMiningTestSuite,
     runMiddlewareTests,
-    runAgentPortalModulesSyncTests
+    runAgentPortalModulesSyncTests,
+    runBillionmailScrapeGraphIntegrationTests
   ];
 
 

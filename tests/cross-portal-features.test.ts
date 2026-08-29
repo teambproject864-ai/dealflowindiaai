@@ -129,6 +129,15 @@ export async function runCrossPortalFeaturesTestSuite() {
   // ── 3. DEALFLOW CRM CONNECTION & BI-DIRECTIONAL SYNC TESTS ──────────────
   console.log("--> [3/3] Testing Dealflow CRM Bi-Directional Sync & Role Access...");
 
+  // Ensure test deals exist in store
+  const currentDeals = await getRoleScopedCRMRecords("admin");
+  if (currentDeals.deals.length < 3) {
+    const { saveCRMDeal } = await import("@/lib/crm-store");
+    await saveCRMDeal({ id: "deal-1", dealName: "Acme Deal", customerId: "cust-1", customerName: "Praneeth Burada", amount: 100000, stage: "qualification" });
+    await saveCRMDeal({ id: "deal-2", dealName: "Beta Deal", customerId: "cust-2", customerName: "Sarah Connor", amount: 50000, stage: "proposal" });
+    await saveCRMDeal({ id: "deal-3", dealName: "Gamma Deal", customerId: "cust-3", customerName: "Alex Mercer", amount: 75000, stage: "closed-won" });
+  }
+
   // Customer role-scoped CRM access (Personal deals only)
   const customerScoped = await getRoleScopedCRMRecords("customer", "cust-1");
   assert.ok(customerScoped.deals.length >= 1, "Customer accesses personal deals");
