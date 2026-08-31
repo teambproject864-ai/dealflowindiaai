@@ -1,63 +1,46 @@
 // app/api/portal/customers/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/firebase-admin";
-import { CustomerAccountOption } from "@/lib/customer-accounts";
+import { CustomerStorageService } from "@/lib/customer-storage";
 
-// In-Memory fallback store for live session customer records
-const inMemoryCustomers: CustomerAccountOption[] = [];
+export const dynamic = "force-dynamic";
 
+/**
+ * GET: Lists all persistent customers
+ */
 export async function GET(request: NextRequest) {
   try {
-    const db = getDb();
-    if (db) {
-      try {
-        const snap = await db.collection("customers").get();
-        if (!snap.empty) {
-          const dbCustomers: CustomerAccountOption[] = snap.docs.map(doc => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              name: data.name || data.contactName || "Customer Account",
-              companyName: data.companyName || data.company || "Enterprise Company",
-              email: data.email || "",
-              industry: data.industry || "Enterprise SaaS",
-              status: data.status || "active",
-            };
-          });
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search") || undefined;
+    const agentKey = searchParams.get("agentKey") || searchParams.get("agentId") || undefined;
 
-          // Merge db customers with in-memory ones without duplicates
-          const customerMap = new Map<string, CustomerAccountOption>();
-          inMemoryCustomers.forEach(c => customerMap.set(c.id, c));
-          dbCustomers.forEach(c => customerMap.set(c.id, c));
-
-          return NextResponse.json({
-            success: true,
-            customers: Array.from(customerMap.values()),
-          });
-        }
-      } catch (dbErr) {
-        console.warn("[CustomersAPI] Firestore read warning:", dbErr);
-      }
-    }
+    const customers = await CustomerStorageService.getAllCustomers({
+      search,
+      agentKey,
+    });
 
     return NextResponse.json({
       success: true,
-      customers: inMemoryCustomers,
+      count: customers.length,
+      customers,
     });
   } catch (error: any) {
+    console.error("[CustomersAPI GET Error]:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to retrieve customers" },
+      { success: false, error: error.message || "Failed to retrieve customers from storage." },
       { status: 500 }
     );
   }
 }
 
+/**
+ * POST: Creates and permanently stores a new customer account
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, companyName, email, industry, phone, plan } = body;
+    const { name, companyName, email, industry, phone, plan, assignedAgentKey, assignedAgentName, assignedAgentId } = body;
 
-    // Strict Field Validations
+    // Strict Validations
     if (!name || typeof name !== "string" || name.trim().length < 2) {
       return NextResponse.json(
         { success: false, error: "Customer Contact Name is required (minimum 2 characters)." },
@@ -82,54 +65,115 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const customerId = `cust_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    const now = new Date().toISOString();
-
-    const newCustomer: CustomerAccountOption = {
-      id: customerId,
+    const createdCustomer = await CustomerStorageService.createCustomer({
       name: name.trim(),
       companyName: companyName.trim(),
-      email: email ? email.trim() : `admin@${companyName.trim().toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
-      industry: industry || "Enterprise SaaS",
-      status: "active",
-    };
+      email: email ? email.trim() : undefined,
+      phone: phone ? String(phone).trim() : undefined,
+      industry: industry ? String(industry).trim() : undefined,
+      assignedAgentKey,
+      assignedAgentName,
+      assignedAgentId,
+      plan,
+    });
 
-    // Save to in-memory store immediately
-    inMemoryCustomers.unshift(newCustomer);
+    return NextResponse.json(
+      {
+        success: true,
+        message: `Customer account '${createdCustomer.companyName}' created successfully.`,
+        customer: createdCustomer,
+      },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("[CustomersAPI POST Error]:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to create customer account." },
+      { status: error.message?.includes("required") || error.message?.includes("Invalid") ? 400 : 500 }
+    );
+  }
+}
 
-    // Save to Firestore if available
-    const db = getDb();
-    if (db) {
-      try {
-        await db.collection("customers").doc(customerId).set({
-          id: customerId,
-          name: newCustomer.name,
-          contactName: newCustomer.name,
-          company: newCustomer.companyName,
-          companyName: newCustomer.companyName,
-          email: newCustomer.email,
-          industry: newCustomer.industry,
-          phone: phone || "",
-          plan: plan || "Enterprise Pilot",
-          status: "active",
-          createdAt: now,
-          updatedAt: now,
-        });
-      } catch (dbErr) {
-        console.warn("[CustomersAPI] Firestore save warning (in-memory preserved):", dbErr);
-      }
+/**
+ * PATCH: Updates or reassigns an existing customer account
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, name, companyName, email, phone, industry, status, assignedAgentKey, assignedAgentName, assignedAgentId } = body;
+
+    if (!id || typeof id !== "string") {
+      return NextResponse.json(
+        { success: false, error: "Customer ID is required for updates." },
+        { status: 400 }
+      );
     }
+
+    const updatedCustomer = await CustomerStorageService.updateCustomer(id, {
+      name,
+      companyName,
+      email,
+      phone,
+      industry,
+      status,
+      assignedAgentKey,
+      assignedAgentName,
+      assignedAgentId,
+    });
 
     return NextResponse.json({
       success: true,
-      message: `Customer account '${newCustomer.companyName}' created successfully.`,
-      customer: newCustomer,
-    }, { status: 201 });
-
+      message: `Customer account '${updatedCustomer.companyName}' updated successfully.`,
+      customer: updatedCustomer,
+    });
   } catch (error: any) {
+    console.error("[CustomersAPI PATCH Error]:", error);
+    const isNotFound = error.message?.includes("not found");
+    const isValidation = error.message?.includes("required") || error.message?.includes("Invalid") || error.message?.includes("Unknown agent");
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to create customer account" },
-      { status: 500 }
+      { success: false, error: error.message || "Failed to update customer account." },
+      { status: isNotFound ? 404 : isValidation ? 400 : 500 }
+    );
+  }
+}
+
+/**
+ * DELETE: Permanently deletes a customer account
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    let id = searchParams.get("id");
+
+    if (!id) {
+      try {
+        const body = await request.json();
+        id = body.id;
+      } catch {
+        // query param was primary
+      }
+    }
+
+    if (!id || typeof id !== "string") {
+      return NextResponse.json(
+        { success: false, error: "Customer ID is required for deletion." },
+        { status: 400 }
+      );
+    }
+
+    await CustomerStorageService.deleteCustomer(id);
+
+    return NextResponse.json({
+      success: true,
+      message: `Customer account '${id}' deleted successfully.`,
+      deletedId: id,
+    });
+  } catch (error: any) {
+    console.error("[CustomersAPI DELETE Error]:", error);
+    const isNotFound = error.message?.includes("not found");
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to delete customer account." },
+      { status: isNotFound ? 404 : 500 }
     );
   }
 }

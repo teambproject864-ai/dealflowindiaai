@@ -5,8 +5,14 @@ export interface CustomerAccountOption {
   name: string;
   companyName: string;
   email?: string;
+  phone?: string;
   industry?: string;
   status?: string;
+  assignedAgentId?: string;
+  assignedAgentName?: string;
+  assignedAgentKey?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const DEFAULT_SEEDED_CUSTOMERS: CustomerAccountOption[] = [];
