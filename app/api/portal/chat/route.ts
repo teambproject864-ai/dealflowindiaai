@@ -37,8 +37,8 @@ export async function GET(req: NextRequest) {
           .orderBy("createdAt", "asc")
           .get();
 
-        if (!snap.empty) {
-          messages = snap.docs.map((doc) => ({
+        if (snap && !snap.empty) {
+          messages = snap.docs.map((doc: any) => ({
             id: doc.id,
             ...doc.data(),
           }));

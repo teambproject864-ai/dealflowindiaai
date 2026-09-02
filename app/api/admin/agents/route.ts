@@ -154,27 +154,29 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const { hashedPassword, ...cleanAgent } = data;
-        const assignedCustomers = customerMapByAgent.get(doc.id) || [];
-        const taskStats = tasksByAgent.get(doc.id) || { total: 0, completed: 0 };
+      if (snapshot && !snapshot.empty) {
+        snapshot.forEach((doc: any) => {
+          const data = doc.data();
+          const { hashedPassword, ...cleanAgent } = data;
+          const assignedCustomers = customerMapByAgent.get(doc.id) || [];
+          const taskStats = tasksByAgent.get(doc.id) || { total: 0, completed: 0 };
 
-        agents.push({
-          ...cleanAgent,
-          isActive: cleanAgent.isActive !== false,
-          assignedCustomers,
-          assignedCustomersCount: assignedCustomers.length,
-          metrics: {
+          agents.push({
+            ...cleanAgent,
+            isActive: cleanAgent.isActive !== false,
+            assignedCustomers,
             assignedCustomersCount: assignedCustomers.length,
-            totalTasks: taskStats.total,
-            completedTasks: taskStats.completed,
-            completionRate: taskStats.total > 0 ? `${Math.round((taskStats.completed / taskStats.total) * 100)}%` : "100%",
-            csatScore: (4.7 + ((doc.id.charCodeAt(doc.id.length - 1) % 4) / 10)).toFixed(1),
-            avgResponseTime: "2.4m",
-          },
+            metrics: {
+              assignedCustomersCount: assignedCustomers.length,
+              totalTasks: taskStats.total,
+              completedTasks: taskStats.completed,
+              completionRate: taskStats.total > 0 ? `${Math.round((taskStats.completed / taskStats.total) * 100)}%` : "100%",
+              csatScore: (4.7 + ((doc.id.charCodeAt(doc.id.length - 1) % 4) / 10)).toFixed(1),
+              avgResponseTime: "2.4m",
+            },
+          });
         });
-      });
+      }
 
       // Sort alphabetically by name
       agents.sort((a, b) => (a.name || "").localeCompare(b.name || ""));

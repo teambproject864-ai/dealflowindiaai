@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { db } from '@/lib/firebase-admin';
 import admin from '@/lib/firebase-admin';
 import { agentDecide } from '@/lib/agent-brain';
+import { generateHumanResponse } from '@/lib/auto-llm';
 import { textToSpeech } from '@/lib/elevenlabs';
 import { injectAudio } from '@/lib/recall';
 import { navigateTo, deleteSession } from '@/lib/screen-controller';
@@ -67,19 +68,32 @@ export async function POST(req: Request) {
   const payload = JSON.parse(bodyText);
   const { event, data } = payload;
 
-  if (!db) return NextResponse.json({ received: true });
-
   if (event === 'transcript.data') {
     const { bot_id, transcript } = data;
-    const callSnapshot = await db.collection('calls').where('recallBotId', '==', bot_id).get();
-    
-    if (callSnapshot.empty) return NextResponse.json({ received: true });
+    if (!transcript) return NextResponse.json({ received: true });
 
-    const callDoc = callSnapshot.docs[0];
-    const callId = callDoc.id;
-    const callData = callDoc.data();
+    let callDoc: any = null;
+    let callId = bot_id;
+    let callData: any = {
+      agentPersona: 'praneeth_assist',
+      currentStage: 'discovery',
+      leadId: 'global',
+    };
 
-    // Check if the speaker is an agent
+    if (db) {
+      try {
+        const callSnapshot = await db.collection('calls').where('recallBotId', '==', bot_id).get();
+        if (callSnapshot && !callSnapshot.empty) {
+          callDoc = callSnapshot.docs[0];
+          callId = callDoc.id;
+          callData = { ...callData, ...callDoc.data() };
+        }
+      } catch (err) {
+        console.warn('[MeetingWebhook] Firestore call lookup notice:', err);
+      }
+    }
+
+    // Check if the speaker is the bot itself
     const persona = (PERSONAS as any)[callData.agentPersona] || PERSONAS.praneeth_assist;
     const speakerStr = String(transcript.speaker || "");
     const lowerSpeaker = speakerStr.toLowerCase();
@@ -88,187 +102,195 @@ export async function POST(req: Request) {
       lowerSpeaker.includes("(ai)") ||
       lowerSpeaker.includes("dealflow.ai") ||
       lowerSpeaker.includes("dealflow") ||
+      lowerSpeaker.includes("assistant") ||
       lowerSpeaker.includes("praneeth assist");
 
-    // Append transcript segment
+    if (isAgent) {
+      return NextResponse.json({ received: true });
+    }
+
+    // Extract participant speech
+    const transcriptText = String(
+      transcript.text ||
+      (Array.isArray(transcript.words) ? transcript.words.map((w: any) => w.text).join(' ') : '')
+    ).trim();
+
+    const wordCount = transcriptText.split(/\s+/).filter(Boolean).length;
+    if (!transcriptText || wordCount < 2) {
+      return NextResponse.json({ received: true });
+    }
+
+    console.log(`[MeetingWebhook] Customer spoke in meeting: "${transcriptText}"`);
+
+    // Append to Firestore transcripts if DB is available
     const segment = {
-      speaker: transcript.speaker || 'Unknown',
-      text: transcript.text || transcript.words.map((w: any) => w.text).join(' '),
+      speaker: transcript.speaker || 'Customer',
+      text: transcriptText,
       timestamp: new Date().toISOString()
     };
 
-    await db.collection('transcripts').doc(callId).set({
-      callId,
-      segments: admin.firestore.FieldValue.arrayUnion(segment),
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
+    if (db) {
+      try {
+        await db.collection('transcripts').doc(callId).set({
+          callId,
+          segments: admin.firestore.FieldValue.arrayUnion(segment),
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
 
-    const wordCount = String(segment.text || "").split(/\s+/).filter(Boolean).length;
-    const isMeaningful = wordCount >= 4;
-    if (!isAgent && isMeaningful) {
-      await callDoc.ref.set(
-        {
-          firstParticipantAt: (callData as any)?.firstParticipantAt || new Date().toISOString(),
-          participantSpeakers: admin.firestore.FieldValue.arrayUnion(segment.speaker),
-          updatedAt: new Date().toISOString(),
-          updatedAtMs: Date.now(),
-        },
-        { merge: true }
-      );
-    } else {
-      await callDoc.ref.set(
-        {
-          lastTranscriptAt: new Date().toISOString(),
-          lastTranscriptAtMs: Date.now(),
-          updatedAt: new Date().toISOString(),
-          updatedAtMs: Date.now(),
-        },
-        { merge: true }
-      );
+        if (callDoc?.ref) {
+          await callDoc.ref.set(
+            {
+              lastTranscriptAt: new Date().toISOString(),
+              lastTranscriptAtMs: Date.now(),
+              updatedAt: new Date().toISOString(),
+              updatedAtMs: Date.now(),
+            },
+            { merge: true }
+          );
+        }
+      } catch (e) {
+        // Non-critical logging
+      }
     }
 
-    if (isAgent) return NextResponse.json({ received: true });
-
-    // Process agent logic for client messages
-    const transcriptDoc = await db.collection('transcripts').doc(callId).get();
-    const segments = transcriptDoc.data()?.segments || [];
-    const recentTranscript = segments.slice(-10).map((s: any) => `${s.speaker}: ${s.text}`);
-
-    // Fetch lead and analysis context
-    let leadData: any = null;
-    if (callData.leadId) {
-      const leadDoc = await db.collection('leads').doc(callData.leadId).get();
-      leadData = leadDoc.data() || null;
-    }
-
-    let analysisData: any = null;
-    if (callData.analysisId) {
-      const analysisDoc = await db.collection('analyses').doc(callData.analysisId).get();
-      analysisData = analysisDoc.exists ? analysisDoc.data() : null;
-    } else if (callData.leadId) {
-      const analysisSnapshot = await db.collection('analyses').where('leadId', '==', callData.leadId).limit(1).get();
-      analysisData = analysisSnapshot.empty ? null : analysisSnapshot.docs[0].data();
+    // Process AI Agent Decision & Response
+    let recentTranscript: string[] = [`${segment.speaker}: ${segment.text}`];
+    if (db) {
+      try {
+        const transcriptDoc = await db.collection('transcripts').doc(callId).get();
+        const segments = transcriptDoc.data()?.segments || [];
+        if (segments.length > 0) {
+          recentTranscript = segments.slice(-8).map((s: any) => `${s.speaker}: ${s.text}`);
+        }
+      } catch (e) {}
     }
 
     const companyContext = {
-      companyName: leadData?.companyName || callData.calendarEventTitle || 'the client',
-      challenges: leadData?.challenges || [],
-      currentTools: leadData?.currentTools || [],
-      analysis: analysisData
+      companyName: callData.calendarEventTitle || 'the client',
+      challenges: [],
+      currentTools: [],
+      analysis: null
     };
 
-    const action = await agentDecide(
-      recentTranscript,
-      companyContext,
-      callData.agentPersona,
-      callData.currentStage,
-      callData.leadId || 'global'
-    );
-
-    // Update call state
-    await callDoc.ref.update({
-      currentStage: action.stage_update,
-      dealProbability: action.dealProbability,
-      updatedAt: new Date().toISOString()
-    });
-
-    // Record signals/objections
-    if (action.buyingSignal || action.objectionDetected) {
-      const noteUpdate: any = {};
-      if (action.buyingSignal) {
-        noteUpdate.buyingSignals = admin.firestore.FieldValue.arrayUnion({
-          timestamp: new Date().toISOString(),
-          signal: action.content
-        });
-      }
-      if (action.objectionDetected) {
-        noteUpdate.objections = admin.firestore.FieldValue.arrayUnion({
-          timestamp: new Date().toISOString(),
-          objection: segment.text,
-          response: action.content
-        });
-      }
-      await db.collection('notes').doc(callId).set(noteUpdate, { merge: true });
+    // Generate fluid human-like conversational response using Auto-LLM
+    let spokenContent = '';
+    try {
+      spokenContent = await generateHumanResponse(
+        transcriptText,
+        recentTranscript.map((t) => ({ speaker: t.split(':')[0] || 'Customer', text: t.split(':')[1] || t })),
+        { personaName: 'Praneeth', companyName: 'DealFlow AI' }
+      );
+    } catch (llmErr: any) {
+      console.warn('[MeetingWebhook] AutoLLM notice:', llmErr.message);
     }
 
-    // Execute actions
-    if (action.action === 'speak' || action.action === 'handle_objection') {
-      const audio = await textToSpeech(action.content, callData.agentPersona);
-      await injectAudio(bot_id, audio);
-    } else if (action.action === 'show_screen' && action.navigate_to) {
-      await navigateTo(callId, action.navigate_to);
-    } else if (action.action === 'close_deal') {
-      await callDoc.ref.update({
-        dealStatus: 'closed_won',
-        dealProbability: 100
-      });
-      // Trigger post-call notification
-      fetch(`${process.env.APP_URL}/api/notifications/post-call`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${systemToken}`
-        },
-        body: JSON.stringify({ callId })
-      }).catch(console.error);
+    if (!spokenContent) {
+      const action = await agentDecide(
+        recentTranscript,
+        companyContext,
+        callData.agentPersona,
+        callData.currentStage,
+        callData.leadId || 'global'
+      );
+      spokenContent = action?.content || '';
     }
 
-  } else if (event === 'bot.status_change' && data.status === 'joined_call') {
-    const { bot_id } = data;
-    const callSnapshot = await db.collection('calls').where('recallBotId', '==', bot_id).get();
-    
-    if (!callSnapshot.empty) {
-      const callDoc = callSnapshot.docs[0];
-      const callData = callDoc.data();
-      const alreadySpoken = !!callData?.openingLineSentAt;
-      if (alreadySpoken) return NextResponse.json({ received: true });
+    console.log(`[MeetingWebhook] Human-like Spoken Response: "${spokenContent}"`);
 
-      let companyName = callData.calendarEventTitle || 'the client';
-      if (callData.leadId) {
-        const leadDoc = await db.collection('leads').doc(callData.leadId).get();
-        const leadData = leadDoc.data();
-        companyName = leadData?.companyName || companyName;
+    if (spokenContent) {
+      // 1. Speak answer out loud via Call Voice Audio Injection
+      try {
+        const audio = await textToSpeech(spokenContent, callData.agentPersona);
+        if (audio && audio.length > 0) {
+          await injectAudio(bot_id, audio);
+          console.log(`[MeetingWebhook] Injected voice audio into Google Meet bot ${bot_id}`);
+        }
+      } catch (audioErr: any) {
+        console.error('[MeetingWebhook] Failed to inject audio:', audioErr.message);
       }
 
-      const persona = (PERSONAS as any)[callData.agentPersona] || PERSONAS.praneeth_assist;
-      const openingLine = persona.openingLine(companyName);
+      // 2. Also send response in Google Meet chat
+      try {
+        const baseUrl = process.env.RECALL_REGION 
+          ? `https://${process.env.RECALL_REGION}.recall.ai` 
+          : 'https://ap-northeast-1.recall.ai';
+        const apiKey = process.env.RECALL_API_KEY;
+        if (apiKey) {
+          await fetch(`${baseUrl}/api/v1/bot/${bot_id}/send_chat_message/`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Token ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: spokenContent }),
+          });
+        }
+      } catch (chatErr) {
+        // Non-fatal
+      }
+    }
+
+    return NextResponse.json({ received: true });
+  } else if (event === 'bot.status_change' && data?.status === 'joined_call') {
+    const { bot_id } = data || {};
+    if (db && bot_id) {
+      const callSnapshot = await db.collection('calls').where('recallBotId', '==', bot_id).get();
       
-      const audio = await textToSpeech(openingLine, callData.agentPersona);
-      await injectAudio(bot_id, audio);
-      
-      await callDoc.ref.update({
-        status: 'in-progress',
-        meetingStatus: 'joined',
-        botJoinedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        updatedAtMs: Date.now(),
-      });
+      if (!callSnapshot.empty) {
+        const callDoc = callSnapshot.docs[0];
+        const callData = callDoc.data();
+        const alreadySpoken = !!callData?.openingLineSentAt;
+        if (alreadySpoken) return NextResponse.json({ received: true });
+
+        let companyName = callData.calendarEventTitle || 'the client';
+        if (callData.leadId) {
+          const leadDoc = await db.collection('leads').doc(callData.leadId).get();
+          const leadData = leadDoc.data();
+          companyName = leadData?.companyName || companyName;
+        }
+
+        const persona = (PERSONAS as any)[callData.agentPersona] || PERSONAS.praneeth_assist;
+        const openingLine = persona.openingLine(companyName);
+        
+        const audio = await textToSpeech(openingLine, callData.agentPersona);
+        await injectAudio(bot_id, audio);
+        
+        await callDoc.ref.update({
+          status: 'in-progress',
+          meetingStatus: 'joined',
+          botJoinedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          updatedAtMs: Date.now(),
+        });
+      }
     }
   } else if (event === 'bot.done') {
-    const { bot_id } = data;
-    const callSnapshot = await db.collection('calls').where('recallBotId', '==', bot_id).get();
-    if (!callSnapshot.empty) {
-      const callDoc = callSnapshot.docs[0];
-      const callId = callDoc.id;
-      
-      await callDoc.ref.update({
-        status: 'completed',
-        meetingStatus: 'ended',
-        endedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        updatedAtMs: Date.now(),
-      });
-      await deleteSession(callId);
-      
-      // Trigger post-call notification
-      fetch(`${process.env.APP_URL}/api/notifications/post-call`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${systemToken}`
+    const { bot_id } = data || {};
+    if (db && bot_id) {
+      const callSnapshot = await db.collection('calls').where('recallBotId', '==', bot_id).get();
+      if (!callSnapshot.empty) {
+        const callDoc = callSnapshot.docs[0];
+        const callId = callDoc.id;
+        
+        await callDoc.ref.update({
+          status: 'completed',
+          meetingStatus: 'ended',
+          endedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          updatedAtMs: Date.now(),
+        });
+        await deleteSession(callId);
+        
+        // Trigger post-call notification
+        fetch(`${process.env.APP_URL}/api/notifications/post-call`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+          'Authorization': `Bearer ${systemToken}`,
         },
-        body: JSON.stringify({ callId })
+        body: JSON.stringify({ callId }),
       }).catch(console.error);
+      }
     }
   }
 

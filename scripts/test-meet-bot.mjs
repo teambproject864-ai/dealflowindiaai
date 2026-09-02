@@ -206,6 +206,8 @@ async function runRealTimeTest() {
     output: process.stdout,
   });
 
+  const history = [];
+
   const promptUser = () => {
     rl.question('Customer Asks > ', async (input) => {
       const trimmed = input.trim();
@@ -223,22 +225,17 @@ async function runRealTimeTest() {
         process.exit(0);
       }
 
-      // Generate Dealflow AI answer based on customer question
-      let answer = '';
-      const q = trimmed.toLowerCase();
+      // Generate intelligent, natural human answer via Auto-LLM
+      const { generateHumanResponse } = await import('../lib/auto-llm.ts');
+      const answer = await generateHumanResponse(trimmed, history, {
+        personaName: 'Praneeth',
+        companyName: 'DealFlow AI',
+      });
 
-      if (q.includes('what is') || q.includes('about') || q.includes('who are you') || q.includes('dealflow')) {
-        answer = 'Dealflow AI is an autonomous revenue platform. We automate outbound sales, conduct discovery calls, and sync commitments directly into your CRM.';
-      } else if (q.includes('price') || q.includes('pricing') || q.includes('cost') || q.includes('how much')) {
-        answer = 'Our platform offers flexible subscription tiers starting at 499 dollars per month, including unlimited AI voice calls, calendar scheduling, and CRM integrations.';
-      } else if (q.includes('crm') || q.includes('hubspot') || q.includes('salesforce') || q.includes('integrate')) {
-        answer = 'We seamlessly integrate with HubSpot, Salesforce, and custom webhooks to log meeting minutes, customer objections, and next steps automatically.';
-      } else if (q.includes('security') || q.includes('privacy') || q.includes('gdpr') || q.includes('soc2')) {
-        answer = 'Security is top priority. All meeting recordings and transcripts are encrypted end to end and adhere to SOC2 and GDPR standards.';
-      } else {
-        answer = `Regarding ${trimmed}: Dealflow AI provides real-time AI agents designed to handle customer inquiries, capture interest, and close pipeline faster.`;
-      }
+      history.push({ speaker: 'Customer', text: trimmed });
+      history.push({ speaker: 'Praneeth (AI)', text: answer });
 
+      await sendChatInCall(botId, answer);
       await speakInCall(botId, answer);
       promptUser();
     });

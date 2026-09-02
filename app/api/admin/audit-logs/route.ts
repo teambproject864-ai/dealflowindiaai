@@ -12,10 +12,11 @@ export async function GET(req: NextRequest) {
     const logs: any[] = [];
     if (db) {
       const snapshot = await db.collection("audit_logs").get();
-
-      snapshot.forEach((doc) => {
-        logs.push({ id: doc.id, ...doc.data() });
-      });
+      if (snapshot && !snapshot.empty) {
+        snapshot.forEach((doc: any) => {
+          logs.push({ id: doc.id, ...doc.data() });
+        });
+      }
 
       // Sort by timestamp or createdAt descending in memory
       logs.sort((a, b) => {
