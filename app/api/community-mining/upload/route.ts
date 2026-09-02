@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { parseCSVFeedback, parseJSONFeedback, ingestRawItems } from "@/lib/community-mining/ingestion";
 import { processUnprocessedRawItems } from "@/lib/community-mining/processor";
+import { fetchSpreadsheetCsv, appendCsvData, SpreadsheetConnectionError, InvalidCsvFormatError } from "@/lib/bulk-csv-processor";
 
 export async function POST(req: Request) {
   const { user, errorResponse } = await requireAuth(req, ["admin", "agent"]);
@@ -15,29 +16,43 @@ export async function POST(req: Request) {
     let fileFormat: "csv" | "json" = "csv";
     let sourceId = "manual_upload";
     let autoProcess = false;
+    let spreadsheetUrl = "";
+    let autoAppend = false;
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       const file = formData.get("file") as File | null;
       sourceId = (formData.get("sourceId") as string) || "manual_upload";
       autoProcess = formData.get("autoProcess") === "true";
+      spreadsheetUrl = (formData.get("spreadsheetUrl") as string) || "";
+      autoAppend = formData.get("autoAppend") === "true";
 
-      if (!file) {
-        return NextResponse.json({ success: false, error: "No file provided in form data" }, { status: 400 });
+      if (file) {
+        fileContent = await file.text();
+        fileFormat = file.name.endsWith(".json") ? "json" : "csv";
+      } else if (spreadsheetUrl) {
+        fileContent = await fetchSpreadsheetCsv(spreadsheetUrl);
+        fileFormat = "csv";
+      } else {
+        return NextResponse.json({ success: false, error: "No file or spreadsheet URL provided." }, { status: 400 });
       }
-
-      fileContent = await file.text();
-      fileFormat = file.name.endsWith(".json") ? "json" : "csv";
     } else {
       const jsonBody = await req.json();
       fileContent = jsonBody.content || "";
       fileFormat = jsonBody.format || "csv";
       sourceId = jsonBody.sourceId || "manual_upload";
       autoProcess = jsonBody.autoProcess === true;
+      spreadsheetUrl = jsonBody.spreadsheetUrl || "";
+      autoAppend = jsonBody.autoAppend === true;
+
+      if (!fileContent && spreadsheetUrl) {
+        fileContent = await fetchSpreadsheetCsv(spreadsheetUrl);
+        fileFormat = "csv";
+      }
     }
 
     if (!fileContent || fileContent.trim().length === 0) {
-      return NextResponse.json({ success: false, error: "Empty file content provided" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Empty file or spreadsheet content provided" }, { status: 400 });
     }
 
     // Parse items according to file format
@@ -61,6 +76,23 @@ export async function POST(req: Request) {
       processingOutput = await processUnprocessedRawItems(result.ingested);
     }
 
+    // Auto-append if spreadsheet URL was provided
+    let appendStatus = null;
+    if (autoAppend && spreadsheetUrl) {
+      appendStatus = await appendCsvData(
+        spreadsheetUrl,
+        parsedPayloads.map((p) => ({
+          externalId: p.externalId,
+          text: p.rawText,
+          author: p.author?.name || "",
+          planTier: p.planTier || "",
+          ingestionStatus: "SUCCESS",
+          ingestedAt: new Date().toISOString(),
+        })),
+        { destinationType: "url" }
+      );
+    }
+
     return NextResponse.json({
       success: true,
       received: result.received,
@@ -68,8 +100,15 @@ export async function POST(req: Request) {
       deduped: result.deduped,
       processed: processingOutput?.processedCount || 0,
       logId: result.logId,
+      appended: appendStatus?.success || false,
     });
   } catch (error: any) {
+    if (error instanceof SpreadsheetConnectionError) {
+      return NextResponse.json({ success: false, error: error.message, code: error.code }, { status: 502 });
+    }
+    if (error instanceof InvalidCsvFormatError) {
+      return NextResponse.json({ success: false, error: error.message, code: error.code }, { status: 422 });
+    }
     console.error("[CommunityMining:Upload] Upload processing error:", error);
     return NextResponse.json(
       { success: false, error: error?.message || "File upload processing failed" },

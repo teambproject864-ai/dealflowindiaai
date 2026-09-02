@@ -2,6 +2,7 @@
 
 import crypto from "crypto";
 import { db } from "@/lib/firebase-admin";
+import { parseCsv } from "@/lib/bulk-csv-processor";
 import type {
   CMRawItem,
   CMSourceType,
@@ -212,62 +213,49 @@ export async function ingestCallTranscript(args: {
   return ingestRawItems([item]);
 }
 
-function parseCsvLine(text: string): string[] {
-  const result: string[] = [];
-  let cur = "";
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    if (char === '"') {
-      if (inQuotes && text[i + 1] === '"') {
-        cur += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ',' && !inQuotes) {
-      result.push(cur.trim());
-      cur = "";
-    } else {
-      cur += char;
-    }
-  }
-  result.push(cur.trim());
-  return result;
-}
-
 /**
- * Parses raw CSV feedback text into structured IngestItemPayload array.
+ * Parses raw CSV feedback text into structured IngestItemPayload array,
+ * handling multi-line quoted entries, commas, escaped quotes, and flexible column mappings.
  */
 export function parseCSVFeedback(csvContent: string, defaultSourceId = "csv_upload"): IngestItemPayload[] {
-  const lines = csvContent.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length === 0) return [];
+  if (!csvContent || !csvContent.trim()) return [];
 
-  // Parse header
-  const headerLine = lines[0];
-  const headers = parseCsvLine(headerLine).map((h) => h.toLowerCase().replace(/['"]+/g, ""));
+  let parsed;
+  try {
+    parsed = parseCsv<Record<string, string>>(csvContent, {
+      hasHeaders: true,
+      skipEmptyLines: true,
+    });
+  } catch (e) {
+    // Fallback simple line splitting if corrupted
+    return [];
+  }
 
-  const textIdx = headers.findIndex((h) => h.includes("feedback") || h.includes("text") || h.includes("comment") || h.includes("content") || h.includes("message"));
-  const authorIdx = headers.findIndex((h) => h.includes("author") || h.includes("user") || h.includes("name") || h.includes("customer"));
-  const emailIdx = headers.findIndex((h) => h.includes("email"));
-  const tierIdx = headers.findIndex((h) => h.includes("tier") || h.includes("plan") || h.includes("segment"));
-  const dateIdx = headers.findIndex((h) => h.includes("date") || h.includes("created") || h.includes("time"));
-  const extIdIdx = headers.findIndex((h) => h.includes("id") || h.includes("ticket") || h.includes("external"));
+  const { headers, rawRows } = parsed;
+  if (rawRows.length <= 1) return [];
+
+  const lowerHeaders = headers.map((h) => h.toLowerCase().replace(/['"]+/g, ""));
+
+  const textIdx = lowerHeaders.findIndex((h) => h.includes("feedback") || h.includes("text") || h.includes("comment") || h.includes("content") || h.includes("message"));
+  const authorIdx = lowerHeaders.findIndex((h) => h.includes("author") || h.includes("user") || h.includes("name") || h.includes("customer"));
+  const emailIdx = lowerHeaders.findIndex((h) => h.includes("email"));
+  const tierIdx = lowerHeaders.findIndex((h) => h.includes("tier") || h.includes("plan") || h.includes("segment"));
+  const dateIdx = lowerHeaders.findIndex((h) => h.includes("date") || h.includes("created") || h.includes("time"));
+  const extIdIdx = lowerHeaders.findIndex((h) => h.includes("id") || h.includes("ticket") || h.includes("external"));
 
   const actualTextIdx = textIdx !== -1 ? textIdx : 0;
   const items: IngestItemPayload[] = [];
+  const dataRows = rawRows.slice(1);
 
-  for (let i = 1; i < lines.length; i++) {
-    const rawLine = lines[i];
-    const cleanedValues = parseCsvLine(rawLine);
-
+  for (let i = 0; i < dataRows.length; i++) {
+    const cleanedValues = dataRows[i];
     const text = cleanedValues[actualTextIdx];
     if (!text || text.length < 3) continue;
 
     const authorName = authorIdx !== -1 ? cleanedValues[authorIdx] : undefined;
     const authorEmail = emailIdx !== -1 ? cleanedValues[emailIdx] : undefined;
     const planTier = (tierIdx !== -1 ? (cleanedValues[tierIdx]?.toLowerCase() as PlanTier) : "growth") || "growth";
-    const externalId = extIdIdx !== -1 ? cleanedValues[extIdIdx] : `csv_${Date.now()}_${i}`;
+    const externalId = extIdIdx !== -1 ? cleanedValues[extIdIdx] : `csv_${Date.now()}_${i + 1}`;
     const createdAt = dateIdx !== -1 ? cleanedValues[dateIdx] : new Date().toISOString();
 
     items.push({
@@ -285,6 +273,64 @@ export function parseCSVFeedback(csvContent: string, defaultSourceId = "csv_uplo
   }
 
   return items;
+}
+
+/**
+ * Ingests bulk CSV or spreadsheet feedback and automatically appends enriched ingestion metadata
+ * back to the source file or linked spreadsheet without overwriting existing data.
+ */
+export async function ingestBulkCSVFeedbackAndAppend(
+  source: string,
+  options: {
+    sourceType?: "file" | "url" | "raw";
+    defaultSourceId?: string;
+    targetDestination?: string;
+    autoAppend?: boolean;
+  } = {}
+) {
+  const defaultSourceId = options.defaultSourceId || "csv_bulk_import";
+  const { loadCsvSource, appendCsvData } = await import("@/lib/bulk-csv-processor");
+
+  const { parsed, detectedType, resolvedPathOrUrl } = await loadCsvSource<Record<string, string>>(
+    source,
+    options.sourceType
+  );
+
+  const rawFeedback = parseCSVFeedback(
+    parsed.rawRows.map((r) => r.join(",")).join("\n"),
+    defaultSourceId
+  );
+
+  // Ingest raw items
+  const ingestResult = await ingestRawItems(rawFeedback);
+
+  // Map processed rows with enrichment
+  const enrichedRows = rawFeedback.map((fb, idx) => ({
+    feedback: fb.rawText,
+    author: fb.author?.name || "",
+    email: fb.author?.email || "",
+    tier: fb.planTier,
+    date: fb.createdAt,
+    externalId: fb.externalId,
+    ingestionStatus: "ingested",
+    dedupHash: computeDedupHash(fb.sourceId, fb.externalId || "", fb.rawText),
+    processedTimestamp: new Date().toISOString(),
+  }));
+
+  let appendSummary = null;
+  if (options.autoAppend !== false && (options.targetDestination || detectedType !== "raw")) {
+    const dest = options.targetDestination || resolvedPathOrUrl;
+    appendSummary = await appendCsvData(dest, enrichedRows, {
+      destinationType: detectedType === "url" ? "url" : "file",
+      createIfMissing: true,
+    });
+  }
+
+  return {
+    ingestResult,
+    enrichedRows,
+    appendSummary,
+  };
 }
 
 /**

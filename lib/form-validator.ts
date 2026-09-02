@@ -1,5 +1,7 @@
 // lib/form-validator.ts
 
+import { parseCsv } from "./bulk-csv-processor";
+
 export interface ValidationRule {
   required?: boolean;
   minLength?: number;
@@ -99,7 +101,7 @@ export class FormValidator {
   }
 
   /**
-   * Parses free-form comma-separated keyword entries with whitespace trimming,
+   * Parses free-form comma-separated keyword entries or multi-line CSV with whitespace trimming,
    * duplicate detection, token validation, and error reporting.
    */
   public static parseCsvKeywords(rawInput: string): CsvKeywordParseResult {
@@ -112,10 +114,28 @@ export class FormValidator {
       };
     }
 
-    const rawTokens = rawInput
-      .split(/,|\n/)
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
+    let rawTokens: string[] = [];
+    try {
+      const parsed = parseCsv<Record<string, string>>(rawInput, {
+        hasHeaders: false,
+        skipEmptyLines: true,
+      });
+      // Flatten all columns from all rows
+      for (const row of parsed.rawRows) {
+        for (const cell of row) {
+          const trimmed = cell.trim();
+          if (trimmed.length > 0) {
+            rawTokens.push(trimmed);
+          }
+        }
+      }
+    } catch {
+      // Fallback simple tokenizer if strict CSV parsing had an unclosed quote or syntax issue
+      rawTokens = rawInput
+        .split(/,|\n/)
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
+    }
 
     const seen = new Set<string>();
     const keywords: string[] = [];
@@ -150,6 +170,40 @@ export class FormValidator {
       invalidTokens,
       isValid: invalidTokens.length === 0,
       errorMessage,
+    };
+  }
+
+  /**
+   * Validates multiple records in bulk against a set of field validation rules.
+   */
+  public static validateBulkInputs(
+    records: Array<Record<string, string>>,
+    fieldDefs: FieldValidationConfig[]
+  ): {
+    totalRecords: number;
+    validCount: number;
+    invalidCount: number;
+    results: Array<{ index: number; isValid: boolean; errors: Record<string, string> }>;
+    isValid: boolean;
+  } {
+    const results = records.map((record, index) => {
+      const validation = this.validateFormFields(fieldDefs, record);
+      return {
+        index,
+        isValid: validation.isValid,
+        errors: validation.errors,
+      };
+    });
+
+    const validCount = results.filter((r) => r.isValid).length;
+    const invalidCount = results.length - validCount;
+
+    return {
+      totalRecords: records.length,
+      validCount,
+      invalidCount,
+      results,
+      isValid: invalidCount === 0,
     };
   }
 

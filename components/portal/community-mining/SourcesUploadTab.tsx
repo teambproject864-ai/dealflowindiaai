@@ -19,6 +19,7 @@ import { GlassPanel } from "@/components/immersive/GlassPanel";
 import { ExtrudedButton } from "@/components/immersive/ExtrudedButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BulkDataProcessorHub } from "@/components/portal/BulkDataProcessorHub";
 import type { CMSource } from "@/types/community-mining";
 
 export function SourcesUploadTab() {
@@ -274,6 +275,14 @@ export function SourcesUploadTab() {
           </GlassPanel>
         </div>
 
+      </div>
+
+      {/* Advanced Bulk CSV & Linked Spreadsheet Engine */}
+      <div className="space-y-3 pt-4 border-t border-slate-800/80">
+        <BulkDataProcessorHub
+          defaultProcessorType="feedback"
+          onComplete={() => fetchSources()}
+        />
       </div>
 
       {/* Add Source Modal */}

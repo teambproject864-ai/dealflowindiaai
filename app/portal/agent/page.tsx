@@ -81,6 +81,8 @@ import { AssignedCustomersWorkspace } from "@/components/portal/AssignedCustomer
 import { CustomerProfileSettingsTab } from "@/components/portal/CustomerProfileSettingsTab";
 import { BillionmailHub } from "@/components/portal/BillionmailHub";
 import { ScrapeGraphStudio } from "@/components/portal/ScrapeGraphStudio";
+import { BulkDataProcessorHub } from "@/components/portal/BulkDataProcessorHub";
+import { FileSpreadsheet } from "lucide-react";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
@@ -106,6 +108,7 @@ const tabs = [
   { id: "dealflow-crm", label: "Dealflow CRM", icon: Briefcase, color: "text-teal-400 border-teal-500/30 hover:border-teal-500/60 shadow-teal-500/10" },
   { id: "billionmail-hub", label: "Billionmail Outbound Hub", icon: Send, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
   { id: "scrapegraph-studio", label: "ScrapeGraphAI Studio", icon: Globe, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "bulk-processor", label: "Bulk CSV & Sheets Hub", icon: FileSpreadsheet, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
   { id: "account-settings", label: "Account Settings & Profile", icon: Settings, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
 ] as const;
 
@@ -3477,7 +3480,21 @@ function AgentPortalContent() {
           </motion.div>
         )}
 
-        {/* 24. ACCOUNT SETTINGS & PROFILE TAB */}
+        {/* 24. BULK CSV & LINKED SPREADSHEETS HUB */}
+        {activeTab === "bulk-processor" && (
+          <motion.div
+            key="bulk-processor"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            <BulkDataProcessorHub defaultProcessorType="leads" />
+          </motion.div>
+        )}
+
+        {/* 25. ACCOUNT SETTINGS & PROFILE TAB */}
         {activeTab === "account-settings" && (
           <motion.div
             key="account-settings"

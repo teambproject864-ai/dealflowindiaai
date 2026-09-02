@@ -72,6 +72,8 @@ import { AgentsModule } from "@/components/portal/admin/AgentsModule";
 import { CustomersModule } from "@/components/portal/admin/CustomersModule";
 import { BillionmailHub } from "@/components/portal/BillionmailHub";
 import { ScrapeGraphStudio } from "@/components/portal/ScrapeGraphStudio";
+import { BulkDataProcessorHub } from "@/components/portal/BulkDataProcessorHub";
+import { FileSpreadsheet } from "lucide-react";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: Activity, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
@@ -100,6 +102,7 @@ const tabs = [
   { id: "crm-sync-center", label: "CRM Sync Queue", icon: RefreshCw, color: "text-amber-400 border-amber-500/30 hover:border-amber-500/60 shadow-amber-500/10" },
   { id: "billionmail-hub", label: "Billionmail Outbound Hub", icon: Mail, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
   { id: "scrapegraph-studio", label: "ScrapeGraphAI Studio", icon: Globe, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "bulk-processor", label: "Bulk CSV & Sheets Hub", icon: FileSpreadsheet, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
 ] as const;
 
 function AdminPortalContent() {
@@ -2608,6 +2611,13 @@ function AdminPortalContent() {
         {activeTab === "scrapegraph-studio" && (
           <div className="animate-in fade-in duration-300">
             <ScrapeGraphStudio />
+          </div>
+        )}
+
+        {/* 19. BULK CSV & LINKED SPREADSHEETS HUB */}
+        {activeTab === "bulk-processor" && (
+          <div className="animate-in fade-in duration-300">
+            <BulkDataProcessorHub defaultProcessorType="leads" />
           </div>
         )}
 

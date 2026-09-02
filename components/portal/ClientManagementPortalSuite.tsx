@@ -70,6 +70,7 @@ import { GlassPanel } from "@/components/immersive/GlassPanel";
 import { ExtrudedButton } from "@/components/immersive/ExtrudedButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BulkDataProcessorHub } from "@/components/portal/BulkDataProcessorHub";
 import { cn } from "@/lib/utils";
 
 // Types & Interfaces
@@ -513,6 +514,7 @@ export function ClientManagementPortalSuite({ initialRole }: { initialRole?: Use
     }
   ]);
   const [isAuditDrawerOpen, setIsAuditDrawerOpen] = useState(false);
+  const [isBulkProcessorOpen, setIsBulkProcessorOpen] = useState(false);
 
   // 6. Integration Wizard & Drawer State
   const [selectedIntegration, setSelectedIntegration] = useState<typeof INTEGRATIONS_CATALOG[0] | null>(null);
@@ -1211,7 +1213,16 @@ export function ClientManagementPortalSuite({ initialRole }: { initialRole?: Use
               </button>
             </div>
 
-            {/* Export Buttons */}
+            {/* Export & Bulk Ingest Buttons */}
+            <ExtrudedButton
+              onClick={() => setIsBulkProcessorOpen(true)}
+              variant="outline"
+              className="py-1.5 px-3 text-xs font-bold border-emerald-700/60 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 flex items-center gap-1.5"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-400" />
+              Bulk CSV / Sheets
+            </ExtrudedButton>
+
             <ExtrudedButton
               onClick={() => handleExportClients("CSV")}
               variant="outline"
@@ -2206,6 +2217,32 @@ export function ClientManagementPortalSuite({ initialRole }: { initialRole?: Use
               )}
             </div>
           </GlassPanel>
+        </div>
+      )}
+
+      {/* Bulk CSV & Spreadsheet Ingestion Modal */}
+      {isBulkProcessorOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <span className="text-xs font-bold font-mono uppercase tracking-wider text-emerald-400">
+                Bulk Lead & Client Ingestion Hub
+              </span>
+              <button
+                onClick={() => setIsBulkProcessorOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800/60"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <BulkDataProcessorHub
+              defaultProcessorType="leads"
+              onComplete={(results) => {
+                showToast("success", "Bulk Import Complete", `Processed and appended ${results.length} records!`);
+              }}
+            />
+          </div>
         </div>
       )}
     </div>

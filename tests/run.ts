@@ -62,6 +62,7 @@ import { runCommunityMiningTestSuite } from "./community-mining.test";
 import { runMiddlewareTests } from "./middleware-verification.test";
 import { runAgentPortalModulesSyncTests } from "./agent-portal-modules-sync.test";
 import { runBillionmailScrapeGraphIntegrationTests } from "./billionmail-scrapegraph-integrations.test";
+import { runBulkCsvProcessorTests } from "./bulk-csv-processor.test";
 
 
 
@@ -374,7 +375,8 @@ async function main() {
     runCommunityMiningTestSuite,
     runMiddlewareTests,
     runAgentPortalModulesSyncTests,
-    runBillionmailScrapeGraphIntegrationTests
+    runBillionmailScrapeGraphIntegrationTests,
+    runBulkCsvProcessorTests
   ];
 
 
