@@ -11,22 +11,59 @@ import { PERSONAS } from '@/prompts/personas';
 import { createToken } from '@/lib/auth';
 
 export async function POST(req: Request) {
-  const signature = req.headers.get('x-recall-signature');
-  const secret = process.env.RECALL_WEBHOOK_SECRET;
-
+  const secret = process.env.RECALL_WEBHOOK_SECRET?.trim();
   const bodyText = await req.text();
+
+  // 1. Check Svix headers (Recall.ai standard format)
+  const webhookId = req.headers.get('webhook-id') || req.headers.get('svix-id');
+  const webhookTimestamp = req.headers.get('webhook-timestamp') || req.headers.get('svix-timestamp');
+  const webhookSignature = req.headers.get('webhook-signature') || req.headers.get('svix-signature');
+
+  // 2. Check legacy headers
+  const legacySignature = req.headers.get('x-recall-signature');
+
+  if (secret) {
+    let isValid = false;
+
+    if (webhookId && webhookTimestamp && webhookSignature) {
+      // Svix signature verification: HMAC-SHA256 over "${webhookId}.${webhookTimestamp}.${bodyText}"
+      const secretKey = secret.startsWith('whsec_')
+        ? Buffer.from(secret.slice(6), 'base64')
+        : Buffer.from(secret, 'utf-8');
+
+      const toSign = `${webhookId}.${webhookTimestamp}.${bodyText}`;
+      const expectedDigest = crypto.createHmac('sha256', secretKey).update(toSign).digest('base64');
+
+      // webhook-signature can contain multiple space-separated signatures (e.g., "v1,abc... v1,def...")
+      const signatures = webhookSignature.split(' ');
+      isValid = signatures.some((sig) => {
+        const parts = sig.split(',');
+        if (parts.length === 2 && parts[0] === 'v1') {
+          try {
+            return crypto.timingSafeEqual(Buffer.from(parts[1]), Buffer.from(expectedDigest));
+          } catch {
+            return false;
+          }
+        }
+        return false;
+      });
+    } else if (legacySignature) {
+      // Legacy signature verification: hex HMAC over bodyText
+      const hmac = crypto.createHmac('sha256', secret);
+      const digest = hmac.update(bodyText).digest('hex');
+      isValid = (digest === legacySignature);
+    }
+
+    if (!isValid) {
+      console.warn('[RecallWebhook] Webhook signature validation failed.');
+      return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 401 });
+    }
+  } else {
+    // If no secret is configured yet in environment, log warning but accept
+    console.warn('[RecallWebhook] RECALL_WEBHOOK_SECRET is not set in environment variables. Allowing webhook in unverified mode.');
+  }
+
   const systemToken = createToken({ id: 'system', email: 'system@dealflow.ai', role: 'admin', name: 'System' });
-  
-  if (!secret || !signature) {
-    return NextResponse.json({ error: 'Missing webhook secret or signature' }, { status: 401 });
-  }
-
-  const hmac = crypto.createHmac('sha256', secret);
-  const digest = hmac.update(bodyText).digest('hex');
-  if (digest !== signature) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   const payload = JSON.parse(bodyText);
   const { event, data } = payload;
 
