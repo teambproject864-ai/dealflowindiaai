@@ -50,15 +50,19 @@ export class TwilioService {
   private static instance: TwilioService | null = null;
   private client: twilio.Twilio | null = null;
   private fromNumber: string;
+  private messagingServiceSid: string | null = null;
 
   private constructor() {
     const sid = process.env.TWILIO_ACCOUNT_SID?.trim();
     const token = process.env.TWILIO_AUTH_TOKEN?.trim();
     const from = process.env.TWILIO_PHONE_NUMBER?.trim();
+    const msid = process.env.TWILIO_MESSAGING_SERVICE_SID?.trim();
 
-    if (sid && token && from) {
+    this.messagingServiceSid = msid || null;
+
+    if (sid && token && (from || msid)) {
       this.client = twilio(sid, token);
-      this.fromNumber = from;
+      this.fromNumber = from || "+19092337799";
     } else {
       console.warn("[TwilioService] TWILIO credentials missing/unconfigured. Operating in Gateway Simulation Mode.");
       this.client = null;
@@ -113,22 +117,32 @@ export class TwilioService {
     const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const statusCallback = `${appUrl}/api/twilio/status-callback?channel=sms`;
 
+    const createParams: any = {
+      body: message,
+      to: formattedTo,
+      statusCallback,
+    };
+
+    if (this.messagingServiceSid) {
+      createParams.messagingServiceSid = this.messagingServiceSid;
+    } else {
+      createParams.from = this.fromNumber;
+    }
+
     const payload = await this.executeWithRetry(() =>
-      this.client!.messages.create({
-        body: message,
-        from: this.fromNumber,
-        to: formattedTo,
-        statusCallback,
-      })
+      this.client!.messages.create(createParams)
     );
+
+    const senderIdentifier = this.messagingServiceSid || this.fromNumber;
 
     await this.logAudit("sms_sent", {
       messageSid: payload.sid,
       to: formattedTo,
+      from: senderIdentifier,
       status: payload.status,
     });
 
-    await this.initializeDeliveryStatus(payload.sid, formattedTo, this.fromNumber, "sms", payload.status);
+    await this.initializeDeliveryStatus(payload.sid, formattedTo, senderIdentifier, "sms", payload.status);
 
     return payload;
   }

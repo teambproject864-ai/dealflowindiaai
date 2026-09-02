@@ -301,12 +301,21 @@ export async function sendSMS(options: { to: string; message: string }) {
   if (!parsed.success) throw new Error("invalid_phone");
 
   const { sid, token, from } = getTwilioCreds();
+  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID?.trim();
   const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
-  const body = new URLSearchParams({
-    From: from,
+
+  const bodyParams: Record<string, string> = {
     To: options.to,
     Body: options.message,
-  });
+  };
+
+  if (messagingServiceSid) {
+    bodyParams.MessagingServiceSid = messagingServiceSid;
+  } else {
+    bodyParams.From = from;
+  }
+
+  const body = new URLSearchParams(bodyParams);
 
   const res = await fetch(url, {
     method: "POST",

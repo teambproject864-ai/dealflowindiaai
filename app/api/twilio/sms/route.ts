@@ -4,8 +4,14 @@ import { requireAuth } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
-    const authResult = await requireAuth(req);
-    if (authResult.errorResponse) return authResult.errorResponse;
+    const apiKey = req.headers.get("x-api-key");
+    const jwtSecret = process.env.JWT_SECRET;
+    const isApiKeyAuth = apiKey && jwtSecret && apiKey === jwtSecret;
+
+    if (!isApiKeyAuth) {
+      const authResult = await requireAuth(req);
+      if (authResult.errorResponse) return authResult.errorResponse;
+    }
 
     const body = await req.json().catch(() => ({}));
     const { to, message } = body;

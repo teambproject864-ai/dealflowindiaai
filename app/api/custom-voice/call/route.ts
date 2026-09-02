@@ -12,8 +12,8 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user || user.role !== "agent") {
-      return NextResponse.json({ success: false, error: "Not authenticated as agent" }, { status: 401 });
+    if (!user || (user.role !== "agent" && user.role !== "admin")) {
+      return NextResponse.json({ success: false, error: "Not authenticated as agent or admin" }, { status: 401 });
     }
 
     const body = await req.json().catch(() => ({}));
