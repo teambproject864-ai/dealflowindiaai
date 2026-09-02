@@ -27,40 +27,36 @@ export async function createMeetingBot(
   const webhookUrl = `${appUrl.replace(/\/$/, "")}/api/meeting/webhook`;
   const workerUrl = process.env.SCREEN_SHARE_WORKER_URL || appUrl;
 
-  // Creating a bot immediately dispatches it to the meeting (auto-join),
-  // since we do not pass `join_at`.
+  const payload: Record<string, any> = {
+    meeting_url: meetingUrl,
+    bot_name: `${personaName} (AI) | Dealflow.ai`,
+    recording_config: {
+      transcript: {
+        provider: {
+          recallai_streaming: {
+            mode: "prioritize_low_latency",
+            language_code: "en",
+          },
+        },
+      },
+      realtime_endpoints: [
+        {
+          type: "webhook",
+          url: webhookUrl,
+          events: ["transcript.data"],
+        },
+      ],
+    },
+    ...(joinAtIso ? { join_at: joinAtIso } : {}),
+  };
+
   const res = await fetch(`${baseUrl}/api/v1/bot/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...getRecallAuthHeader(),
     },
-    body: JSON.stringify({
-      meeting_url: meetingUrl,
-      bot_name: `${personaName} (AI) | Dealflow.ai`,
-      transcription_options: { 
-        provider: "deepgram",
-        language: "en"
-      },
-      recording_mode: "speaker_view",
-      real_time_transcription: {
-        enabled: true
-      },
-      output_media: {
-        camera: {
-          kind: "webpage",
-          url: `${workerUrl}/display/${callId}`,
-        },
-      },
-      ...(joinAtIso ? { join_at: joinAtIso } : {}),
-      // Required by Recall for /output_audio to work.
-      automatic_audio_output: {
-        in_call_recording: {
-          data: { kind: "mp3" },
-        },
-      },
-      webhook_url: webhookUrl,
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {

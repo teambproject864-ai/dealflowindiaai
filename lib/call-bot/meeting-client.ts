@@ -73,26 +73,6 @@ export async function createBot(meetingUrl: string, metadata: BotMetadata = {}):
   const payload = {
     meeting_url: meetingUrl,
     bot_name: botName,
-    transcription_options: {
-      provider: "deepgram",
-      language: "en"
-    },
-    recording_mode: "speaker_view",
-    real_time_transcription: {
-      enabled: true
-    },
-    automatic_audio_output: {
-      in_call_recording: {
-        data: { kind: "mp3" }
-      }
-    },
-    webhook_url: webhookUrl,
-    metadata: {
-      callId: metadata.callId || "",
-      callType: metadata.callType || "discovery",
-      intakeFormId: metadata.intakeFormId || "",
-      ...metadata
-    }
   };
 
   return retryOnce(async () => {
