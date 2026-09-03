@@ -250,8 +250,8 @@ async function main() {
             console.log("\n======================================================");
             console.log("      AUTOMATED MINUTES OF MEETING (MOM) GENERATED    ");
             console.log("======================================================");
-            console.log(`Title    : ${momResult.mom.meetingTitle}`);
-            console.log(`Executive Summary:\n${momResult.mom.summary}\n`);
+            console.log(`Title    : ${session.meetingTitle}`);
+            console.log(`Executive Summary:\n${momResult.mom.executiveSummary}\n`);
             console.log("Key Action Items:");
             momResult.mom.actionItems.forEach((item, idx) => {
               console.log(`  ${idx + 1}. [${item.priority || "Normal"}] ${item.task} (Owner: ${item.owner}, Due: ${item.timeline})`);

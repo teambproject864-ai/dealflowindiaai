@@ -53,7 +53,7 @@ async function resendSendEmail(args: { to: string | string[]; subject: string; h
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Dealflow.ai <noreply@dealflow.ai>",
+      from: process.env.EMAIL_FROM || "Dealflow AI <onboarding@resend.dev>",
       to: args.to,
       subject: args.subject,
       html: args.html,
