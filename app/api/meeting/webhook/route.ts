@@ -82,8 +82,20 @@ export async function POST(req: Request) {
   const payload = JSON.parse(bodyText);
   const { event, data } = payload;
 
-  if (event === 'transcript.data') {
-    const { bot_id, transcript } = data;
+  if (event === 'transcript.data' || event === 'participant_events.chat_message') {
+    const bot_id = data.bot_id || data.botId;
+    let transcript = data.transcript;
+
+    if (event === 'participant_events.chat_message') {
+      const messageText = data.data?.text || data.message || data.text;
+      const speakerName = data.participant?.name || 'Customer';
+      if (!messageText) return NextResponse.json({ received: true });
+      transcript = {
+        speaker: speakerName,
+        text: messageText,
+      };
+    }
+
     if (!transcript) return NextResponse.json({ received: true });
 
     let callDoc: any = null;
