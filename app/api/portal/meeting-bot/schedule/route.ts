@@ -23,6 +23,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Meeting title, meeting URL, and start time are required" }, { status: 400 });
     }
 
+    const targetRecipients = Array.isArray(recipients) && recipients.length > 0
+      ? recipients
+      : [{ email: "client@example.com", name: "Client Stakeholder", phone: "+15550192831" }];
+
     // Schedule Bot Session
     const session = await scheduleMeetingBotSession({
       meetingTitle,
@@ -33,6 +37,7 @@ export async function POST(req: Request) {
       scheduledByUserRole: scheduledByUserRole || "customer",
       assignedAgentId: assignedAgentId || "agent-1",
       customerId: customerId || "cust-1",
+      recipients: targetRecipients,
       remindersEnabled: true,
     });
 
@@ -46,10 +51,6 @@ export async function POST(req: Request) {
     });
 
     // Schedule Reminders
-    const targetRecipients = Array.isArray(recipients) && recipients.length > 0
-      ? recipients
-      : [{ email: "client@example.com", phone: "+15550192831" }];
-
     const reminders = await scheduleMeetingReminders({
       sessionId: session.sessionId,
       meetingTitle: session.meetingTitle,

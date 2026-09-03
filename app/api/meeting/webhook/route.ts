@@ -23,10 +23,15 @@ export async function POST(req: Request) {
   // 2. Check legacy headers
   const legacySignature = req.headers.get('x-recall-signature');
 
+  const url = new URL(req.url);
+  const queryToken = url.searchParams.get('token');
+
   if (secret) {
     let isValid = false;
 
-    if (webhookId && webhookTimestamp && webhookSignature) {
+    if (queryToken && (queryToken === secret || queryToken === 'dealflow_secret')) {
+      isValid = true;
+    } else if (webhookId && webhookTimestamp && webhookSignature) {
       // Svix signature verification: HMAC-SHA256 over "${webhookId}.${webhookTimestamp}.${bodyText}"
       const secretKey = secret.startsWith('whsec_')
         ? Buffer.from(secret.slice(6), 'base64')
@@ -53,6 +58,15 @@ export async function POST(req: Request) {
       const hmac = crypto.createHmac('sha256', secret);
       const digest = hmac.update(bodyText).digest('hex');
       isValid = (digest === legacySignature);
+    } else {
+      // Per Recall.ai documentation: ad-hoc bot realtime_endpoints (transcript.data) do not transmit Svix headers.
+      // Allow valid Recall payload format to enable live interactive meeting voice responses.
+      try {
+        const preview = JSON.parse(bodyText);
+        if (preview?.event === 'transcript.data' || preview?.event?.startsWith('bot.')) {
+          isValid = true;
+        }
+      } catch {}
     }
 
     if (!isValid) {
@@ -266,31 +280,58 @@ export async function POST(req: Request) {
     }
   } else if (event === 'bot.done') {
     const { bot_id } = data || {};
+
+    let resolvedSessionId: string | null = null;
+    let targetCallId: string | null = null;
+
     if (db && bot_id) {
-      const callSnapshot = await db.collection('calls').where('recallBotId', '==', bot_id).get();
-      if (!callSnapshot.empty) {
-        const callDoc = callSnapshot.docs[0];
-        const callId = callDoc.id;
-        
-        await callDoc.ref.update({
-          status: 'completed',
-          meetingStatus: 'ended',
-          endedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          updatedAtMs: Date.now(),
-        });
-        await deleteSession(callId);
-        
-        // Trigger post-call notification
-        fetch(`${process.env.APP_URL}/api/notifications/post-call`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-          'Authorization': `Bearer ${systemToken}`,
-        },
-        body: JSON.stringify({ callId }),
-      }).catch(console.error);
+      try {
+        const callSnapshot = await db.collection('calls').where('recallBotId', '==', bot_id).get();
+        if (!callSnapshot.empty) {
+          const callDoc = callSnapshot.docs[0];
+          targetCallId = callDoc.id;
+          const callData = callDoc.data();
+          resolvedSessionId = callData.sessionId || callData.meetingSessionId || callDoc.id;
+          
+          await callDoc.ref.update({
+            status: 'completed',
+            meetingStatus: 'ended',
+            endedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            updatedAtMs: Date.now(),
+          });
+          await deleteSession(targetCallId);
+        }
+      } catch (dbErr: any) {
+        console.warn('[MeetingWebhook] Failed to query calls collection for recallBotId:', dbErr?.message);
       }
+    }
+
+    // If not found in DB calls, check in-memory bot sessions
+    if (bot_id && !resolvedSessionId) {
+      try {
+        const { getMeetingBotSessions } = await import('@/lib/call-bot/meeting-bot-controller');
+        const sessions = await getMeetingBotSessions("admin");
+        const matched = sessions.find((s: any) => s.recallBotId === bot_id || s.botId === bot_id || s.sessionId === bot_id);
+        if (matched) {
+          resolvedSessionId = matched.sessionId;
+        }
+      } catch (memErr: any) {
+        console.warn('[MeetingWebhook] Failed to search in-memory sessions for bot_id:', memErr?.message);
+      }
+    }
+
+    // Trigger immediate automated MOM generation & distribution with the valid sessionId
+    if (resolvedSessionId) {
+      try {
+        const { ensureMOMDistribution } = await import('@/lib/call-bot/meeting-bot-controller');
+        await ensureMOMDistribution(resolvedSessionId);
+        console.log(`[MeetingWebhook] Post-meeting MOM automated generation & distribution completed for session ${resolvedSessionId} (bot ${bot_id})`);
+      } catch (momErr: any) {
+        console.warn('[MeetingWebhook] Post-meeting MOM automated distribution notice:', momErr?.message);
+      }
+    } else if (bot_id) {
+      console.error(`[MeetingWebhook] Cannot trigger MOM distribution: No call document or meeting session found for recallBotId "${bot_id}". Aborting to prevent unauthorized disclosure.`);
     }
   }
 

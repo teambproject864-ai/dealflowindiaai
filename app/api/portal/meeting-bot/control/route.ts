@@ -31,6 +31,7 @@ export async function POST(req: Request) {
       success: result.success,
       session: result.session,
       message: result.message,
+      mom: result.mom,
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err?.message || "Failed to execute bot control action" }, { status: 500 });

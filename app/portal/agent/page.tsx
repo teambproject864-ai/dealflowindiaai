@@ -82,10 +82,15 @@ import { CustomerProfileSettingsTab } from "@/components/portal/CustomerProfileS
 import { BillionmailHub } from "@/components/portal/BillionmailHub";
 import { ScrapeGraphStudio } from "@/components/portal/ScrapeGraphStudio";
 import { BulkDataProcessorHub } from "@/components/portal/BulkDataProcessorHub";
+import { CentralizedEmailHub } from "@/components/portal/CentralizedEmailHub";
+import { MeetingRecordingViewer } from "@/components/portal/MeetingRecordingViewer";
+import { SUPPORTED_LANGUAGES, translateText } from "@/lib/translation/translation-service";
 import { FileSpreadsheet } from "lucide-react";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3, color: "text-emerald-400 border-emerald-500/30 hover:border-emerald-500/60 shadow-emerald-500/10" },
+  { id: "email-inbox", label: "Unified Email Monitor", icon: Mail, color: "text-blue-400 border-blue-500/30 hover:border-blue-500/60 shadow-blue-500/10" },
+  { id: "recordings", label: "Meeting Recordings Vault", icon: Video, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
   { id: "assigned-customers", label: "Assigned Customers", icon: Users, color: "text-indigo-400 border-indigo-500/30 hover:border-indigo-500/60 shadow-indigo-500/10" },
   { id: "community-mining", label: "Community Mining", icon: Sparkles, color: "text-violet-400 border-violet-500/30 hover:border-violet-500/60 shadow-violet-500/10" },
   { id: "ai-webinar", label: "AI Webinar Module", icon: Video, color: "text-cyan-400 border-cyan-500/30 hover:border-cyan-500/60 shadow-cyan-500/10" },
@@ -560,6 +565,78 @@ function AgentPortalContent() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  // Context-Aware Chat Reply & Translation State
+  const [chatLanguage, setChatLanguage] = useState<string>("en");
+  const [chatViewMode, setChatViewMode] = useState<"original" | "translated">("original");
+  const [translatedChatMessages, setTranslatedChatMessages] = useState<Record<string, string>>({});
+  const [isTranslatingChat, setIsTranslatingChat] = useState(false);
+  const [contextDraftReply, setContextDraftReply] = useState<any | null>(null);
+  const [isGeneratingContextReply, setIsGeneratingContextReply] = useState(false);
+  const [draftEditText, setDraftEditText] = useState("");
+  const [isEditingDraft, setIsEditingDraft] = useState(false);
+
+  // Generate context-aware draft reply from historical meetings and emails
+  const handleGenerateContextReply = async (queryText?: string) => {
+    const q = queryText || newMessage || (chatMessages.length > 0 ? chatMessages[chatMessages.length - 1]?.content : "How is our webhook setup progressing?");
+    if (!q) return;
+
+    setIsGeneratingContextReply(true);
+    try {
+      const res = await fetch("/api/portal/chat/context-reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "generate",
+          customerQuery: q,
+          customerId: activeWorkspaceCustomerId || "cust-1",
+          ticketId: "TICK-4892",
+          language: chatLanguage,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.draft) {
+        setContextDraftReply(data.draft);
+        setDraftEditText(data.draft.draftReplyText);
+        showToast("success", "AI Context Reply Ready", `Surfaced ${data.draft.surfacedSnippets?.length || 0} historical meeting context snippets (${Math.round(data.draft.confidenceScore * 100)}% alignment).`);
+      }
+    } catch (err) {
+      console.error("Failed to generate context-aware chat reply:", err);
+    } finally {
+      setIsGeneratingContextReply(false);
+    }
+  };
+
+  const handleApproveDraftReply = async () => {
+    if (!contextDraftReply) return;
+    try {
+      const textToUse = isEditingDraft ? draftEditText : contextDraftReply.draftReplyText;
+      setNewMessage(textToUse);
+      await fetch("/api/portal/chat/context-reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve", draftId: contextDraftReply.id }),
+      });
+      setContextDraftReply(null);
+      setIsEditingDraft(false);
+      showToast("success", "Draft Approved", "Inserted into message input. Click send or edit further.");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDiscardDraftReply = async () => {
+    if (!contextDraftReply) return;
+    try {
+      await fetch("/api/portal/chat/context-reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "discard", draftId: contextDraftReply.id }),
+      });
+    } catch {}
+    setContextDraftReply(null);
+    setIsEditingDraft(false);
   };
 
   const handleSaveAsset = async (assetId: string | null, title: string, tactic: string, content: string, status?: string, targetCustomerId?: string) => {
@@ -2644,7 +2721,7 @@ function AgentPortalContent() {
           </motion.div>
         )}
 
-        {/* 3. CHAT MESSENGER TAB */}
+        {/* 3. CHAT MESSENGER TAB (WITH MULTILINGUAL TRANSLATION & CONTEXT-AWARE AI ASSISTANT) */}
         {activeTab === "chat" && (
           <motion.div
             key="chat"
@@ -2654,40 +2731,260 @@ function AgentPortalContent() {
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-4"
           >
-            <h2 className="text-2xl font-bold text-slate-100">Live Client Messenger</h2>
-            <GlassPanel className="border-slate-800 bg-slate-900/20 p-4 h-[500px] flex flex-col justify-between">
-              <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin">
-                {chatMessages.length === 0 ? (
-                  <p className="text-slate-500 text-center py-12 text-sm">No recent messages in this session.</p>
-                ) : (
-                  chatMessages.map(msg => {
-                    const isMe = msg.senderRole === "agent" || msg.senderId === user?.id;
-                    return (
-                      <div key={msg.id} className={cn("flex flex-col max-w-[70%] space-y-1", isMe ? "ml-auto items-end" : "mr-auto items-start")}>
-                        <span className="text-[10px] text-slate-500">{msg.senderName} • {new Date(msg.timestamp).toLocaleTimeString()}</span>
-                        <div className={cn(
-                          "p-3 rounded-2xl text-xs",
-                          isMe ? "bg-purple-600 text-white rounded-tr-none" : "bg-slate-800 text-slate-200 rounded-tl-none"
-                        )}>
-                          {msg.content}
+            {/* Top Toolbar: Translation & Assistant */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 p-4 bg-slate-900/40 border border-slate-800 rounded-2xl">
+              <div>
+                <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-sky-400" />
+                  Live Client Messenger & AI Context Assistant
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Real-time two-way interaction • Historical meeting context retrieval (90%+ alignment) • 20+ Language Translation
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 flex-wrap">
+                {/* Language Selector */}
+                <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-xs">
+                  <Globe className="h-3.5 w-3.5 text-indigo-400" />
+                  <select
+                    value={chatLanguage}
+                    onChange={(e) => setChatLanguage(e.target.value)}
+                    className="bg-transparent text-xs text-slate-200 focus:outline-none"
+                  >
+                    {SUPPORTED_LANGUAGES.map((lang) => (
+                      <option key={lang.code} value={lang.code} className="bg-slate-900 text-slate-200">
+                        {lang.flag} {lang.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Original vs Translated Toggle */}
+                <div className="flex rounded-xl bg-slate-950 border border-slate-800 p-0.5 text-xs">
+                  <button
+                    onClick={() => setChatViewMode("original")}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg transition-all font-medium",
+                      chatViewMode === "original" ? "bg-sky-600 text-white" : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    Original
+                  </button>
+                  <button
+                    onClick={() => setChatViewMode("translated")}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg transition-all font-medium",
+                      chatViewMode === "translated" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    Translated ({chatLanguage.toUpperCase()})
+                  </button>
+                </div>
+
+                <Button
+                  onClick={() => handleGenerateContextReply()}
+                  disabled={isGeneratingContextReply}
+                  size="sm"
+                  className="bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20"
+                >
+                  <Sparkles className={cn("h-3.5 w-3.5 mr-1.5", isGeneratingContextReply && "animate-spin")} />
+                  {isGeneratingContextReply ? "Pulling Context..." : "AI Context Reply"}
+                </Button>
+              </div>
+            </div>
+
+            {/* 2-Column Chat Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              {/* Left Column: Chat Messenger */}
+              <div className="md:col-span-7">
+                <GlassPanel className="border-slate-800 bg-slate-900/20 p-4 h-[560px] flex flex-col justify-between">
+                  <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin">
+                    {chatMessages.length === 0 ? (
+                      <div className="text-center py-16 text-slate-500 text-xs space-y-2">
+                        <MessageSquare className="h-8 w-8 mx-auto opacity-30" />
+                        <p>No recent messages in this session.</p>
+                        <p className="text-[11px] text-slate-600">Type a message below or trigger AI Context Reply from historical meeting recordings.</p>
+                      </div>
+                    ) : (
+                      chatMessages.map(msg => {
+                        const isMe = msg.senderRole === "agent" || msg.senderId === user?.id;
+                        const displayContent = chatViewMode === "translated" && translatedChatMessages[msg.id]
+                          ? translatedChatMessages[msg.id]
+                          : msg.content;
+
+                        return (
+                          <div key={msg.id} className={cn("flex flex-col max-w-[75%] space-y-1", isMe ? "ml-auto items-end" : "mr-auto items-start")}>
+                            <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                              <span>{msg.senderName}</span>
+                              <span>•</span>
+                              <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                              {chatViewMode === "translated" && (
+                                <span className="text-[9px] text-indigo-400 font-mono">({chatLanguage.toUpperCase()})</span>
+                              )}
+                            </div>
+                            <div className={cn(
+                              "p-3 rounded-2xl text-xs leading-relaxed",
+                              isMe ? "bg-sky-600 text-white rounded-tr-none" : "bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700"
+                            )}>
+                              {displayContent}
+                            </div>
+                            {!isMe && (
+                              <button
+                                onClick={() => handleGenerateContextReply(msg.content)}
+                                className="text-[10px] text-sky-400 hover:text-sky-300 font-medium flex items-center gap-1 self-start pt-0.5"
+                              >
+                                <Sparkles className="h-2.5 w-2.5" /> Context-Aware Reply
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <form onSubmit={handleSendMessage} className="flex gap-2 pt-4 border-t border-slate-800/80 mt-4">
+                    <Input
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Type message or insert AI context reply..."
+                      className="bg-slate-950 border-slate-850 rounded-xl text-xs"
+                    />
+                    <ExtrudedButton type="submit" className="bg-sky-600 hover:bg-sky-500 text-white">
+                      <Send className="h-4 w-4" />
+                    </ExtrudedButton>
+                  </form>
+                </GlassPanel>
+              </div>
+
+              {/* Right Column: AI Context-Aware Reply Assistant */}
+              <div className="md:col-span-5">
+                <GlassPanel className="border-slate-800 bg-slate-900/20 p-4 h-[560px] flex flex-col justify-between space-y-3">
+                  <div className="space-y-3 overflow-y-auto pr-1">
+                    <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                        AI Context-Aware Reply Assistant
+                      </span>
+                      {contextDraftReply && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          {Math.round(contextDraftReply.confidenceScore * 100)}% Alignment
+                        </span>
+                      )}
+                    </div>
+
+                    {contextDraftReply ? (
+                      <div className="space-y-3 text-xs">
+                        {/* Surfaced Snippets from historical meetings & communications */}
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                            Surfaced Historical Context ({contextDraftReply.surfacedSnippets?.length || 0} Sources)
+                          </span>
+                          {contextDraftReply.surfacedSnippets?.map((snip: any) => (
+                            <div
+                              key={snip.id}
+                              className={cn(
+                                "p-2.5 rounded-xl border text-[11px] space-y-1",
+                                snip.isCommitment
+                                  ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
+                                  : "bg-slate-950/60 border-slate-800 text-slate-300"
+                              )}
+                            >
+                              <div className="flex justify-between text-[10px] text-slate-400">
+                                <span className="font-bold text-slate-200">{snip.sourceTitle}</span>
+                                <span className="font-mono text-indigo-400">{snip.timestampFormatted}</span>
+                              </div>
+                              <p className="leading-relaxed italic">
+                                {snip.snippetText}
+                              </p>
+                              {snip.isCommitment && (
+                                <span className="inline-block px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300">
+                                  ★ Prior Meeting Commitment
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Proposed Draft Reply */}
+                        <div className="space-y-1 pt-1">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              Personalized Draft Reply
+                            </span>
+                            <button
+                              onClick={() => setIsEditingDraft(!isEditingDraft)}
+                              className="text-[10px] text-sky-400 hover:underline"
+                            >
+                              {isEditingDraft ? "Done Editing" : "Edit Draft"}
+                            </button>
+                          </div>
+
+                          {isEditingDraft ? (
+                            <Textarea
+                              rows={5}
+                              value={draftEditText}
+                              onChange={(e) => setDraftEditText(e.target.value)}
+                              className="bg-slate-950 border-slate-800 text-xs text-slate-200 leading-relaxed"
+                            />
+                          ) : (
+                            <div className="p-3 bg-sky-950/20 border border-sky-500/30 rounded-xl text-slate-200 text-xs leading-relaxed">
+                              {draftEditText || contextDraftReply.draftReplyText}
+                            </div>
+                          )}
+
+                          {contextDraftReply.translatedDraftText && chatLanguage !== "en" && (
+                            <div className="p-2.5 bg-indigo-950/20 border border-indigo-500/30 rounded-xl text-slate-300 text-[11px] space-y-0.5">
+                              <span className="text-[9px] font-bold text-indigo-400 uppercase">
+                                Translated Preview ({chatLanguage.toUpperCase()}):
+                              </span>
+                              <p>{contextDraftReply.translatedDraftText}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    );
-                  })
-                )}
+                    ) : (
+                      <div className="text-center py-16 text-slate-500 text-xs space-y-2">
+                        <Sparkles className="h-8 w-8 mx-auto opacity-30 text-indigo-400" />
+                        <p className="font-medium text-slate-400">Context Engine Ready</p>
+                        <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                          Click &quot;AI Context Reply&quot; above to automatically search historical meeting recordings, commitments, and emails to generate an aligned draft reply.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Agent Action Buttons: Approve, Edit, Discard */}
+                  {contextDraftReply && (
+                    <div className="flex items-center gap-2 pt-3 border-t border-slate-800">
+                      <Button
+                        onClick={handleApproveDraftReply}
+                        size="sm"
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
+                      >
+                        <Check className="h-3.5 w-3.5 mr-1" /> Approve & Insert
+                      </Button>
+                      <Button
+                        onClick={() => setIsEditingDraft(!isEditingDraft)}
+                        variant="outline"
+                        size="sm"
+                        className="bg-slate-950 border-slate-800 text-xs text-slate-300"
+                      >
+                        {isEditingDraft ? "Preview" : "Edit"}
+                      </Button>
+                      <Button
+                        onClick={handleDiscardDraftReply}
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-rose-400 hover:bg-rose-500/10"
+                      >
+                        Discard
+                      </Button>
+                    </div>
+                  )}
+                </GlassPanel>
               </div>
-              <form onSubmit={handleSendMessage} className="flex gap-2 pt-4 border-t border-slate-800/80 mt-4">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type message to client..."
-                  className="bg-slate-950 border-slate-850 rounded-xl"
-                />
-                <ExtrudedButton type="submit" className="bg-purple-600 hover:bg-purple-700">
-                  <Send className="h-4 w-4" />
-                </ExtrudedButton>
-              </form>
-            </GlassPanel>
+            </div>
           </motion.div>
         )}
 
@@ -3505,6 +3802,43 @@ function AgentPortalContent() {
             className="space-y-6"
           >
             <CustomerProfileSettingsTab />
+          </motion.div>
+        )}
+
+        {/* 26. UNIFIED EMAIL MONITOR TAB */}
+        {activeTab === "email-inbox" && (
+          <motion.div
+            key="email-inbox"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            <CentralizedEmailHub
+              currentAgentId={user?.id || "agent-1"}
+              currentAgentEmail={user?.email || "agent@dealflow.ai"}
+              currentAgentName={user?.name || "Dealflow Senior Agent"}
+              defaultCustomerId={activeWorkspaceCustomerId || "cust-1"}
+              defaultTicketId="TICK-4892"
+            />
+          </motion.div>
+        )}
+
+        {/* 27. MEETING RECORDINGS VAULT TAB */}
+        {activeTab === "recordings" && (
+          <motion.div
+            key="recordings"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            <MeetingRecordingViewer
+              customerId={activeWorkspaceCustomerId || undefined}
+              ticketId="TICK-4892"
+            />
           </motion.div>
         )}
 

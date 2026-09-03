@@ -4,6 +4,11 @@ import { getCallTypeConfig, CallTypeConfig } from "../call-bot/call-router";
 import { searchCRMRecords } from "../crm-store";
 import { generateMOMDocument, MinutesOfMeeting } from "../call-bot/mom-generator";
 import { sendPostCallMOMEmail } from "../post-call-email";
+import {
+  routeAndGenerateLLMResponse,
+  LLMRoutingMode,
+  LLMResponseResult,
+} from "../auto-llm";
 
 export type CallScenario = "client_sales" | "customer_checkin" | "internal_standup" | "onboarding" | "cross_functional";
 
@@ -15,6 +20,7 @@ export interface BotCustomizationInput {
   productFocus?: string;
   pricingGuardrails?: { maxDiscountPercent: number; requireApprovalForSLA: boolean };
   inCallPromptOverrides?: string[];
+  defaultRoutingMode?: LLMRoutingMode;
 }
 
 export interface LiveTranscriptChunk {
@@ -35,6 +41,13 @@ export interface InMeetingDecision {
   impactScore: number;
 }
 
+export interface ExtractedActionItem {
+  task: string;
+  owner: string;
+  priority: "high" | "medium" | "low";
+  timeline: string;
+}
+
 export interface LiveMeetingBotState {
   botId: string;
   meetingUrl: string;
@@ -45,7 +58,7 @@ export interface LiveMeetingBotState {
   sentimentScore: number; // 0 to 1
   sentimentRating: "Positive" | "Neutral" | "Negative";
   detectedObjections: Array<{ objection: string; suggestedResolution: string; confidence: number }>;
-  extractedActionItems: Array<{ task: string; owner: string; priority: "high" | "medium" | "low" }>;
+  extractedActionItems: ExtractedActionItem[];
   decisions: InMeetingDecision[];
   customizations?: BotCustomizationInput;
   startTime: string;
@@ -120,6 +133,41 @@ export class DealflowMeetingBot {
     return true;
   }
 
+  /**
+   * Fully Interactive Q&A for meeting participants.
+   * Leverages the dynamic LLM router with default Dual-Model Parallel Operation (Kimi + Dealflow LLM).
+   */
+  public async answerParticipantQuestion(
+    question: string,
+    speaker: string = "Participant",
+    routingMode?: LLMRoutingMode
+  ): Promise<LLMResponseResult> {
+    const activeRoutingMode = routingMode || this.state.customizations?.defaultRoutingMode || "dual_parallel";
+    const history = this.state.transcript.map(t => ({ speaker: t.speaker, text: t.text }));
+
+    const result = await routeAndGenerateLLMResponse(question, history, {
+      routingMode: activeRoutingMode,
+      scenario: this.state.callScenario,
+      personaName: "Praneeth",
+      companyName: this.state.customizations?.companyName || "DealFlow AI",
+    });
+
+    // Ingest the question & answer into meeting state
+    await this.ingestTranscriptChunk({
+      speaker,
+      text: question,
+      timestamp: new Date().toISOString(),
+    });
+
+    await this.ingestTranscriptChunk({
+      speaker: "Praneeth (AI) | Dealflow.ai",
+      text: result.spokenText,
+      timestamp: new Date().toISOString(),
+    });
+
+    return result;
+  }
+
   public async ingestTranscriptChunk(chunk: LiveTranscriptChunk): Promise<void> {
     this.state.transcript.push(chunk);
     if (!this.state.participants.includes(chunk.speaker)) {
@@ -176,12 +224,17 @@ export class DealflowMeetingBot {
       }
     }
 
-    // 2. Action items extraction per scenario
+    // 2. Action items extraction per scenario with explicit responsible person and timeline
     if (text.includes("will send") || text.includes("follow up") || text.includes("action item") || text.includes("next step") || text.includes("assign")) {
+      const isUrgent = text.includes("urgent") || text.includes("asap") || text.includes("today");
+      const priority = isUrgent ? "high" : "medium";
+      const timeline = isUrgent ? "Immediate / Same Day" : "Within 24 to 48 Hours";
+
       this.state.extractedActionItems.push({
         task: `Follow up on: "${chunk.text.slice(0, 80)}..."`,
-        owner: chunk.speaker,
-        priority: text.includes("urgent") || text.includes("asap") ? "high" : "medium",
+        owner: chunk.speaker || "Account Executive",
+        priority,
+        timeline,
       });
 
       // Low risk autonomous decision
@@ -229,12 +282,17 @@ export class DealflowMeetingBot {
 
   public async generateDataDrivenActionPlan(): Promise<GeneratedActionPlan> {
     const companyName = this.state.customizations?.companyName || "Client Enterprise";
-    const crmRecords = await searchCRMRecords({ query: companyName });
-    const historicalDeals = crmRecords.deals || [];
+    let winRate = 0.75;
 
-    const winCount = historicalDeals.filter(d => d.stage === "closed-won").length;
-    const totalCount = Math.max(historicalDeals.length, 1);
-    const winRate = historicalDeals.length > 0 ? winCount / totalCount : 0.75;
+    try {
+      const crmRecords = await searchCRMRecords({ query: companyName });
+      const historicalDeals = crmRecords.deals || [];
+      const winCount = historicalDeals.filter(d => d.stage === "closed-won").length;
+      const totalCount = Math.max(historicalDeals.length, 1);
+      winRate = historicalDeals.length > 0 ? winCount / totalCount : 0.75;
+    } catch {
+      winRate = 0.75;
+    }
 
     // Use Dealflow LLM to synthesize meeting context with historical win patterns
     const prompt = `Synthesize action plan for company ${companyName}.
@@ -244,7 +302,13 @@ Action items count: ${this.state.extractedActionItems.length}.
 Objections count: ${this.state.detectedObjections.length}.
 Historical Win Rate: ${(winRate * 100).toFixed(1)}%.`;
 
-    const llmResult = await this.llm.infer(prompt, "You are a senior Dealflow strategy engine.");
+    let strategyText = "Execute structured multi-touch outreach focusing on high-ROI deliverables and technical validation.";
+    try {
+      const llmResult = await this.llm.infer(prompt, "You are a senior Dealflow strategy engine.");
+      strategyText = (llmResult?.fusedOutput || llmResult?.llmOutput || strategyText).slice(0, 300);
+    } catch {
+      // Graceful fallback
+    }
 
     const recommendedSteps = [
       {
@@ -275,12 +339,10 @@ Historical Win Rate: ${(winRate * 100).toFixed(1)}%.`;
         stepNumber: 4,
         action: `Complete captured in-meeting commitment: ${this.state.extractedActionItems[0].task}`,
         targetOwner: this.state.extractedActionItems[0].owner,
-        timeline: "Immediate",
+        timeline: this.state.extractedActionItems[0].timeline || "Immediate",
         rationale: "Directly fulfills participant commitment logged in meeting notes.",
       });
     }
-
-    const strategyText = (llmResult?.fusedOutput || llmResult?.llmOutput || "Execute structured multi-touch outreach focusing on high-ROI deliverables and technical validation.").slice(0, 300);
 
     return {
       planId: `plan-${Date.now()}`,
@@ -295,23 +357,56 @@ Historical Win Rate: ${(winRate * 100).toFixed(1)}%.`;
       ],
       alignmentScore: 0.91,
     };
-
   }
 
-  public async finishCallAndDistributeMOM(recipientEmails: string[]): Promise<MinutesOfMeeting> {
+  /**
+   * Finalizes the call, generates complete MOM document, and immediately distributes
+   * it to all pre-configured meeting participants without delay.
+   */
+  public async finishCallAndDistributeMOM(recipientEmails: string[] = []): Promise<MinutesOfMeeting> {
     this.state.status = "completed";
     this.state.endTime = new Date().toISOString();
 
     const actionPlan = await this.generateDataDrivenActionPlan();
-    const mom = generateMOMDocument(this.state, actionPlan);
+    const mom = generateMOMDocument(this.state, actionPlan, recipientEmails);
 
     if (recipientEmails && recipientEmails.length > 0) {
-      await sendPostCallMOMEmail({
+      const emailResult = await sendPostCallMOMEmail({
         recipients: recipientEmails,
         mom,
       });
+      mom.deliveryStatus = emailResult.success ? "delivered" : "dispatched";
+      mom.dispatchedAt = emailResult.dispatchedAt;
+      mom.recipients = recipientEmails;
+    } else {
+      mom.deliveryStatus = "generated";
     }
 
     return mom;
   }
+}
+
+// Active Meeting Bots Registry
+const activeMeetingBots = new Map<string, DealflowMeetingBot>();
+
+export function getOrCreateMeetingBot(
+  botId: string,
+  meetingUrl: string = "https://meet.google.com/active-call",
+  scenario: CallScenario = "client_sales",
+  customizations?: BotCustomizationInput
+): DealflowMeetingBot {
+  let bot = activeMeetingBots.get(botId);
+  if (!bot) {
+    bot = new DealflowMeetingBot(botId, meetingUrl, scenario, customizations);
+    activeMeetingBots.set(botId, bot);
+  }
+  return bot;
+}
+
+export function getActiveMeetingBot(botId: string): DealflowMeetingBot | undefined {
+  return activeMeetingBots.get(botId);
+}
+
+export function removeMeetingBot(botId: string): boolean {
+  return activeMeetingBots.delete(botId);
 }

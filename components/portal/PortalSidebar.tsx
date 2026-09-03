@@ -64,6 +64,8 @@ const CATEGORY_MAP: Record<string, string> = {
   resignations: "Entity Management",
 
   // Communications & Integrations
+  "email-inbox": "Communications & Integrations",
+  recordings: "Communications & Integrations",
   "bot-monitor": "Communications & Integrations",
   interactions: "Communications & Integrations",
   "whatsapp-archive": "Communications & Integrations",
