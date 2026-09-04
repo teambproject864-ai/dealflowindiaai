@@ -11,27 +11,44 @@ import { navigateTo, deleteSession } from '@/lib/screen-controller';
 import { PERSONAS } from '@/prompts/personas';
 import { createToken } from '@/lib/auth';
 
+function safeCompare(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b) return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 export async function POST(req: Request) {
   const secret = process.env.RECALL_WEBHOOK_SECRET?.trim();
   const bodyText = await req.text();
 
-  // 1. Check Svix headers (Recall.ai standard format)
-  const webhookId = req.headers.get('webhook-id') || req.headers.get('svix-id');
-  const webhookTimestamp = req.headers.get('webhook-timestamp') || req.headers.get('svix-timestamp');
-  const webhookSignature = req.headers.get('webhook-signature') || req.headers.get('svix-signature');
-
-  // 2. Check legacy headers
-  const legacySignature = req.headers.get('x-recall-signature');
-
-  const url = new URL(req.url);
-  const queryToken = url.searchParams.get('token');
-
   if (secret) {
     let isValid = false;
 
-    if (queryToken && (queryToken === secret || queryToken === 'dealflow_secret')) {
+    // 1. Recall.ai realtime_endpoints header authentication (Authorization or X-Webhook-Secret)
+    const authHeader = req.headers.get('authorization');
+    const secretHeader = req.headers.get('x-webhook-secret');
+
+    if (secretHeader && safeCompare(secretHeader.trim(), secret)) {
       isValid = true;
-    } else if (webhookId && webhookTimestamp && webhookSignature) {
+    } else if (authHeader) {
+      const cleanAuth = authHeader.trim();
+      if (cleanAuth.startsWith('Bearer ') && safeCompare(cleanAuth.slice(7).trim(), secret)) {
+        isValid = true;
+      } else if (cleanAuth.startsWith('Token ') && safeCompare(cleanAuth.slice(6).trim(), secret)) {
+        isValid = true;
+      } else if (safeCompare(cleanAuth, secret)) {
+        isValid = true;
+      }
+    }
+
+    // 2. Check Svix headers (Recall.ai standard format)
+    const webhookId = req.headers.get('webhook-id') || req.headers.get('svix-id');
+    const webhookTimestamp = req.headers.get('webhook-timestamp') || req.headers.get('svix-timestamp');
+    const webhookSignature = req.headers.get('webhook-signature') || req.headers.get('svix-signature');
+
+    if (!isValid && webhookId && webhookTimestamp && webhookSignature) {
       // Svix signature verification: HMAC-SHA256 over "${webhookId}.${webhookTimestamp}.${bodyText}"
       const secretKey = secret.startsWith('whsec_')
         ? Buffer.from(secret.slice(6), 'base64')
@@ -45,28 +62,19 @@ export async function POST(req: Request) {
       isValid = signatures.some((sig) => {
         const parts = sig.split(',');
         if (parts.length === 2 && parts[0] === 'v1') {
-          try {
-            return crypto.timingSafeEqual(Buffer.from(parts[1]), Buffer.from(expectedDigest));
-          } catch {
-            return false;
-          }
+          return safeCompare(parts[1], expectedDigest);
         }
         return false;
       });
-    } else if (legacySignature) {
+    }
+
+    // 3. Check legacy headers
+    const legacySignature = req.headers.get('x-recall-signature');
+    if (!isValid && legacySignature) {
       // Legacy signature verification: hex HMAC over bodyText
       const hmac = crypto.createHmac('sha256', secret);
       const digest = hmac.update(bodyText).digest('hex');
-      isValid = (digest === legacySignature);
-    } else {
-      // Per Recall.ai documentation: ad-hoc bot realtime_endpoints (transcript.data) do not transmit Svix headers.
-      // Allow valid Recall payload format to enable live interactive meeting voice responses.
-      try {
-        const preview = JSON.parse(bodyText);
-        if (preview?.event === 'transcript.data' || preview?.event?.startsWith('bot.')) {
-          isValid = true;
-        }
-      } catch {}
+      isValid = safeCompare(digest, legacySignature);
     }
 
     if (!isValid) {
@@ -119,20 +127,22 @@ export async function POST(req: Request) {
       }
     }
 
-    // Check if the speaker is the bot itself
+    // Precise bot speaker detection (never filter out human participants like "Praneeth" or "assistant")
     const persona = (PERSONAS as any)[callData.agentPersona] || PERSONAS.praneeth_assist;
-    const speakerStr = String(transcript.speaker || "");
+    const speakerStr = String(transcript.speaker || "").trim();
     const lowerSpeaker = speakerStr.toLowerCase();
-    const isAgent =
-      (!!speakerStr && speakerStr.includes(persona.name)) ||
+    const isBotSelf =
+      Boolean(transcript.is_bot) ||
+      Boolean(transcript.is_self) ||
+      lowerSpeaker.endsWith("(ai) | dealflow.ai") ||
       lowerSpeaker.includes("(ai)") ||
-      lowerSpeaker.includes("dealflow.ai") ||
-      lowerSpeaker.includes("dealflow") ||
-      lowerSpeaker.includes("assistant") ||
-      lowerSpeaker.includes("praneeth assist");
+      lowerSpeaker === "dealflow ai live assistant" ||
+      lowerSpeaker === "dealflow assistant" ||
+      lowerSpeaker === `${persona.name.toLowerCase()} (ai) | dealflow.ai` ||
+      lowerSpeaker === `${persona.name.toLowerCase()} assist (ai)`;
 
-    if (isAgent) {
-      return NextResponse.json({ received: true });
+    if (isBotSelf) {
+      return NextResponse.json({ received: true, ignored: "bot_self_utterance" });
     }
 
     // Extract participant speech
@@ -142,11 +152,17 @@ export async function POST(req: Request) {
     ).trim();
 
     const wordCount = transcriptText.split(/\s+/).filter(Boolean).length;
-    if (!transcriptText || wordCount < 2) {
+    if (!transcriptText || wordCount < 1) {
       return NextResponse.json({ received: true });
     }
 
-    console.log(`[MeetingWebhook] Customer spoke in meeting: "${transcriptText}"`);
+    // If chunk is not final, buffer it to allow complete questions before generating response
+    const isFinal = transcript.is_final !== false;
+    if (!isFinal && transcriptText.split(/\s+/).length < 3) {
+      return NextResponse.json({ received: true, status: "buffering_partial" });
+    }
+
+    console.log(`[MeetingWebhook] Customer spoke in meeting: "${transcriptText}" (speaker: ${speakerStr})`);
 
     // Append to Firestore transcripts if DB is available
     const segment = {
@@ -168,6 +184,7 @@ export async function POST(req: Request) {
             {
               lastTranscriptAt: new Date().toISOString(),
               lastTranscriptAtMs: Date.now(),
+              currentPhase: 'active_qa',
               updatedAt: new Date().toISOString(),
               updatedAtMs: Date.now(),
             },
@@ -235,29 +252,38 @@ export async function POST(req: Request) {
         console.error('[MeetingWebhook] Failed to inject audio:', audioErr.message);
       }
 
-      // 2. Also send response in Google Meet chat
+      // 2. Also send response simultaneously in Google Meet chat for dual reliability
       try {
-        const baseUrl = process.env.RECALL_REGION 
-          ? `https://${process.env.RECALL_REGION}.recall.ai` 
-          : 'https://ap-northeast-1.recall.ai';
+        const primaryRegion = process.env.RECALL_REGION || 'ap-northeast-1';
+        const regions = [primaryRegion, primaryRegion === 'ap-northeast-1' ? 'us-east-1' : 'ap-northeast-1'];
         const apiKey = process.env.RECALL_API_KEY;
         if (apiKey) {
-          await fetch(`${baseUrl}/api/v1/bot/${bot_id}/send_chat_message/`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Token ${apiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message: spokenContent }),
-          });
+          for (const reg of regions) {
+            const baseUrl = `https://${reg}.recall.ai`;
+            const chatRes = await fetch(`${baseUrl}/api/v1/bot/${bot_id}/send_chat_message/`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Token ${apiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ message: spokenContent }),
+            });
+            if (chatRes.ok) {
+              console.log(`[MeetingWebhook] Sent chat message to bot ${bot_id} via ${reg}`);
+              break;
+            }
+          }
         }
-      } catch (chatErr) {
-        // Non-fatal
+      } catch (chatErr: any) {
+        console.warn('[MeetingWebhook] Chat dispatch warning:', chatErr?.message);
       }
     }
 
-    return NextResponse.json({ received: true });
-  } else if (event === 'bot.status_change' && data?.status === 'joined_call') {
+    return NextResponse.json({ received: true, answered: Boolean(spokenContent) });
+  } else if (
+    event === 'bot.status_change' && 
+    (data?.status === 'joined_call' || data?.status?.code === 'joined_call' || data?.status?.code === 'in_call_recording')
+  ) {
     const { bot_id } = data || {};
     if (db && bot_id) {
       const callSnapshot = await db.collection('calls').where('recallBotId', '==', bot_id).get();
@@ -266,7 +292,7 @@ export async function POST(req: Request) {
         const callDoc = callSnapshot.docs[0];
         const callData = callDoc.data();
         const alreadySpoken = !!callData?.openingLineSentAt;
-        if (alreadySpoken) return NextResponse.json({ received: true });
+        if (alreadySpoken) return NextResponse.json({ received: true, message: "Introduction already delivered" });
 
         let companyName = callData.calendarEventTitle || 'the client';
         if (callData.leadId) {
@@ -279,11 +305,38 @@ export async function POST(req: Request) {
         const openingLine = persona.openingLine(companyName);
         
         const audio = await textToSpeech(openingLine, callData.agentPersona);
-        await injectAudio(bot_id, audio);
+        if (audio && audio.length > 0) {
+          await injectAudio(bot_id, audio);
+        }
+
+        // Send opening line in chat as well
+        try {
+          const primaryRegion = process.env.RECALL_REGION || 'ap-northeast-1';
+          const regions = [primaryRegion, primaryRegion === 'ap-northeast-1' ? 'us-east-1' : 'ap-northeast-1'];
+          const apiKey = process.env.RECALL_API_KEY;
+          if (apiKey) {
+            for (const reg of regions) {
+              const baseUrl = `https://${reg}.recall.ai`;
+              const chatRes = await fetch(`${baseUrl}/api/v1/bot/${bot_id}/send_chat_message/`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Token ${apiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: openingLine }),
+              });
+              if (chatRes.ok) break;
+            }
+          }
+        } catch (e: any) {
+          console.warn('[MeetingWebhook] Failed to send opening line chat:', e?.message);
+        }
         
         await callDoc.ref.update({
           status: 'in-progress',
           meetingStatus: 'joined',
+          openingLineSentAt: new Date().toISOString(),
+          currentPhase: 'active_qa',
           botJoinedAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           updatedAtMs: Date.now(),

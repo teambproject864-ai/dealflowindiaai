@@ -3,10 +3,10 @@
 // The original version used a Recall SDK package that isn't installed in this repo.
 // To make the meeting bot actually join the call, we call Recall's REST API directly.
 
-const RECALL_REGION_DEFAULT = "us-east-1";
+const RECALL_REGION_DEFAULT = "ap-northeast-1";
 
-function getRecallBaseUrl() {
-  const region = process.env.RECALL_REGION || RECALL_REGION_DEFAULT;
+function getRecallBaseUrl(regionOverride?: string) {
+  const region = regionOverride || process.env.RECALL_REGION || RECALL_REGION_DEFAULT;
   return `https://${region}.recall.ai`;
 }
 
@@ -24,6 +24,7 @@ export async function createMeetingBot(
 ) {
   const baseUrl = getRecallBaseUrl();
   const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://dealsflowai.vercel.app";
+  const secret = process.env.RECALL_WEBHOOK_SECRET?.trim();
   const webhookUrl = `${appUrl.replace(/\/$/, "")}/api/meeting/webhook`;
   const workerUrl = process.env.SCREEN_SHARE_WORKER_URL || appUrl;
 
@@ -43,7 +44,13 @@ export async function createMeetingBot(
         {
           type: "webhook",
           url: webhookUrl,
-          events: ["transcript.data"],
+          ...(secret ? {
+            headers: {
+              "Authorization": `Token ${secret}`,
+              "X-Webhook-Secret": secret,
+            },
+          } : {}),
+          events: ["transcript.data", "participant_events.chat_message"],
         },
       ],
     },
@@ -72,26 +79,40 @@ export async function createMeetingBot(
 }
 
 export async function injectAudio(botId: string, audioBuffer: Buffer) {
-  const baseUrl = getRecallBaseUrl();
+  const primaryRegion = process.env.RECALL_REGION || RECALL_REGION_DEFAULT;
+  const fallbackRegion = primaryRegion === "ap-northeast-1" ? "us-east-1" : "ap-northeast-1";
+  const regions = [primaryRegion, fallbackRegion];
 
-  const res = await fetch(`${baseUrl}/api/v1/bot/${botId}/output_audio/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getRecallAuthHeader(),
-    },
-    body: JSON.stringify({
-      kind: "mp3",
-      b64_data: audioBuffer.toString("base64"),
-    }),
-  });
+  let lastError: any = null;
+  for (const region of regions) {
+    const baseUrl = `https://${region}.recall.ai`;
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/bot/${botId}/output_audio/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getRecallAuthHeader(),
+        },
+        body: JSON.stringify({
+          kind: "mp3",
+          b64_data: audioBuffer.toString("base64"),
+        }),
+      });
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Recall bot.output_audio failed: ${res.status} ${res.statusText} ${text}`);
+      if (res.ok) {
+        return res.json().catch(() => ({}));
+      }
+
+      const text = await res.text().catch(() => "");
+      console.warn(`[Recall:injectAudio] Region ${region} returned ${res.status} (${text}), trying fallback...`);
+      lastError = new Error(`Recall bot.output_audio failed on ${region} [${res.status} ${res.statusText}]: ${text}`);
+      continue;
+    } catch (err: any) {
+      lastError = err;
+    }
   }
 
-  return res.json().catch(() => ({}));
+  throw lastError || new Error(`Recall bot.output_audio failed across all regions`);
 }
 
 export async function endMeetingBot(botId: string) {

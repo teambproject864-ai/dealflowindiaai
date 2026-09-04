@@ -70,6 +70,7 @@ import { SystemHealthModule } from "@/components/portal/admin/SystemHealthModule
 import { PlatformSettingsModule } from "@/components/portal/admin/PlatformSettingsModule";
 import { AgentsModule } from "@/components/portal/admin/AgentsModule";
 import { CustomersModule } from "@/components/portal/admin/CustomersModule";
+import { CallBotStatusModule } from "@/components/portal/admin/CallBotStatusModule";
 import { BillionmailHub } from "@/components/portal/BillionmailHub";
 import { ScrapeGraphStudio } from "@/components/portal/ScrapeGraphStudio";
 import { BulkDataProcessorHub } from "@/components/portal/BulkDataProcessorHub";
@@ -1786,42 +1787,11 @@ function AdminPortalContent() {
 
         {/* 3. BOT MONITOR TAB */}
         {activeTab === "bot-monitor" && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <h2 className="text-2xl font-bold text-slate-100">AI Call Bot Status</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <GlassPanel tilt={false} className="border-slate-800">
-                <CardHeader><CardTitle className="text-slate-200">Active Live Channels</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                  {agentSessions.length === 0 ? (
-                    <p className="text-slate-500 text-sm text-center py-6">No voice agent bots currently active.</p>
-                  ) : (
-                    agentSessions.map(session => (
-                      <div key={session.id} className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-bold text-slate-200">Agent ID: {session.agentKey}</p>
-                          <p className="text-xs text-slate-500 mt-1">Status: {session.status} • Created: {new Date(session.createdAt).toLocaleTimeString()}</p>
-                        </div>
-                        <span className="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-bold animate-pulse">Live</span>
-                      </div>
-                    ))
-                  )}
-                </CardContent>
-              </GlassPanel>
-
-              <GlassPanel tilt={false} className="border-slate-800">
-                <CardHeader><CardTitle className="text-slate-200">Session Logs</CardTitle></CardHeader>
-                <CardContent className="space-y-3 text-xs max-h-96 overflow-y-auto">
-                  {calls.slice(0, 5).map(call => (
-                    <div key={call.id} className="p-3 border border-slate-900 rounded bg-slate-900/40">
-                      <p className="text-slate-300"><strong>Call ID:</strong> {call.id}</p>
-                      <p className="text-slate-400">Caller: {call.callerName} ({call.callerRole}) → Receiver: {call.receiverName} ({call.receiverRole})</p>
-                      <p className="text-slate-400">Duration: {call.duration}s • Status: <span className="text-emerald-400 font-bold">{call.status}</span></p>
-                    </div>
-                  ))}
-                </CardContent>
-              </GlassPanel>
-            </div>
-          </div>
+          <CallBotStatusModule
+            initialCalls={calls}
+            agentSessions={agentSessions}
+            onRefreshCalls={fetchPortalData}
+          />
         )}
 
         {/* 4. TASKS TAB */}

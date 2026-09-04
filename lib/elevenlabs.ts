@@ -15,6 +15,8 @@ export async function textToSpeech(text: string, personaKey?: string): Promise<B
   // Try ElevenLabs if an API key is configured
   if (apiKey && apiKey.startsWith('sk_')) {
     try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: 'POST',
         headers: {
@@ -31,7 +33,9 @@ export async function textToSpeech(text: string, personaKey?: string): Promise<B
             use_speaker_boost: true,
           },
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timer);
 
       if (response.ok) {
         return Buffer.from(await response.arrayBuffer());

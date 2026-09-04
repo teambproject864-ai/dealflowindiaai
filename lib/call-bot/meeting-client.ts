@@ -1,6 +1,6 @@
 // lib/call-bot/meeting-client.ts
 
-const RECALL_REGION_DEFAULT = "us-east-1";
+const RECALL_REGION_DEFAULT = "ap-northeast-1";
 
 export interface BotMetadata {
   callId?: string;
@@ -65,14 +65,43 @@ async function retryOnce<T>(operation: () => Promise<T>, opName: string): Promis
 export async function createBot(meetingUrl: string, metadata: BotMetadata = {}): Promise<BotResponse> {
   const baseUrl = getRecallBaseUrl();
   const appUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
+  const secret = process.env.RECALL_WEBHOOK_SECRET?.trim();
   const webhookUrl = `${appUrl}/api/call-bot/webhook`;
   const botName = metadata.personaName 
     ? `${metadata.personaName} (AI) | Dealflow.ai` 
     : "DealFlow AI Live Assistant";
 
-  const payload = {
+  const payload: Record<string, any> = {
     meeting_url: meetingUrl,
     bot_name: botName,
+    recording_config: {
+      transcript: {
+        provider: {
+          recallai_streaming: {
+            mode: "prioritize_low_latency",
+            language_code: "en",
+          },
+        },
+      },
+      realtime_endpoints: [
+        {
+          type: "webhook",
+          url: webhookUrl,
+          ...(secret ? {
+            headers: {
+              "Authorization": `Token ${secret}`,
+              "X-Webhook-Secret": secret,
+            },
+          } : {}),
+          events: ["transcript.data", "participant_events.chat_message"],
+        },
+      ],
+    },
+    metadata: {
+      callId: metadata.callId,
+      callType: metadata.callType,
+      intakeFormId: metadata.intakeFormId,
+    },
   };
 
   return retryOnce(async () => {

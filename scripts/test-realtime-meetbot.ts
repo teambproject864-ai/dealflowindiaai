@@ -93,7 +93,8 @@ async function main() {
   console.log("------------------------------------------------------");
 
   const appUrl = process.env.APP_URL || "https://dealsflowai.vercel.app";
-  const webhookUrl = `${appUrl.replace(/\/$/, "")}/api/meeting/webhook?token=dealflow_secret`;
+  const secret = process.env.RECALL_WEBHOOK_SECRET?.trim();
+  const webhookUrl = `${appUrl.replace(/\/$/, "")}/api/meeting/webhook`;
 
   console.log("\n[Step 1/4] Dispatching Recall.ai Bot into Google Meet...");
 
@@ -113,6 +114,12 @@ async function main() {
         {
           type: "webhook",
           url: webhookUrl,
+          ...(secret ? {
+            headers: {
+              "Authorization": `Token ${secret}`,
+              "X-Webhook-Secret": secret,
+            },
+          } : {}),
           events: ["transcript.data", "participant_events.chat_message"],
         },
       ],

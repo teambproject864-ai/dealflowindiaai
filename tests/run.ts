@@ -63,6 +63,7 @@ import { runMiddlewareTests } from "./middleware-verification.test";
 import { runAgentPortalModulesSyncTests } from "./agent-portal-modules-sync.test";
 import { runBillionmailScrapeGraphIntegrationTests } from "./billionmail-scrapegraph-integrations.test";
 import { runBulkCsvProcessorTests } from "./bulk-csv-processor.test";
+import { runCallBotStatusTests } from "./call-bot-status.test";
 
 
 
@@ -376,7 +377,8 @@ async function main() {
     runMiddlewareTests,
     runAgentPortalModulesSyncTests,
     runBillionmailScrapeGraphIntegrationTests,
-    runBulkCsvProcessorTests
+    runBulkCsvProcessorTests,
+    runCallBotStatusTests
   ];
 
 

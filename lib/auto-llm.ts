@@ -115,7 +115,7 @@ export function classifyMeetingIntent(query: string, scenario: LLMScenario = "cl
     return "data_query";
   }
 
-  // 3. Process explanations (onboarding, setup, integration, security, how does it work)
+  // 3. Process explanations (onboarding, setup, integration, security, follow-up elaboration)
   if (
     q.includes("onboard") ||
     q.includes("setup") ||
@@ -131,7 +131,14 @@ export function classifyMeetingIntent(query: string, scenario: LLMScenario = "cl
     q.includes("gdpr") ||
     q.includes("audio") ||
     q.includes("injection") ||
-    q.includes("architecture")
+    q.includes("architecture") ||
+    q.includes("elaborate") ||
+    q.includes("tell me more") ||
+    q.includes("explain more") ||
+    q.includes("what do you mean") ||
+    q.includes("example") ||
+    q === "why" ||
+    q.startsWith("why ")
   ) {
     return "process_explanation";
   }
@@ -201,6 +208,9 @@ export function generateContextualHumanResponse(userSpeech: string, personaName:
     case "data_query":
       return KNOWLEDGE_BASE.pipeline_data;
     case "process_explanation":
+      if (q.includes("elaborate") || q.includes("tell me more") || q.includes("example") || q.includes("why") || q.includes("what do you mean")) {
+        return "DealFlow AI deploys autonomous AI agents directly into your sales cycle. Instead of human reps spending hours on note-taking and manual CRM entry, our agents handle the discovery call, log commitments live, and synchronize action items directly into your CRM.";
+      }
       if (q.includes("security") || q.includes("compliance") || q.includes("soc2") || q.includes("gdpr")) {
         return KNOWLEDGE_BASE.security;
       }

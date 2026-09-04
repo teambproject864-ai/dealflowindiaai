@@ -14,7 +14,7 @@ interface CalendlyWidgetProps {
 }
 
 export function CalendlyWidget({
-  url = process.env.NEXT_PUBLIC_CALENDLY_URL || "https://calendly.com/praneethburada/30min",
+  url = process.env.NEXT_PUBLIC_CALENDLY_URL || process.env.CALENDLY_URL || "https://calendly.com/teambproject864/30min",
   height = "700px",
   minWidth = "320px",
   className = "",

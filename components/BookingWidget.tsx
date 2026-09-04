@@ -124,7 +124,9 @@ export function BookingWidget({
   }, [filterStatus]);
 
   const calendlyBaseUrl =
-    process.env.NEXT_PUBLIC_CALENDLY_URL || "https://calendly.com/praneethburada/30min";
+    process.env.NEXT_PUBLIC_CALENDLY_URL ||
+    process.env.CALENDLY_URL ||
+    "https://calendly.com/teambproject864/30min";
   const calendlyExternalUrl = `${calendlyBaseUrl}?utm_source=dealflow&utm_medium=pipeline_support&utm_campaign=gtm_analysis_review&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`;
 
   useCalendlyEventListener({
@@ -132,6 +134,24 @@ export function BookingWidget({
       setCallScheduled(true);
       const randomAgent = REVENUE_AGENTS[Math.floor(Math.random() * REVENUE_AGENTS.length)];
       setMatchedAgentKey(randomAgent.key);
+
+      // Asynchronously sync with backend Calendly webhook receiver to schedule meeting bot
+      void fetch("/api/webhooks/calendly", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "invitee.created",
+          payload: {
+            name,
+            email,
+            companyName,
+            leadId,
+            analysisId,
+            ...(e.data?.payload || {}),
+          },
+        }),
+      }).catch((err) => console.warn("[BookingWidget] In-app Calendly auto-schedule notice:", err));
+
       if (onBookingConfirmed)
         onBookingConfirmed({
           name, email, companyName, leadId, analysisId,
@@ -202,6 +222,7 @@ export function BookingWidget({
   }, [autoAssigning, autoAssignedAgent, leadId, companyName, challengeTags, onAgentAssigned]);
 
   const handleProceedWithAgent = () => {
+    if (!selectedAgent) return;
     setAgentProceedConfirmed(true);
     if (onAgentAssigned) onAgentAssigned(selectedAgent.key);
     if (onBookingConfirmed)
@@ -776,7 +797,7 @@ export function BookingWidget({
                       Agent Assigned &amp; Portal Access Activated!
                     </h4>
                     <p className="text-xs text-slate-300">
-                      <strong>{selectedAgent.name}</strong> ({selectedAgent.title}) has been assigned to your account.
+                      <strong>{selectedAgent?.name ?? "Assigned Specialist"}</strong> ({selectedAgent?.title ?? "Revenue Specialist"}) has been assigned to your account.
                       All your ICP data, campaign playbooks, and interaction history are now accessible in their agent portal.
                     </p>
 
@@ -788,7 +809,7 @@ export function BookingWidget({
                         </p>
                         <p className="flex items-center gap-2">
                           <PhoneCall className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                          <span>Agent contact: <code className="text-amber-300">{selectedAgent.key}@dealflow.ai</code></span>
+                          <span>Agent contact: <code className="text-amber-300">{selectedAgent?.key ?? "agent"}@dealflow.ai</code></span>
                         </p>
                       </div>
                       <div className="bg-slate-950/60 p-3 rounded-xl border border-emerald-500/20 text-xs space-y-1.5 text-slate-300">
@@ -894,7 +915,7 @@ export function BookingWidget({
                   <div>
                     <h4 className="text-sm font-extrabold text-white mb-1">Strategy Call Confirmed!</h4>
                     <p className="text-xs text-slate-300">
-                      Matched Agent: <strong>{matchedAgent.name}</strong> ({matchedAgent.title})
+                      Matched Agent: <strong>{matchedAgent?.name ?? "Revenue Specialist"}</strong> ({matchedAgent?.title ?? "AI Specialist"})
                     </p>
                     <div className="mt-3 text-xs space-y-1.5 text-slate-300">
                       <p className="flex items-center gap-2">
@@ -903,7 +924,7 @@ export function BookingWidget({
                       </p>
                       <p className="flex items-center gap-2">
                         <Bot className="h-3.5 w-3.5 text-cyan-400" />
-                        Agent contact: <code className="text-cyan-300">{matchedAgent.key}@dealflow.ai</code>
+                        Agent contact: <code className="text-cyan-300">{matchedAgent?.key ?? "agent"}@dealflow.ai</code>
                       </p>
                       <p className="flex items-center gap-2">
                         <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
